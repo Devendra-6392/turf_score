@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const bookingController = require('../controllers/bookingController');
+const adminAuth = require('../middleware/adminAuthMiddleware');
+const authorize = require('../middleware/permissionMiddleware');
+
+router.get('/', adminAuth, authorize('bookings', 'view'), bookingController.getAllBookings);
+router.post('/create-order', bookingController.createRazorpayOrder);
+router.post('/', bookingController.createBooking);
+router.post('/:bookingId/approve-cancellation', adminAuth, authorize('bookings', 'edit'), bookingController.cancelBooking);
+router.post('/:bookingId/cancel', adminAuth, authorize('bookings', 'delete'), bookingController.cancelBooking);
+router.post('/:bookingId/request-cancellation', bookingController.requestCancellation);
+router.get('/user/:userId', bookingController.getUserBookings);
+
+module.exports = router;

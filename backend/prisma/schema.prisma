@@ -1,0 +1,631 @@
+// This is your complete Turf Booking Platform schema
+// Migrated from PostgreSQL (Supabase) to MySQL (XAMPP)
+// Heavily expanded and refined to an expert enterprise-grade architecture
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum SportType {
+  CRICKET
+  FOOTBALL
+  TENNIS
+  BADMINTON
+  BASKETBALL
+  VOLLEYBALL
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+  MAINTENANCE
+  ON_HOLD
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  CANCEL_REQUESTED
+  COMPLETED
+  NO_SHOW
+  REFUNDED
+}
+
+enum DayType {
+  WEEKDAY
+  WEEKEND
+  HOLIDAY
+}
+
+enum TimeSlotType {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+}
+
+enum CancellationReason {
+  WEATHER
+  PERSONAL
+  EMERGENCY
+  TURF_ISSUE
+  OTHER
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum GroupStatus {
+  OPEN
+  FULL
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+  CASHBACK
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  REMINDER
+  RAIN_ALERT
+  PRICE_DROP
+  PROMOTION
+  PAYMENT_SUCCESS
+  CANCELLATION
+}
+
+enum OverrideType {
+  HOLIDAY
+  MAINTENANCE
+  SPECIAL_EVENT
+  WEATHER_BLOCK
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  TURF_ADMIN
+  EMPLOYEE
+}
+
+// ============================================
+// CORE TABLES
+// ============================================
+
+model AdminPanelUser {
+  id       String    @id @default(uuid()) @db.VarChar(36)
+  email    String    @unique @db.VarChar(255)
+  password String    @db.VarChar(255)
+  name     String    @db.VarChar(255)
+  role     AdminRole @default(TURF_ADMIN)
+  turfId   String?   @db.VarChar(36) // For TURF_ADMIN
+  turf     Turf?     @relation(fields: [turfId], references: [id])
+
+  // Expert additions:
+  phone       String?   @db.VarChar(20)
+  isActive    Boolean   @default(true)
+  avatarUrl   String?   @db.Text
+  lastLogin   DateTime?
+  permissions Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id                   String                @id @default(uuid()) @db.VarChar(36)
+  email                String                @unique @db.VarChar(255)
+  password             String?               @db.VarChar(255)
+  name                 String?               @db.VarChar(255)
+  avatar               String?               @db.Text
+  phone                String?               @db.VarChar(20)
+  fcmToken             String?               @db.Text
+  matchesPlayed        Int                   @default(0)
+  rating               Float                 @default(5.0)
+  xp                   Int                   @default(0)
+  wallet               Wallet?
+  bookings             Booking[]
+  reviews              Review[]
+  groupMemberships     GroupMember[]
+  captainGroups        GroupBooking[]        @relation("CaptainBookings")
+  notifications        Notification[]
+  favorites            Favorite[]
+  searches             SearchHistory[]
+  cancellationRequests CancellationRequest[]
+  supportTickets       SupportTicket[]
+  teamsOwned           Team[]                @relation("TeamCaptain")
+  teamMemberships      TeamMember[]
+
+  // Expert additions:
+  gender         String?    @db.VarChar(20)
+  dob            DateTime?  @db.Date
+  isActive       Boolean    @default(true)
+  isVerified     Boolean    @default(false)
+  preferredSport SportType?
+  bio            String?    @db.Text
+  totalSpend     Float      @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Turf {
+  id                    String                     @id @default(uuid()) @db.VarChar(36)
+  name                  String                     @db.VarChar(255)
+  location              String                     @db.Text
+  description           String                     @db.Text
+  city                  String                     @db.VarChar(100)
+  state                 String                     @db.VarChar(100)
+  category              String                     @default("Football") @db.VarChar(100)
+  latitude              Float?
+  longitude             Float?
+  sportTypes            Json                       @default("[]")
+  amenities             Json                       @default("[]")
+  rating                Float                      @default(4.5)
+  images                Json                       @default("[]")
+  cancellationPolicy    CancellationPolicy?
+  slots                 TurfSlot[]
+  pricing               TurfPricing[]
+  reviews               Review[]
+  bookings              Booking[]
+  availabilityOverrides TurfAvailabilityOverride[]
+  favorites             Favorite[]
+  admins                AdminPanelUser[]
+  teams                 Team[]
+
+  // Expert additions:
+  contactPhone     String?   @db.VarChar(20)
+  contactEmail     String?   @db.VarChar(255)
+  openingTime      String    @default("06:00") @db.VarChar(10)
+  closingTime      String    @default("23:00") @db.VarChar(10)
+  isActive         Boolean   @default(true)
+  isFeatured       Boolean   @default(false)
+  googleMapsUrl    String?   @db.Text
+  safetyGuidelines String?   @db.Text
+  rulesOfVenue     Json      @default("[]")
+  entryQrToken     String?   @unique @db.VarChar(64)
+  qrEnabled        Boolean   @default(true)
+  qrUpdatedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([latitude, longitude])
+}
+
+model TurfSlot {
+  id           String     @id @default(uuid()) @db.VarChar(36)
+  turfId       String     @db.VarChar(36)
+  turf         Turf       @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  date         DateTime   @db.Date
+  startTime    String     @db.VarChar(10)
+  endTime      String     @db.VarChar(10)
+  status       SlotStatus @default(AVAILABLE)
+  price        Float
+  bufferBefore Int        @default(0)
+  bufferAfter  Int        @default(15)
+  booking      Booking?
+
+  // Expert additions:
+  sportType  SportType @default(FOOTBALL)
+  discount   Float     @default(0.0)
+  isPeakHour Boolean   @default(false)
+  maxPlayers Int       @default(10)
+  notes      String?   @db.Text
+
+  @@unique([turfId, date, startTime])
+  @@index([turfId, date, status])
+  @@index([status])
+}
+
+model Booking {
+  id                  String               @id @default(uuid()) @db.VarChar(36)
+  userId              String               @db.VarChar(36)
+  user                User                 @relation(fields: [userId], references: [id])
+  turfId              String               @db.VarChar(36)
+  turf                Turf                 @relation(fields: [turfId], references: [id])
+  slotId              String               @unique @db.VarChar(36)
+  slot                TurfSlot             @relation(fields: [slotId], references: [id])
+  amount              Float
+  status              BookingStatus        @default(CONFIRMED)
+  razorpayId          String?              @db.VarChar(255)
+  paymentDetail       PaymentDetail?
+  review              Review?
+  groupBooking        GroupBooking?
+  cancellationRequest CancellationRequest?
+  addOns              BookingAddOn[]
+  teamId              String?              @db.VarChar(36)
+  team                Team?                @relation(fields: [teamId], references: [id])
+  createdAt           DateTime             @default(now())
+
+  // Expert additions:
+  bookingNumber   String    @unique @default(uuid()) @db.VarChar(50)
+  paymentStatus   String    @default("PENDING") @db.VarChar(20)
+  subTotal        Float     @default(0.0)
+  taxAmount       Float     @default(0.0)
+  discountAmount  Float     @default(0.0)
+  couponCode      String?   @db.VarChar(50)
+  additionalNotes String?   @db.Text
+  cancelledBy     String?   @db.VarChar(20) // "USER", "ADMIN", "SYSTEM"
+  checkInStatus   Boolean   @default(false)
+  checkInTime     DateTime?
+  checkedInById   String?   @db.VarChar(36)
+
+  @@index([userId])
+  @@index([turfId])
+  @@index([status])
+  @@index([teamId])
+}
+
+model Team {
+  id        String       @id @default(uuid()) @db.VarChar(36)
+  name      String       @db.VarChar(100)
+  sportType SportType
+  captainId String       @db.VarChar(36)
+  captain   User         @relation("TeamCaptain", fields: [captainId], references: [id], onDelete: Cascade)
+  turfId    String?      @db.VarChar(36)
+  turf      Turf?        @relation(fields: [turfId], references: [id])
+  members   TeamMember[]
+  bookings  Booking[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([captainId])
+}
+
+model TeamMember {
+  id       String   @id @default(uuid()) @db.VarChar(36)
+  teamId   String   @db.VarChar(36)
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId   String   @db.VarChar(36)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("PLAYER") @db.VarChar(20)
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model PaymentDetail {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  bookingId         String   @unique @db.VarChar(36)
+  booking           Booking  @relation(fields: [bookingId], references: [id])
+  razorpayOrderId   String?  @db.VarChar(255)
+  razorpayPaymentId String?  @db.VarChar(255)
+  razorpaySignature String?  @db.Text
+  paymentMethod     String?  @db.VarChar(50)
+  amount            Float
+  currency          String   @default("INR") @db.VarChar(10)
+  status            String   @default("SUCCESS") @db.VarChar(20)
+  createdAt         DateTime @default(now())
+
+  // Expert additions:
+  gateway        String  @default("RAZORPAY") @db.VarChar(50)
+  errorMessage   String? @db.Text
+  transactionFee Float   @default(0.0)
+  billingAddress Json?
+}
+
+// ============================================
+// PRICING TABLES
+// ============================================
+
+model TurfPricing {
+  id        String       @id @default(uuid()) @db.VarChar(36)
+  turfId    String       @db.VarChar(36)
+  turf      Turf         @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  dayType   DayType
+  timeSlot  TimeSlotType
+  sportType SportType?
+  price     Float
+  isActive  Boolean      @default(true)
+
+  @@unique([turfId, dayType, timeSlot, sportType])
+}
+
+// ============================================
+// CANCELLATION & REFUND TABLES
+// ============================================
+
+model CancellationPolicy {
+  id                    String   @id @default(uuid()) @db.VarChar(36)
+  turfId                String   @unique @db.VarChar(36)
+  turf                  Turf     @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  freeCancellationHours Int      @default(6)
+  partialRefundPercent  Int      @default(50)
+  rainProtection        Boolean  @default(true)
+  weatherCheckEnabled   Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model CancellationRequest {
+  id           String             @id @default(uuid()) @db.VarChar(36)
+  bookingId    String             @unique @db.VarChar(36)
+  booking      Booking            @relation(fields: [bookingId], references: [id])
+  userId       String             @db.VarChar(36)
+  user         User               @relation(fields: [userId], references: [id])
+  reason       String             @db.Text
+  reasonType   CancellationReason
+  refundAmount Float
+  refundStatus RefundStatus       @default(PENDING)
+  weatherData  Json?
+  createdAt    DateTime           @default(now())
+  processedAt  DateTime?
+
+  @@index([userId])
+  @@index([refundStatus])
+}
+
+// ============================================
+// GROUP BOOKING TABLES
+// ============================================
+
+model GroupBooking {
+  id             String        @id @default(uuid()) @db.VarChar(36)
+  bookingId      String        @unique @db.VarChar(36)
+  booking        Booking       @relation(fields: [bookingId], references: [id])
+  captainId      String        @db.VarChar(36)
+  captain        User          @relation("CaptainBookings", fields: [captainId], references: [id])
+  totalPlayers   Int           @default(1)
+  playersNeeded  Int
+  pricePerPerson Float
+  isPublic       Boolean       @default(false)
+  inviteCode     String        @unique @default(uuid()) @db.VarChar(36)
+  status         GroupStatus   @default(OPEN)
+  members        GroupMember[]
+  createdAt      DateTime      @default(now())
+  expiresAt      DateTime
+
+  // Expert additions:
+  title      String? @db.VarChar(255)
+  skillLevel String  @default("ALL") @db.VarChar(50)
+}
+
+model GroupMember {
+  id         String       @id @default(uuid()) @db.VarChar(36)
+  groupId    String       @db.VarChar(36)
+  group      GroupBooking @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId     String       @db.VarChar(36)
+  user       User         @relation(fields: [userId], references: [id])
+  hasPaid    Boolean      @default(false)
+  paidAmount Float?
+  joinedAt   DateTime     @default(now())
+
+  // Expert additions:
+  role     String  @default("MEMBER") @db.VarChar(50)
+  position String? @db.VarChar(50)
+
+  @@unique([groupId, userId])
+}
+
+// ============================================
+// WALLET & TRANSACTION TABLES
+// ============================================
+
+model Wallet {
+  id           String        @id @default(uuid()) @db.VarChar(36)
+  userId       String        @unique @db.VarChar(36)
+  user         User          @relation(fields: [userId], references: [id])
+  balance      Float         @default(0)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Expert additions:
+  currency String  @default("INR") @db.VarChar(10)
+  isActive Boolean @default(true)
+}
+
+model Transaction {
+  id          String            @id @default(uuid()) @db.VarChar(36)
+  walletId    String            @db.VarChar(36)
+  wallet      Wallet            @relation(fields: [walletId], references: [id])
+  amount      Float
+  type        TransactionType
+  description String            @db.Text
+  reference   String?           @db.VarChar(255)
+  status      TransactionStatus @default(COMPLETED)
+  createdAt   DateTime          @default(now())
+
+  // Expert additions:
+  previousBalance Float   @default(0.0)
+  newBalance      Float   @default(0.0)
+  ipAddress       String? @db.VarChar(45)
+  userAgent       String? @db.Text
+}
+
+// ============================================
+// REVIEW & SOCIAL TABLES
+// ============================================
+
+model Review {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  userId     String   @db.VarChar(36)
+  user       User     @relation(fields: [userId], references: [id])
+  turfId     String   @db.VarChar(36)
+  turf       Turf     @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  bookingId  String   @unique @db.VarChar(36)
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  rating     Int
+  comment    String?  @db.Text
+  images     Json     @default("[]")
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Expert additions:
+  reply             String?   @db.Text
+  repliedAt         DateTime?
+  helpfulCount      Int       @default(0)
+  cleanlinessRating Int       @default(5)
+  amenitiesRating   Int       @default(5)
+  staffRating       Int       @default(5)
+
+  @@index([turfId])
+  @@index([userId])
+}
+
+// ============================================
+// UTILITY TABLES
+// ============================================
+
+model Notification {
+  id        String           @id @default(uuid()) @db.VarChar(36)
+  userId    String           @db.VarChar(36)
+  user      User             @relation(fields: [userId], references: [id])
+  title     String           @db.VarChar(255)
+  body      String           @db.Text
+  type      NotificationType
+  data      Json?
+  isRead    Boolean          @default(false)
+  sentAt    DateTime
+  createdAt DateTime         @default(now())
+
+  // Expert additions:
+  isPushSent  Boolean   @default(false)
+  isEmailSent Boolean   @default(false)
+  readAt      DateTime?
+
+  @@index([userId, isRead])
+}
+
+model TurfAvailabilityOverride {
+  id        String       @id @default(uuid()) @db.VarChar(36)
+  turfId    String       @db.VarChar(36)
+  turf      Turf         @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  date      DateTime     @db.Date
+  reason    String       @db.Text
+  type      OverrideType
+  slots     Json?
+  createdAt DateTime     @default(now())
+
+  @@unique([turfId, date])
+  @@index([turfId, date])
+}
+
+model Favorite {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  userId    String   @db.VarChar(36)
+  user      User     @relation(fields: [userId], references: [id])
+  turfId    String   @db.VarChar(36)
+  turf      Turf     @relation(fields: [turfId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, turfId])
+}
+
+model SearchHistory {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  userId    String     @db.VarChar(36)
+  user      User       @relation(fields: [userId], references: [id])
+  query     String     @db.VarChar(255)
+  location  String?    @db.VarChar(255)
+  sportType SportType?
+  results   Int
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+}
+
+// ============================================
+// NEW ENTERPRISE GRADE TABLES
+// ============================================
+
+model Coupon {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  code           String   @unique @db.VarChar(50)
+  discountType   String   @default("PERCENTAGE") @db.VarChar(20) // PERCENTAGE or FLAT
+  value          Float // Value of discount (e.g., 10 for 10% or 150 for 150 INR)
+  minBookingAmt  Float    @default(0.0)
+  maxDiscountAmt Float    @default(1000.0)
+  startDate      DateTime
+  endDate        DateTime
+  usageLimit     Int      @default(100)
+  usedCount      Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AddOnProduct {
+  id          String         @id @default(uuid()) @db.VarChar(36)
+  name        String         @db.VarChar(255)
+  description String?        @db.Text
+  price       Float // Rent or purchase price
+  isRentable  Boolean        @default(true)
+  stockCount  Int            @default(10)
+  isActive    Boolean        @default(true)
+  bookings    BookingAddOn[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model BookingAddOn {
+  id             String       @id @default(uuid()) @db.VarChar(36)
+  bookingId      String       @db.VarChar(36)
+  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  addOnProductId String       @db.VarChar(36)
+  addOnProduct   AddOnProduct @relation(fields: [addOnProductId], references: [id])
+  quantity       Int          @default(1)
+  pricePaid      Float // Snapshots the price at booking time
+  createdAt      DateTime     @default(now())
+}
+
+model SystemAuditLog {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  adminId   String?  @db.VarChar(36)
+  action    String   @db.VarChar(255) // e.g., "UPDATE_PRICING", "DELETE_SLOT"
+  details   String   @db.Text
+  ipAddress String?  @db.VarChar(45)
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  userId      String   @db.VarChar(36)
+  user        User     @relation(fields: [userId], references: [id])
+  subject     String   @db.VarChar(255)
+  description String   @db.Text
+  priority    String   @default("MEDIUM") @db.VarChar(20) // LOW, MEDIUM, HIGH
+  status      String   @default("OPEN") @db.VarChar(20) // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  category    String   @db.VarChar(100) // e.g., "PAYMENT", "BOOKING_ISSUE", "FEEDBACK"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  title     String   @db.VarChar(255)
+  imageUrl  String   @db.Text
+  linkUrl   String?  @db.Text
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
