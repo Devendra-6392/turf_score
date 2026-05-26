@@ -7,21 +7,31 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Dimensions,
+  Image,
   ScrollView,
-  ActivityIndicator
+  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
-import PremiumButton from '../components/PremiumButton';
-import { User, Mail, Lock } from 'lucide-react-native';
+import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
+
+const { width, height } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  
   const { register } = useAuth();
 
   const handleSignUp = async () => {
@@ -43,62 +53,101 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      {/* Top half wave background pattern */}
+      <View style={styles.topHeaderContainer}>
+        <Image 
+          source={require('../assets/green_topography.png')} 
+          style={styles.headerPattern} 
+          resizeMode="cover"
+        />
+      </View>
+
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+        style={styles.keyboardView}
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join the elite community of turf players</Text>
-          </View>
+          <Text style={styles.title}>Sign up</Text>
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <User size={20} color={Colors.onSurfaceVariant} style={styles.icon} />
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <View style={[
+              styles.inputContainer,
+              nameFocused && styles.inputContainerFocused
+            ]}>
+              <User size={16} color={nameFocused ? Colors.primary : Colors.onSurfaceVariant} style={styles.icon} />
               <TextInput 
-                placeholder="Full Name"
-                placeholderTextColor={Colors.onSurfaceVariant + '80'}
+                placeholder="John Doe"
+                placeholderTextColor={Colors.onSurfaceVariant + '60'}
                 value={name}
                 onChangeText={setName}
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
                 style={styles.input}
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Mail size={20} color={Colors.onSurfaceVariant} style={styles.icon} />
+            <Text style={styles.inputLabel}>Email</Text>
+            <View style={[
+              styles.inputContainer,
+              emailFocused && styles.inputContainerFocused
+            ]}>
+              <Mail size={16} color={emailFocused ? Colors.primary : Colors.onSurfaceVariant} style={styles.icon} />
               <TextInput 
-                placeholder="Email address"
-                placeholderTextColor={Colors.onSurfaceVariant + '80'}
+                placeholder="demo@email.com"
+                placeholderTextColor={Colors.onSurfaceVariant + '60'}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
                 style={styles.input}
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Lock size={20} color={Colors.onSurfaceVariant} style={styles.icon} />
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={[
+              styles.inputContainer,
+              passwordFocused && styles.inputContainerFocused
+            ]}>
+              <Lock size={16} color={passwordFocused ? Colors.primary : Colors.onSurfaceVariant} style={styles.icon} />
               <TextInput 
-                placeholder="Create Password"
-                placeholderTextColor={Colors.onSurfaceVariant + '80'}
+                placeholder="Create your password"
+                placeholderTextColor={Colors.onSurfaceVariant + '60'}
+                secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
                 style={styles.input}
               />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                {showPassword ? (
+                  <EyeOff size={18} color={Colors.onSurfaceVariant} />
+                ) : (
+                  <Eye size={18} color={Colors.onSurfaceVariant} />
+                )}
+              </TouchableOpacity>
             </View>
 
-            <PremiumButton 
-              title={loading ? <ActivityIndicator color="#fff" /> : "Create Account"}
+            <TouchableOpacity 
+              style={styles.signUpBtn} 
               onPress={handleSignUp}
-              style={styles.signUpBtn}
-            />
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.signUpBtnText}>Create Account</Text>
+              )}
+            </TouchableOpacity>
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>Already have an account? </Text>
@@ -109,7 +158,7 @@ const SignUpScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -118,64 +167,96 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  topHeaderContainer: {
+    width: '100%',
+    height: height * 0.35,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerPattern: {
+    width: '100%',
+    height: '100%',
+  },
+  keyboardView: {
+    flex: 1,
+    marginTop: -20,
+  },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingHorizontal: 32,
     paddingBottom: 40,
   },
-  header: {
-    marginBottom: 48,
-  },
   title: {
-    fontSize: 36,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
     color: Colors.onBackground,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.onSurfaceVariant,
-    lineHeight: 24,
+    marginBottom: 28,
+    letterSpacing: -0.5,
   },
   form: {
     width: '100%',
   },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.onBackground,
+    marginBottom: 2,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceContainerLow,
-    borderRadius: 20,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    height: 64,
+    borderBottomWidth: 1.5,
+    borderBottomColor: Colors.outline,
+    marginBottom: 24,
+    height: 48,
+  },
+  inputContainerFocused: {
+    borderBottomColor: Colors.primary,
   },
   icon: {
-    marginRight: 16,
+    marginRight: 10,
+    bottom: -2,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.onBackground,
     fontWeight: '600',
+    paddingVertical: 4,
+  },
+  eyeBtn: {
+    padding: 4,
   },
   signUpBtn: {
-    width: '100%',
-    height: 64,
-    marginTop: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: 16,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  signUpBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 28,
   },
   footerText: {
     color: Colors.onSurfaceVariant,
-    fontSize: 14,
+    fontSize: 13,
   },
   loginText: {
     color: Colors.primary,
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: '800',
+    fontSize: 13,
   }
 });
 

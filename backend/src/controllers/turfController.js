@@ -10,11 +10,10 @@ function parseCalendarDate(value) {
 exports.getAllTurfs = async (req, res) => {
   try {
     const turfs = await prisma.turf.findMany();
-    // Map new schema fields backward for frontend
     const mapped = turfs.map(t => ({
       ...t,
-      imageUrl: t.images && t.images.length > 0 ? t.images[0] : null,
-      pricePerHour: 3500 // Generic fallback, though newer ones have detailed pricing
+      imageUrl: t.imageUrl || (t.images && t.images.length > 0 ? t.images[0] : null),
+      pricePerHour: t.pricePerHour
     }));
     res.json(mapped);
   } catch (error) {
@@ -28,7 +27,27 @@ exports.createTurf = async (req, res) => {
     if (req.admin.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'Only super admins can create new turfs' });
     }
-    const { name, location, city, state, description, category, latitude, longitude } = req.body;
+    const { 
+      name, location, city, state, description, category, latitude, longitude,
+      pricePerHour, imageUrl, groundSize, groundType, cancellationPolicyText,
+      openingTime, closingTime, contactPhone, contactEmail, safetyGuidelines,
+      amenities, images
+    } = req.body;
+
+    let parsedAmenities = [];
+    if (amenities) {
+      if (Array.isArray(amenities)) parsedAmenities = amenities;
+      else {
+        try { parsedAmenities = JSON.parse(amenities); } catch (e) { parsedAmenities = []; }
+      }
+    }
+    let parsedImages = [];
+    if (images) {
+      if (Array.isArray(images)) parsedImages = images;
+      else {
+        try { parsedImages = JSON.parse(images); } catch (e) { parsedImages = []; }
+      }
+    }
     
     const turf = await prisma.turf.create({
       data: {
@@ -40,8 +59,18 @@ exports.createTurf = async (req, res) => {
         category: category || 'Football',
         latitude: parseFloat(latitude) || null,
         longitude: parseFloat(longitude) || null,
-        images: [], // Default empty
-        amenities: [] // Default empty
+        pricePerHour: pricePerHour !== undefined ? parseFloat(pricePerHour) : 1000.0,
+        imageUrl: imageUrl || null,
+        groundSize: groundSize || null,
+        groundType: groundType || null,
+        cancellationPolicyText: cancellationPolicyText || null,
+        openingTime: openingTime || "06:00",
+        closingTime: closingTime || "23:00",
+        contactPhone: contactPhone || null,
+        contactEmail: contactEmail || null,
+        safetyGuidelines: safetyGuidelines || null,
+        amenities: parsedAmenities,
+        images: parsedImages
       }
     });
 
@@ -60,19 +89,45 @@ exports.updateTurf = async (req, res) => {
       return res.status(403).json({ error: 'You can only manage your assigned turf' });
     }
 
-    const { name, location, city, state, description, category, latitude, longitude } = req.body;
+    const { 
+      name, location, city, state, description, category, latitude, longitude,
+      pricePerHour, imageUrl, groundSize, groundType, cancellationPolicyText,
+      openingTime, closingTime, contactPhone, contactEmail, safetyGuidelines,
+      amenities, images
+    } = req.body;
+
+    let dataUpdate = {
+      name,
+      location,
+      city,
+      state,
+      description,
+      category,
+      latitude: latitude === undefined ? undefined : (parseFloat(latitude) || null),
+      longitude: longitude === undefined ? undefined : (parseFloat(longitude) || null)
+    };
+
+    if (pricePerHour !== undefined) dataUpdate.pricePerHour = parseFloat(pricePerHour);
+    if (imageUrl !== undefined) dataUpdate.imageUrl = imageUrl;
+    if (groundSize !== undefined) dataUpdate.groundSize = groundSize;
+    if (groundType !== undefined) dataUpdate.groundType = groundType;
+    if (cancellationPolicyText !== undefined) dataUpdate.cancellationPolicyText = cancellationPolicyText;
+    if (openingTime !== undefined) dataUpdate.openingTime = openingTime;
+    if (closingTime !== undefined) dataUpdate.closingTime = closingTime;
+    if (contactPhone !== undefined) dataUpdate.contactPhone = contactPhone;
+    if (contactEmail !== undefined) dataUpdate.contactEmail = contactEmail;
+    if (safetyGuidelines !== undefined) dataUpdate.safetyGuidelines = safetyGuidelines;
+
+    if (amenities !== undefined) {
+      dataUpdate.amenities = Array.isArray(amenities) ? amenities : (typeof amenities === 'string' ? JSON.parse(amenities) : []);
+    }
+    if (images !== undefined) {
+      dataUpdate.images = Array.isArray(images) ? images : (typeof images === 'string' ? JSON.parse(images) : []);
+    }
+
     const turf = await prisma.turf.update({
       where: { id },
-      data: {
-        name,
-        location,
-        city,
-        state,
-        description,
-        category,
-        latitude: latitude === undefined ? undefined : (parseFloat(latitude) || null),
-        longitude: longitude === undefined ? undefined : (parseFloat(longitude) || null)
-      }
+      data: dataUpdate
     });
     res.json(turf);
   } catch (error) {
@@ -106,11 +161,10 @@ exports.getTurfById = async (req, res) => {
     });
     if (!turf) return res.status(404).json({ error: 'Turf not found' });
     
-    // Map backward
     const mapped = {
       ...turf,
-      imageUrl: turf.images && turf.images.length > 0 ? turf.images[0] : null,
-      pricePerHour: 3500
+      imageUrl: turf.imageUrl || (turf.images && turf.images.length > 0 ? turf.images[0] : null),
+      pricePerHour: turf.pricePerHour
     };
     res.json(mapped);
   } catch (error) {

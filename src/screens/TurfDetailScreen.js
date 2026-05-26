@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Star, MapPin, Clock, Users, Wifi, ShieldCheck, Coffee, Zap, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Star, MapPin, Clock, Users, Wifi, ShieldCheck, Coffee, Zap, ChevronRight, Phone, Mail, Info } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
@@ -156,6 +156,31 @@ const TurfDetailScreen = ({ route, navigation }) => {
             {turf?.description || 'Experience play on our world-class FIFA-pro synthetic grass. Perfect for high-intensity matches with advanced lighting and premium facilities.'}
           </Text>
 
+          {/* Ground Details (Timing, Size, Surface) */}
+          <View style={styles.detailsContainer}>
+            <View style={styles.detailItem}>
+              <Clock size={16} color={Colors.primary} />
+              <View style={styles.detailItemTextCol}>
+                <Text style={styles.detailItemLabel}>Timing</Text>
+                <Text style={styles.detailItemVal}>{turf?.openingTime || '06:00'} - {turf?.closingTime || '23:00'}</Text>
+              </View>
+            </View>
+            <View style={styles.detailItem}>
+              <Users size={16} color={Colors.primary} />
+              <View style={styles.detailItemTextCol}>
+                <Text style={styles.detailItemLabel}>Size</Text>
+                <Text style={styles.detailItemVal}>{turf?.groundSize || 'Standard'}</Text>
+              </View>
+            </View>
+            <View style={styles.detailItem}>
+              <Info size={16} color={Colors.primary} />
+              <View style={styles.detailItemTextCol}>
+                <Text style={styles.detailItemLabel}>Surface</Text>
+                <Text style={styles.detailItemVal} numberOfLines={1}>{turf?.groundType || 'Synthetic'}</Text>
+              </View>
+            </View>
+          </View>
+
           {/* Amenities Grid */}
           <Text style={styles.sectionTitle}>Amenities</Text>
           <View style={styles.amenitiesGrid}>
@@ -183,6 +208,38 @@ const TurfDetailScreen = ({ route, navigation }) => {
               <View style={styles.safetyBox}>
                 <ShieldCheck size={18} color={Colors.primary} />
                 <Text style={styles.safetyText}>{turf.safetyGuidelines}</Text>
+              </View>
+            </>
+          )}
+
+          {/* Cancellation Policy */}
+          {turf?.cancellationPolicyText && (
+            <>
+              <Text style={styles.sectionTitle}>Cancellation Policy</Text>
+              <View style={styles.policyBox}>
+                <Info size={16} color="#e65100" />
+                <Text style={styles.policyText}>{turf.cancellationPolicyText}</Text>
+              </View>
+            </>
+          )}
+
+          {/* Contact Details */}
+          {(turf?.contactPhone || turf?.contactEmail) && (
+            <>
+              <Text style={styles.sectionTitle}>Contact Venue</Text>
+              <View style={styles.contactCard}>
+                {turf?.contactPhone && (
+                  <View style={styles.contactRow}>
+                    <Phone size={16} color={Colors.primary} />
+                    <Text style={styles.contactText}>{turf.contactPhone}</Text>
+                  </View>
+                )}
+                {turf?.contactEmail && (
+                  <View style={styles.contactRow}>
+                    <Mail size={16} color={Colors.primary} />
+                    <Text style={styles.contactText}>{turf.contactEmail}</Text>
+                  </View>
+                )}
               </View>
             </>
           )}
@@ -502,6 +559,76 @@ const styles = StyleSheet.create({
     backgroundColor: '#8BC34A',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  detailsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    marginBottom: 24,
+    gap: 10,
+  },
+  detailItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailItemTextCol: {
+    flex: 1,
+  },
+  detailItemLabel: {
+    fontSize: 11,
+    color: Colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  detailItemVal: {
+    fontSize: 13,
+    color: Colors.onBackground,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  policyBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#fff3e0',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ffe0b2',
+    marginBottom: 24,
+  },
+  policyText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#e65100',
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+  contactCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    marginBottom: 24,
+    gap: 12,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  contactText: {
+    fontSize: 14,
+    color: Colors.onBackground,
+    fontWeight: '600',
   },
 });
 

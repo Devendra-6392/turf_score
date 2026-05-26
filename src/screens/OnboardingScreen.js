@@ -6,11 +6,12 @@ import {
   FlatList, 
   Dimensions, 
   Image, 
-  TouchableOpacity
+  TouchableOpacity,
+  Platform,
+  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
-import PremiumButton from '../components/PremiumButton';
 import { ChevronRight } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -20,19 +21,16 @@ const SLIDES = [
     id: '1',
     title: 'Precision Playing Surfaces',
     description: 'Access the most elite synthetic and natural grass pitches vetted by pro scouts.',
-    image: require('../assets/onboarding1.png'),
   },
   {
     id: '2',
     title: 'Elite Club Membership',
     description: 'Unlock priority booking, premium locker rooms, and exclusive tournament entry.',
-    image: require('../assets/onboarding2.png'),
   },
   {
     id: '3',
     title: 'Kinetically Optimized',
     description: 'The fastest way to secure your spot and start playing. Performance at your fingertips.',
-    image: require('../assets/onboarding1.png'), // Reusing or using another
   }
 ];
 
@@ -49,7 +47,19 @@ const OnboardingScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      {/* Wavy header topography pattern */}
+      <View style={styles.topHeaderContainer}>
+        <Image 
+          source={require('../assets/green_topography.png')} 
+          style={styles.headerPattern} 
+          resizeMode="cover"
+        />
+      </View>
+
+      {/* Slide Text Content */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -62,17 +72,16 @@ const OnboardingScreen = ({ navigation }) => {
         }}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            <View style={styles.imageContainer}>
-              <Image source={item.image} style={styles.image} resizeMode="cover" />
-            </View>
             <View style={styles.textContainer}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.description}>{item.description}</Text>
             </View>
           </View>
         )}
+        style={styles.flatList}
       />
 
+      {/* Footer containing pagination & continue button */}
       <View style={styles.footer}>
         <View style={styles.pagination}>
           {SLIDES.map((_, i) => (
@@ -86,20 +95,20 @@ const OnboardingScreen = ({ navigation }) => {
           ))}
         </View>
 
-        <PremiumButton 
-          title={currentIndex === SLIDES.length - 1 ? "Get Started" : "Continue"} 
-          onPress={handleNext}
-          style={styles.button}
-        />
-        
         <TouchableOpacity 
-          onPress={() => navigation.replace('Login')}
-          style={styles.skipBtn}
+          onPress={handleNext}
+          style={styles.continueRow}
+          activeOpacity={0.8}
         >
-          <Text style={styles.skipText}>Skip introduction</Text>
+          <Text style={styles.continueText}>
+            {currentIndex === SLIDES.length - 1 ? "Get Started" : "Continue"}
+          </Text>
+          <View style={styles.continueCircle}>
+            <ChevronRight size={18} color="#fff" />
+          </View>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -108,72 +117,88 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  slide: {
-    width,
-    alignItems: 'center',
-  },
-  imageContainer: {
-    width: width * 0.9,
-    height: height * 0.45,
-    borderRadius: 40,
+  topHeaderContainer: {
+    width: '100%',
+    height: height * 0.55,
+    position: 'relative',
     overflow: 'hidden',
-    marginTop: 40,
-    backgroundColor: Colors.surfaceContainerLow,
   },
-  image: {
+  headerPattern: {
     width: '100%',
     height: '100%',
   },
+  flatList: {
+    flex: 1,
+  },
+  slide: {
+    width,
+    paddingHorizontal: 32,
+    justifyContent: 'center',
+    paddingTop: 10,
+  },
   textContainer: {
-    paddingHorizontal: 40,
-    marginTop: 40,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
     color: Colors.onBackground,
-    textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: Platform.OS === 'ios' ? 44 : 32,
+    backgroundColor: Colors.background,
   },
   pagination: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.surfaceContainerHighest,
-    marginHorizontal: 4,
-  },
-  activeDot: {
-    width: 24,
-    backgroundColor: Colors.primary,
-  },
-  button: {
-    width: '100%',
-  },
-  skipBtn: {
-    marginTop: 20,
     alignItems: 'center',
   },
-  skipText: {
-    color: Colors.onSurfaceVariant,
-    fontSize: 14,
-    fontWeight: '600',
-  }
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.outline,
+    marginHorizontal: 3,
+  },
+  activeDot: {
+    width: 18,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary,
+  },
+  continueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  continueText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  continueCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
 });
 
 export default OnboardingScreen;

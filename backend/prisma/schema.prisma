@@ -200,18 +200,23 @@ model Turf {
   teams                 Team[]
 
   // Expert additions:
-  contactPhone     String?   @db.VarChar(20)
-  contactEmail     String?   @db.VarChar(255)
-  openingTime      String    @default("06:00") @db.VarChar(10)
-  closingTime      String    @default("23:00") @db.VarChar(10)
-  isActive         Boolean   @default(true)
-  isFeatured       Boolean   @default(false)
-  googleMapsUrl    String?   @db.Text
-  safetyGuidelines String?   @db.Text
-  rulesOfVenue     Json      @default("[]")
-  entryQrToken     String?   @unique @db.VarChar(64)
-  qrEnabled        Boolean   @default(true)
-  qrUpdatedAt      DateTime?
+  contactPhone           String?   @db.VarChar(20)
+  contactEmail           String?   @db.VarChar(255)
+  openingTime            String    @default("06:00") @db.VarChar(10)
+  closingTime            String    @default("23:00") @db.VarChar(10)
+  isActive               Boolean   @default(true)
+  isFeatured             Boolean   @default(false)
+  googleMapsUrl          String?   @db.Text
+  safetyGuidelines       String?   @db.Text
+  rulesOfVenue           Json      @default("[]")
+  entryQrToken           String?   @unique @db.VarChar(64)
+  qrEnabled              Boolean   @default(true)
+  qrUpdatedAt            DateTime?
+  pricePerHour           Float     @default(1000.0)
+  imageUrl               String?   @db.Text
+  groundSize             String?   @db.VarChar(100)
+  groundType             String?   @db.VarChar(100)
+  cancellationPolicyText String?   @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

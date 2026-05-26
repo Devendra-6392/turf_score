@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { 
-  View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, 
+import {
+  View, Text, ScrollView, Image, StyleSheet, TouchableOpacity,
   StatusBar, ActivityIndicator, Dimensions, FlatList, ImageBackground,
   Platform, Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
+import {
   Search, MapPin, Star, QrCode, ChevronRight, Wallet
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
@@ -73,12 +73,12 @@ const bannerStyles = StyleSheet.create({
 const RecommendedCard = memo(({ turf, onPress }) => (
   <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.recCard}>
     <View style={styles.recImageContainer}>
-      <Image 
-        source={{ uri: turf.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }} 
-        style={styles.recImage} 
+      <Image
+        source={{ uri: turf.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }}
+        style={styles.recImage}
       />
-      <LinearGradient 
-        colors={['transparent', 'rgba(0,0,0,0.65)']} 
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.65)']}
         style={styles.recImageOverlay}
       />
       <View style={styles.recOverlayInfo}>
@@ -107,8 +107,8 @@ const RecommendedCard = memo(({ turf, onPress }) => (
 // ─── Nearby Card ────────────────────────────────────────────
 const NearbyCard = memo(({ turf, onPress }) => (
   <TouchableOpacity activeOpacity={0.88} onPress={onPress} style={styles.nearbyCard}>
-    <Image 
-      source={{ uri: turf.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80' }} 
+    <Image
+      source={{ uri: turf.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80' }}
       style={styles.nearbyImage}
     />
     <View style={styles.nearbyBottom}>
@@ -249,147 +249,147 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.headerDark} translucent={false} />
-      
+
       {/* ── Top Header Background ── */}
       <View style={styles.headerBgShape} />
 
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScrollView 
-          showsVerticalScrollIndicator={false} 
+        <ScrollView
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.headerSafe}>
             <View style={styles.userRow}>
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{userName}</Text>
-                  <View style={styles.locationPill}>
-                    <MapPin size={13} color="rgba(255,255,255,0.5)" />
-                    <Text style={styles.locationText} numberOfLines={1}>{currentLocation}</Text>
-                  </View>
-                </View>
-                <View style={styles.headerRightActions}>
-                  <View style={styles.walletPill}>
-                    <Wallet size={13} color="#FFF" />
-                    <Text style={styles.walletBalanceText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('QRScanner')} activeOpacity={0.8}>
-                    <View style={styles.avatarPlaceholder}>
-                      <QrCode size={20} color="#fff" />
-                    </View>
-                  </TouchableOpacity>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName}>{userName}</Text>
+                <View style={styles.locationPill}>
+                  <MapPin size={13} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.locationText} numberOfLines={1}>{currentLocation}</Text>
                 </View>
               </View>
-
-              {/* Search Bar */}
-              <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress} activeOpacity={0.9}>
-                <Search size={18} color="rgba(255,255,255,0.5)" />
-                <Text style={styles.searchPlaceholder}>Search your next play</Text>
-              </TouchableOpacity>
+              <View style={styles.headerRightActions}>
+                <View style={styles.walletPill}>
+                  <Wallet size={13} color="#FFF" />
+                  <Text style={styles.walletBalanceText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
+                </View>
+                <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('QRScanner')} activeOpacity={0.8}>
+                  <View style={styles.avatarPlaceholder}>
+                    <QrCode size={20} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
 
-        {/* ─── Category Chips ─── */}
-        <View style={styles.categorySection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryStrip}
-          >
-            {SPORT_CATEGORIES.map((cat) => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <TouchableOpacity 
-                  key={cat.id}
-                  style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                  onPress={() => handleCategoryPress(cat.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.categoryEmoji}>{cat.icon}</Text>
-                  <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+            {/* Search Bar */}
+            <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress} activeOpacity={0.9}>
+              <Search size={18} color="rgba(255,255,255,0.5)" />
+              <Text style={styles.searchPlaceholder}>Search your next play</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* ─── Banner Slider ─── */}
-        {banners.length > 0 && (
-          <View style={styles.bannerSection}>
-            <FlatList
-              ref={sliderRef}
-              data={banners}
+          {/* ─── Category Chips ─── */}
+          <View style={styles.categorySection}>
+            <ScrollView
               horizontal
-              pagingEnabled
               showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryStrip}
+            >
+              {SPORT_CATEGORIES.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                    onPress={() => handleCategoryPress(cat.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.categoryEmoji}>{cat.icon}</Text>
+                    <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* ─── Banner Slider ─── */}
+          {banners.length > 0 && (
+            <View style={styles.bannerSection}>
+              <FlatList
+                ref={sliderRef}
+                data={banners}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => <BannerSlide item={item} width={BANNER_WIDTH} />}
+                onMomentumScrollEnd={onSliderScroll}
+                snapToInterval={BANNER_WIDTH}
+                decelerationRate="fast"
+                getItemLayout={(_, index) => ({ length: BANNER_WIDTH, offset: BANNER_WIDTH * index, index })}
+              />
+              {banners.length > 1 && (
+                <View style={styles.dotsContainer}>
+                  {banners.map((_, i) => (
+                    <View key={i} style={[styles.dot, activeSlide === i && styles.activeDot]} />
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* ─── Recommended Ground ─── */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recommended Ground</Text>
+            <TouchableOpacity onPress={handleSearchPress}>
+              <Text style={styles.seeAllText}>see all</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loadingTurfs ? (
+            <ActivityIndicator color={Colors.primary} size="large" style={{ marginVertical: 48 }} />
+          ) : recommendedTurfs.length > 0 ? (
+            <FlatList
+              horizontal
+              data={recommendedTurfs}
               keyExtractor={item => item.id}
-              renderItem={({ item }) => <BannerSlide item={item} width={BANNER_WIDTH} />}
-              onMomentumScrollEnd={onSliderScroll}
-              snapToInterval={BANNER_WIDTH}
-              decelerationRate="fast"
-              getItemLayout={(_, index) => ({ length: BANNER_WIDTH, offset: BANNER_WIDTH * index, index })}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recList}
+              renderItem={({ item }) => (
+                <RecommendedCard turf={item} onPress={() => handleTurfPress(item)} />
+              )}
             />
-            {banners.length > 1 && (
-              <View style={styles.dotsContainer}>
-                {banners.map((_, i) => (
-                  <View key={i} style={[styles.dot, activeSlide === i && styles.activeDot]} />
-                ))}
-              </View>
-            )}
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>🏟️</Text>
+              <Text style={styles.emptyTitle}>No turfs found</Text>
+              <Text style={styles.emptySubtitle}>
+                {selectedCategory ? `No ${selectedCategory.toLowerCase()} turfs yet.` : 'No turfs available.'}
+              </Text>
+            </View>
+          )}
+
+          {/* ─── Near By ─── */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Near by</Text>
+            <TouchableOpacity onPress={handleSearchPress}>
+              <Text style={styles.seeAllText}>see all</Text>
+            </TouchableOpacity>
           </View>
-        )}
 
-        {/* ─── Recommended Ground ─── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recommended Ground</Text>
-          <TouchableOpacity onPress={handleSearchPress}>
-            <Text style={styles.seeAllText}>see all</Text>
-          </TouchableOpacity>
-        </View>
+          {!loadingTurfs && nearbyTurfs.length > 0 ? (
+            nearbyTurfs.map((turf) => (
+              <NearbyCard key={turf.id} turf={turf} onPress={() => handleTurfPress(turf)} />
+            ))
+          ) : !loadingTurfs ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>📍</Text>
+              <Text style={styles.emptyTitle}>No nearby turfs</Text>
+            </View>
+          ) : null}
 
-        {loadingTurfs ? (
-          <ActivityIndicator color={Colors.primary} size="large" style={{ marginVertical: 48 }} />
-        ) : recommendedTurfs.length > 0 ? (
-          <FlatList
-            horizontal
-            data={recommendedTurfs}
-            keyExtractor={item => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recList}
-            renderItem={({ item }) => (
-              <RecommendedCard turf={item} onPress={() => handleTurfPress(item)} />
-            )}
-          />
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🏟️</Text>
-            <Text style={styles.emptyTitle}>No turfs found</Text>
-            <Text style={styles.emptySubtitle}>
-              {selectedCategory ? `No ${selectedCategory.toLowerCase()} turfs yet.` : 'No turfs available.'}
-            </Text>
-          </View>
-        )}
-
-        {/* ─── Near By ─── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Near by</Text>
-          <TouchableOpacity onPress={handleSearchPress}>
-            <Text style={styles.seeAllText}>see all</Text>
-          </TouchableOpacity>
-        </View>
-
-        {!loadingTurfs && nearbyTurfs.length > 0 ? (
-          nearbyTurfs.map((turf) => (
-            <NearbyCard key={turf.id} turf={turf} onPress={() => handleTurfPress(turf)} />
-          ))
-        ) : !loadingTurfs ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📍</Text>
-            <Text style={styles.emptyTitle}>No nearby turfs</Text>
-          </View>
-        ) : null}
-
-      </ScrollView>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
