@@ -1,6 +1,6 @@
 const prisma = require('../config/db');
 
-const ALLOWED_TEAM_SPORTS = ['CRICKET', 'TENNIS', 'BASKETBALL'];
+const ALLOWED_TEAM_SPORTS = ['CRICKET', 'TENNIS', 'BASKETBALL', 'FOOTBALL', 'VOLLEYBALL'];
 const MAX_TEAM_MEMBERS = 8;
 
 const teamInclude = {
@@ -26,25 +26,47 @@ exports.getMyTeams = async (req, res) => {
 
 exports.createTeam = async (req, res) => {
   try {
-    const { name, sportType, memberEmails = [] } = req.body;
+    const { name, sportType, members = [] } = req.body;
     const normalizedSport = String(sportType || '').toUpperCase();
     if (!name?.trim() || !ALLOWED_TEAM_SPORTS.includes(normalizedSport)) {
       return res.status(400).json({ error: 'Team name and a supported sport are required' });
     }
 
     const captain = await prisma.user.findUnique({ where: { id: req.userId } });
-    const emails = [...new Set(memberEmails.map((email) => String(email).trim().toLowerCase()).filter(Boolean))]
-      .filter((email) => email !== captain.email.toLowerCase());
-    if (emails.length + 1 > MAX_TEAM_MEMBERS) {
+    
+    const validMembersMap = new Map();
+    members.forEach(m => {
+      const email = String(m.email || '').trim().toLowerCase();
+      if (email && email !== captain.email.toLowerCase()) {
+        validMembersMap.set(email, {
+          email: email,
+          name: m.name ? String(m.name).trim() : null,
+          position: m.position ? String(m.position).trim() : null
+        });
+      }
+    });
+    
+    const uniqueMembers = Array.from(validMembersMap.values());
+
+    if (uniqueMembers.length + 1 > MAX_TEAM_MEMBERS) {
       return res.status(400).json({ error: 'A team can contain a maximum of 8 players including the captain' });
     }
 
-    const invitedUsers = await prisma.user.findMany({ where: { email: { in: emails } } });
-    const foundEmails = new Set(invitedUsers.map((user) => user.email.toLowerCase()));
-    const missingEmails = emails.filter((email) => !foundEmails.has(email));
-    if (missingEmails.length) {
-      return res.status(400).json({ error: `These players must register first: ${missingEmails.join(', ')}` });
-    }
+    const emails = uniqueMembers.map(m => m.email);
+    const existingUsers = await prisma.user.findMany({ where: { email: { in: emails } } });
+    const emailToUserId = {};
+    existingUsers.forEach(u => { emailToUserId[u.email.toLowerCase()] = u.id; });
+
+    const membersToCreate = [
+      { userId: req.userId, role: 'CAPTAIN' },
+      ...uniqueMembers.map(m => ({
+        userId: emailToUserId[m.email] || null,
+        email: m.email,
+        name: m.name,
+        position: m.position,
+        role: 'PLAYER'
+      }))
+    ];
 
     const team = await prisma.team.create({
       data: {
@@ -52,10 +74,7 @@ exports.createTeam = async (req, res) => {
         sportType: normalizedSport,
         captainId: req.userId,
         members: {
-          create: [
-            { userId: req.userId, role: 'CAPTAIN' },
-            ...invitedUsers.map((user) => ({ userId: user.id, role: 'PLAYER' }))
-          ]
+          create: membersToCreate
         }
       },
       include: teamInclude
@@ -63,6 +82,81 @@ exports.createTeam = async (req, res) => {
     res.status(201).json(team);
   } catch (error) {
     res.status(500).json({ error: error.message || 'Failed to create team' });
+  }
+};
+
+exports.editTeam = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { name, sportType, members = [] } = req.body;
+    
+    const team = await prisma.team.findFirst({ where: { id: teamId, captainId: req.userId } });
+    if (!team) return res.status(404).json({ error: 'Team not found or unauthorized' });
+
+    const normalizedSport = String(sportType || '').toUpperCase();
+    if (!name?.trim() || !ALLOWED_TEAM_SPORTS.includes(normalizedSport)) {
+      return res.status(400).json({ error: 'Team name and a supported sport are required' });
+    }
+
+    const captain = await prisma.user.findUnique({ where: { id: req.userId } });
+    
+    const validMembersMap = new Map();
+    members.forEach(m => {
+      const email = String(m.email || '').trim().toLowerCase();
+      if (email && email !== captain.email.toLowerCase()) {
+        validMembersMap.set(email, {
+          email: email,
+          name: m.name ? String(m.name).trim() : null,
+          position: m.position ? String(m.position).trim() : null
+        });
+      }
+    });
+    
+    const uniqueMembers = Array.from(validMembersMap.values());
+    if (uniqueMembers.length + 1 > MAX_TEAM_MEMBERS) {
+      return res.status(400).json({ error: 'A team can contain a maximum of 8 players including the captain' });
+    }
+
+    const emails = uniqueMembers.map(m => m.email);
+    const existingUsers = await prisma.user.findMany({ where: { email: { in: emails } } });
+    const emailToUserId = {};
+    existingUsers.forEach(u => { emailToUserId[u.email.toLowerCase()] = u.id; });
+
+    const updatedTeam = await prisma.$transaction(async (tx) => {
+      await tx.team.update({
+        where: { id: teamId },
+        data: {
+          name: name.trim(),
+          sportType: normalizedSport,
+        }
+      });
+      
+      await tx.teamMember.deleteMany({
+        where: { teamId, role: { not: 'CAPTAIN' } }
+      });
+
+      if (uniqueMembers.length > 0) {
+        await tx.teamMember.createMany({
+          data: uniqueMembers.map(m => ({
+            teamId,
+            userId: emailToUserId[m.email] || null,
+            email: m.email,
+            name: m.name,
+            position: m.position,
+            role: 'PLAYER'
+          }))
+        });
+      }
+
+      return tx.team.findUnique({
+        where: { id: teamId },
+        include: teamInclude
+      });
+    });
+
+    res.json(updatedTeam);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Failed to update team' });
   }
 };
 

@@ -10,6 +10,7 @@ const bookingRoutes = require('./src/routes/bookingRoutes');
 const teamRoutes = require('./src/routes/teamRoutes');
 const checkInRoutes = require('./src/routes/checkInRoutes');
 const bannerRoutes = require('./src/routes/bannerRoutes');
+const challengeRoutes = require('./src/routes/challengeRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/check-ins', checkInRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/challenges', challengeRoutes);
 
 // Database check and Start
 const prisma = require('./src/config/db');

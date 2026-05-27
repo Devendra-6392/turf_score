@@ -10,7 +10,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 
 // ─── Amenity Icon Mapper ────────────────────────────────────
 const AMENITY_DATA = {
@@ -217,7 +217,7 @@ const TurfDetailScreen = ({ route, navigation }) => {
             <>
               <Text style={styles.sectionTitle}>Cancellation Policy</Text>
               <View style={styles.policyBox}>
-                <Info size={16} color="#e65100" />
+                <Info size={16} color={Colors.warning} />
                 <Text style={styles.policyText}>{turf.cancellationPolicyText}</Text>
               </View>
             </>
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   bookBtnArrow: {
     width: 40, height: 40,
     borderRadius: 20,
-    backgroundColor: '#8BC34A',
+    backgroundColor: Colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -597,17 +597,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: '#fff3e0',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)', // Light warning color
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#ffe0b2',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
     marginBottom: 24,
   },
   policyText: {
     flex: 1,
     fontSize: 14,
-    color: '#e65100',
+    color: Colors.warning,
     lineHeight: 22,
     fontWeight: '500',
   },

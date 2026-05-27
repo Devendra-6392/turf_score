@@ -13,22 +13,31 @@ import {
   StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, QrCode, Trash2, Users } from 'lucide-react-native';
+import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
-const SPORTS = ['CRICKET', 'TENNIS', 'BASKETBALL'];
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];
+
+const SPORT_POSITIONS = {
+  CRICKET: ['Batsman', 'Bowler', 'All-rounder', 'Wicket Keeper'],
+  FOOTBALL: ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'],
+  BASKETBALL: ['Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center'],
+  VOLLEYBALL: ['Setter', 'Outside Hitter', 'Middle Blocker', 'Libero'],
+  TENNIS: ['Player']
+};
 
 export default function TeamsScreen({ navigation }) {
   const { token, user } = useAuth();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingTeam, setEditingTeam] = useState(null);
   const [name, setName] = useState('');
   const [sportType, setSportType] = useState('CRICKET');
-  const [memberEmails, setMemberEmails] = useState(['']);
+  const [members, setMembers] = useState([{ email: '', name: '', position: '' }]);
 
   const loadTeams = useCallback(async () => {
     if (!token) return;
@@ -49,26 +58,42 @@ export default function TeamsScreen({ navigation }) {
   }, [loadTeams]);
 
   const resetForm = () => {
+    setEditingTeam(null);
     setName('');
     setSportType('CRICKET');
-    setMemberEmails(['']);
+    setMembers([{ email: '', name: '', position: '' }]);
   };
 
-  const createTeam = async () => {
+  const openEdit = (team) => {
+    setEditingTeam(team);
+    setName(team.name);
+    setSportType(team.sportType);
+    const existingMembers = team.members.filter(m => m.role !== 'CAPTAIN').map(m => ({
+      email: m.email || m.user?.email || '',
+      name: m.name || m.user?.name || '',
+      position: m.position || ''
+    }));
+    setMembers(existingMembers.length ? existingMembers : [{ email: '', name: '', position: '' }]);
+    setOpen(true);
+  };
+
+  const saveTeam = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/teams`, {
-        method: 'POST',
+      const url = editingTeam ? `${BACKEND_URL}/teams/${editingTeam.id}` : `${BACKEND_URL}/teams`;
+      const method = editingTeam ? 'PUT' : 'POST';
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, sportType, memberEmails })
+        body: JSON.stringify({ name, sportType, members })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Could not create team');
+      if (!response.ok) throw new Error(data.error || 'Could not save team');
       setOpen(false);
       resetForm();
       loadTeams();
-      Toast.show({ type: 'success', text1: 'Team created', text2: 'Your squad is ready to book.' });
+      Toast.show({ type: 'success', text1: editingTeam ? 'Team updated' : 'Team created', text2: 'Your squad is ready.' });
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Could not create team', text2: error.message });
+      Toast.show({ type: 'error', text1: 'Error', text2: error.message });
     }
   };
 
@@ -105,7 +130,7 @@ export default function TeamsScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.createButton} onPress={() => setOpen(true)} activeOpacity={0.88}>
+        <TouchableOpacity style={styles.createButton} onPress={() => { resetForm(); setOpen(true); }} activeOpacity={0.88}>
           <Plus size={20} color="#fff" />
           <Text style={styles.createButtonText}>Create New Team</Text>
         </TouchableOpacity>
@@ -134,9 +159,14 @@ export default function TeamsScreen({ navigation }) {
                     </View>
                   </View>
                   {item.captainId === user?.id && (
-                    <TouchableOpacity onPress={() => deleteTeam(item)} style={styles.deleteBtn} activeOpacity={0.7}>
-                      <Trash2 size={16} color="#DC2626" />
-                    </TouchableOpacity>
+                    <View style={{flexDirection: 'row', gap: 8}}>
+                      <TouchableOpacity onPress={() => openEdit(item)} style={[styles.deleteBtn, {backgroundColor: '#E0F2FE'}]} activeOpacity={0.7}>
+                        <Text style={{color: Colors.primary, fontSize: 12, fontWeight: 'bold'}}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => deleteTeam(item)} style={styles.deleteBtn} activeOpacity={0.7}>
+                        <Trash2 size={16} color={Colors.error} />
+                      </TouchableOpacity>
+                    </View>
                   )}
                 </View>
                 
@@ -152,8 +182,9 @@ export default function TeamsScreen({ navigation }) {
                     <View key={member.id} style={styles.memberItem}>
                       <View style={styles.memberDot} />
                       <Text style={styles.memberName} numberOfLines={1}>
-                        {member.user.name || member.user.email}
+                        {member.name || member.user?.name || member.email || member.user?.email || 'Unknown Player'}
                         {member.role === 'CAPTAIN' ? ' (Captain)' : ''}
+                        {member.position ? ` • ${member.position}` : ''}
                       </Text>
                     </View>
                   ))}
@@ -169,7 +200,7 @@ export default function TeamsScreen({ navigation }) {
           <View style={styles.modal}>
             <View style={styles.modalHeaderIndicator} />
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalTitle}>Create Team</Text>
+              <Text style={styles.modalTitle}>{editingTeam ? 'Edit Team' : 'Create Team'}</Text>
               <TextInput 
                 style={styles.input} 
                 value={name} 
@@ -180,39 +211,105 @@ export default function TeamsScreen({ navigation }) {
               
               <Text style={styles.sectionLabel}>Sport Category</Text>
               <View style={styles.sportRow}>
-                {SPORTS.map((sport) => {
-                  const isActive = sport === sportType;
-                  return (
-                    <TouchableOpacity 
-                      key={sport} 
-                      style={[styles.sportChip, isActive && styles.sportChipActive]} 
-                      onPress={() => setSportType(sport)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[styles.sportChipText, isActive && styles.sportChipTextActive]}>{sport}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {SPORTS.map((sport) => {
+                    const isActive = sport === sportType;
+                    return (
+                      <TouchableOpacity 
+                        key={sport} 
+                        style={[styles.sportChip, isActive && styles.sportChipActive, {marginRight: 8}]} 
+                        onPress={() => setSportType(sport)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.sportChipText, isActive && styles.sportChipTextActive]}>{sport}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
               
               <Text style={styles.sectionLabel}>Invite Teammates</Text>
-              <Text style={styles.hint}>Add teammate email addresses. Invited players must already have an account.</Text>
+              <Text style={styles.hint}>Add teammate details. They will be linked if they register with this email.</Text>
               
-              {memberEmails.map((email, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.input}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={(value) => setMemberEmails(memberEmails.map((item, i) => i === index ? value : item))}
-                  placeholder={`Player ${index + 2} email`}
-                  placeholderTextColor="rgba(0,0,0,0.3)"
-                />
+              {members.map((member, index) => (
+                <View key={index} style={styles.memberInputCard}>
+                  <View style={styles.memberCardHeader}>
+                    <View style={styles.memberBadge}>
+                      <Text style={styles.memberBadgeText}>Player {index + 1}</Text>
+                    </View>
+                    {members.length > 1 && (
+                      <TouchableOpacity onPress={() => setMembers(members.filter((_, i) => i !== index))} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                        <Trash2 size={16} color={Colors.error} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
+                  <View style={styles.inputWrapper}>
+                    <Mail size={16} color="rgba(0,0,0,0.4)" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.inputWithIcon}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      value={member.email}
+                      onChangeText={(val) => {
+                        const newM = [...members];
+                        newM[index].email = val;
+                        setMembers(newM);
+                      }}
+                      placeholder="Email Address"
+                      placeholderTextColor="rgba(0,0,0,0.3)"
+                    />
+                  </View>
+                  
+                  <View style={styles.inputWrapper}>
+                    <UserIcon size={16} color="rgba(0,0,0,0.4)" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.inputWithIcon}
+                      value={member.name}
+                      onChangeText={(val) => {
+                        const newM = [...members];
+                        newM[index].name = val;
+                        setMembers(newM);
+                      }}
+                      placeholder="Name (Optional)"
+                      placeholderTextColor="rgba(0,0,0,0.3)"
+                    />
+                  </View>
+                  
+                  {SPORT_POSITIONS[sportType] && (
+                    <View style={styles.positionWrapper}>
+                      <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 4}}>
+                        <Shield size={14} color={Colors.onSurfaceVariant} />
+                        <Text style={styles.positionLabel}>Select Position</Text>
+                      </View>
+                      <View style={styles.positionRow}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {SPORT_POSITIONS[sportType].map(pos => {
+                              const isActive = member.position === pos;
+                              return (
+                                <TouchableOpacity
+                                  key={pos}
+                                  style={[styles.sportChip, isActive && styles.sportChipActive, {marginRight: 8, paddingVertical: 8, paddingHorizontal: 14}]}
+                                  onPress={() => {
+                                    const newM = [...members];
+                                    newM[index].position = pos;
+                                    setMembers(newM);
+                                  }}
+                                  activeOpacity={0.7}
+                                >
+                                  <Text style={[styles.sportChipText, isActive && styles.sportChipTextActive, {fontSize: 12}]}>{pos}</Text>
+                                </TouchableOpacity>
+                              );
+                          })}
+                        </ScrollView>
+                      </View>
+                    </View>
+                  )}
+                </View>
               ))}
               
-              {memberEmails.length < 7 && (
-                <TouchableOpacity style={styles.addPlayer} onPress={() => setMemberEmails([...memberEmails, ''])} activeOpacity={0.7}>
+              {members.length < 7 && (
+                <TouchableOpacity style={styles.addPlayer} onPress={() => setMembers([...members, {email: '', name: '', position: ''}])} activeOpacity={0.7}>
                   <Plus size={16} color={Colors.primary} />
                   <Text style={styles.addPlayerText}>Add Teammate</Text>
                 </TouchableOpacity>
@@ -223,8 +320,8 @@ export default function TeamsScreen({ navigation }) {
               <TouchableOpacity style={styles.cancel} onPress={() => { setOpen(false); resetForm(); }} activeOpacity={0.8}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.save} onPress={createTeam} disabled={!name.trim()} activeOpacity={0.8}>
-                <Text style={styles.saveText}>Create Team</Text>
+              <TouchableOpacity style={styles.save} onPress={saveTeam} disabled={!name.trim()} activeOpacity={0.8}>
+                <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -325,7 +422,7 @@ const styles = StyleSheet.create({
   
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modal: { 
-    maxHeight: '85%', 
+    maxHeight: '92%', 
     backgroundColor: Colors.background, 
     borderTopLeftRadius: 32, 
     borderTopRightRadius: 32, 
@@ -356,7 +453,7 @@ const styles = StyleSheet.create({
     color: Colors.onBackground,
     fontSize: 14
   },
-  sportRow: { flexDirection: 'row', gap: 8, marginBottom: 15 },
+  sportRow: { flexDirection: 'row', marginBottom: 15 },
   sportChip: { 
     paddingVertical: 10, 
     paddingHorizontal: 16, 
@@ -369,6 +466,61 @@ const styles = StyleSheet.create({
   sportChipText: { fontSize: 12, fontWeight: '750', color: Colors.onSurfaceVariant },
   sportChipTextActive: { color: '#fff' },
   hint: { color: Colors.onSurfaceVariant, fontSize: 12, lineHeight: 18, marginBottom: 12 },
+  
+  memberInputCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight
+  },
+  memberCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14
+  },
+  memberBadge: {
+    backgroundColor: 'rgba(75, 122, 47, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8
+  },
+  memberBadgeText: {
+    color: Colors.primary,
+    fontWeight: '800',
+    fontSize: 12
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    paddingHorizontal: 14
+  },
+  inputIcon: {
+    marginRight: 8
+  },
+  inputWithIcon: {
+    flex: 1,
+    paddingVertical: 14,
+    color: Colors.onBackground,
+    fontSize: 14
+  },
+  positionWrapper: {
+    marginTop: 4
+  },
+  positionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.onSurfaceVariant
+  },
+  positionRow: { flexDirection: 'row' },
+  
   addPlayer: { flexDirection: 'row', gap: 6, paddingVertical: 12, alignItems: 'center' },
   addPlayerText: { color: Colors.primary, fontWeight: '750', fontSize: 13 },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 16 },

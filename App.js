@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -18,6 +18,9 @@ import BookingDetailScreen from './src/screens/BookingDetailScreen';
 import BookSlotScreen from './src/screens/BookSlotScreen';
 import TeamsScreen from './src/screens/TeamsScreen';
 import QRScannerScreen from './src/screens/QRScannerScreen';
+import ChallengesScreen from './src/screens/ChallengesScreen';
+import CreateChallengeScreen from './src/screens/CreateChallengeScreen';
+import ChallengeDetailScreen from './src/screens/ChallengeDetailScreen';
 import AttractiveBottomTab from './src/components/AttractiveBottomTab';
 import AnimatedScreenWrapper from './src/components/AnimatedScreenWrapper';
 import { AuthProvider } from './src/context/AuthContext';
@@ -37,6 +40,9 @@ const TabNavigator = () => (
     </Tab.Screen>
     <Tab.Screen name="Search">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><SearchScreen {...props} /></AnimatedScreenWrapper>}
+    </Tab.Screen>
+    <Tab.Screen name="Challenges">
+      {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><ChallengesScreen {...props} /></AnimatedScreenWrapper>}
     </Tab.Screen>
     <Tab.Screen name="Teams">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><TeamsScreen {...props} /></AnimatedScreenWrapper>}
@@ -66,6 +72,9 @@ export default function App() {
           <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
           <Stack.Screen name="QRScanner" component={QRScannerScreen} />
           <Stack.Screen name="Search" component={SearchScreen} />
+          <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
+          <Stack.Screen name="ChallengeDetail" component={ChallengeDetailScreen} />
+          <Stack.Screen name="ChallengeDetailByShare" component={ChallengeDetailScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} position="top" topOffset={50} />

@@ -91,6 +91,19 @@ enum TransactionStatus {
   FAILED
 }
 
+enum ChallengeStatus {
+  OPEN
+  ACCEPTED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
+enum ChallengeType {
+  INDIVIDUAL
+  TEAM
+}
+
 enum NotificationType {
   BOOKING_CONFIRMATION
   REMINDER
@@ -161,6 +174,8 @@ model User {
   supportTickets       SupportTicket[]
   teamsOwned           Team[]                @relation("TeamCaptain")
   teamMemberships      TeamMember[]
+  createdChallenges    Challenge[]           @relation("CreatedChallenges")
+  acceptedChallenges   Challenge[]           @relation("AcceptedChallenges")
 
   // Expert additions:
   gender         String?    @db.VarChar(20)
@@ -198,6 +213,7 @@ model Turf {
   favorites             Favorite[]
   admins                AdminPanelUser[]
   teams                 Team[]
+  challenges            Challenge[]
 
   // Expert additions:
   contactPhone           String?   @db.VarChar(20)
@@ -296,10 +312,12 @@ model Team {
   captain   User         @relation("TeamCaptain", fields: [captainId], references: [id], onDelete: Cascade)
   turfId    String?      @db.VarChar(36)
   turf      Turf?        @relation(fields: [turfId], references: [id])
-  members   TeamMember[]
-  bookings  Booking[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  members              TeamMember[]
+  bookings             Booking[]
+  challengerChallenges Challenge[]  @relation("ChallengerTeam")
+  opponentChallenges   Challenge[]  @relation("OpponentTeam")
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@index([captainId])
 }
@@ -308,12 +326,15 @@ model TeamMember {
   id       String   @id @default(uuid()) @db.VarChar(36)
   teamId   String   @db.VarChar(36)
   team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId   String   @db.VarChar(36)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String?  @db.VarChar(36)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email    String?  @db.VarChar(255)
+  name     String?  @db.VarChar(255)
   role     String   @default("PLAYER") @db.VarChar(20)
+  position String?  @db.VarChar(50)
   joinedAt DateTime @default(now())
 
-  @@unique([teamId, userId])
+  @@unique([teamId, email])
   @@index([userId])
 }
 
@@ -633,4 +654,52 @@ model Banner {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// CHALLENGE SYSTEM
+// ============================================
+
+model Challenge {
+  id               String          @id @default(uuid()) @db.VarChar(36)
+  title            String          @db.VarChar(255)
+  description      String?         @db.Text
+  sportType        SportType
+  type             ChallengeType   @default(INDIVIDUAL)
+  status           ChallengeStatus @default(OPEN)
+
+  creatorId        String          @db.VarChar(36)
+  creator          User            @relation("CreatedChallenges", fields: [creatorId], references: [id])
+
+  challengerTeamId String?         @db.VarChar(36)
+  challengerTeam   Team?           @relation("ChallengerTeam", fields: [challengerTeamId], references: [id])
+
+  opponentId       String?         @db.VarChar(36)
+  opponent         User?           @relation("AcceptedChallenges", fields: [opponentId], references: [id])
+
+  opponentTeamId   String?         @db.VarChar(36)
+  opponentTeam     Team?           @relation("OpponentTeam", fields: [opponentTeamId], references: [id])
+
+  turfId           String?         @db.VarChar(36)
+  turf             Turf?           @relation(fields: [turfId], references: [id])
+
+  scheduledDate    String?         @db.VarChar(20)
+  scheduledTime    String?         @db.VarChar(10)
+
+  skillLevel       String          @default("ALL") @db.VarChar(50)
+  maxPlayers       Int             @default(10)
+  message          String?         @db.Text
+  shareCode        String          @unique @default(uuid()) @db.VarChar(36)
+  isPublic         Boolean         @default(true)
+
+  expiresAt        DateTime?
+  acceptedAt       DateTime?
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([sportType])
+  @@index([shareCode])
 }
