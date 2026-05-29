@@ -11,7 +11,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const CARD_WIDTH = SCREEN_WIDTH - 32;
 
 const ChallengesScreen = ({ navigation }) => {
@@ -68,7 +68,7 @@ const ChallengesScreen = ({ navigation }) => {
       activeOpacity={0.8}
     >
       <LinearGradient
-        colors={['rgba(138, 43, 226, 0.1)', 'rgba(75, 0, 130, 0.1)']}
+        colors={['rgba(75, 122, 47, 0.1)', 'rgba(107, 142, 35, 0.1)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.challengeCard}
@@ -270,11 +270,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 4,
   },
   createButton: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginBottom: 8,
   },
   filterList: {
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
   },
   filterChipTextActive: {
     color: '#fff',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginHorizontal: 16,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.2)',
+    borderColor: 'rgba(75, 122, 47, 0.2)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   creatorName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   rating: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 2,
   },
   typeBadge: {
@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginBottom: 6,
   },
   description: {
     fontSize: 13,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   stat: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(138, 43, 226, 0.08)',
+    backgroundColor: 'rgba(75, 122, 47, 0.08)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   },
   messageBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 140, 0, 0.1)',
+    backgroundColor: 'rgba(107, 142, 35, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 8,
@@ -426,11 +426,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(138, 43, 226, 0.1)',
+    borderTopColor: 'rgba(75, 122, 47, 0.1)',
   },
   timeText: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
   },
   acceptButton: {
     paddingHorizontal: 12,
@@ -452,12 +452,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 6,
   },
   createFirstButton: {
@@ -477,3 +477,4 @@ const styles = StyleSheet.create({
 });
 
 export default ChallengesScreen;
+

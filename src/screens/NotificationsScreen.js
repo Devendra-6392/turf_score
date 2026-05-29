@@ -8,7 +8,7 @@ import { Bell, ArrowLeft, Share2, Calendar, Trophy, AlertCircle, CheckCircle2 } 
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 const NotificationsScreen = ({ navigation }) => {
   const { token } = useAuth();
@@ -71,12 +71,12 @@ const NotificationsScreen = ({ navigation }) => {
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Go to Challenge', onPress: () => navigation.navigate('ChallengeDetail', { challengeId: item.data.challengeId }) },
-          { 
-            text: 'Share Link', 
+          {
+            text: 'Share Link',
             onPress: () => Share.share({
               message: `I challenge you! Join my match here: exponew://challenge/share/${item.data.shareCode}`,
               title: item.title,
-            }) 
+            })
           }
         ]
       );
@@ -103,7 +103,7 @@ const NotificationsScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
       onPress={() => handleNotificationPress(item)}
     >

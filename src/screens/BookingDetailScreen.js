@@ -12,7 +12,7 @@ import {
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BookingDetailScreen = ({ route, navigation }) => {
@@ -79,7 +79,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.headerDark} />
-      
+
       {/* ── Dark Header Background ── */}
       <View style={styles.headerBg} />
 
@@ -94,7 +94,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          
+
           {/* ── Status Banner ── */}
           <View style={styles.statusBanner}>
             <View style={[styles.statusIconWrap, { backgroundColor: statusConfig.bg }]}>
@@ -106,8 +106,8 @@ const BookingDetailScreen = ({ route, navigation }) => {
                 {booking.status === 'CONFIRMED' || booking.status === 'PAID'
                   ? 'Your turf is ready. Show this at the venue.'
                   : booking.status === 'CANCEL_REQUESTED'
-                  ? 'We are processing your refund.'
-                  : 'This booking has been cancelled.'}
+                    ? 'We are processing your refund.'
+                    : 'This booking has been cancelled.'}
               </Text>
             </View>
           </View>
@@ -119,9 +119,9 @@ const BookingDetailScreen = ({ route, navigation }) => {
               <Text style={styles.cardTitle}>Turf Details</Text>
             </View>
             <View style={styles.turfRow}>
-              <Image 
-                source={{ uri: booking.turf?.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }} 
-                style={styles.turfImage} 
+              <Image
+                source={{ uri: booking.turf?.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }}
+                style={styles.turfImage}
               />
               <View style={styles.turfInfo}>
                 <Text style={styles.turfName}>{booking.turf?.name || 'Turf Arena'}</Text>
@@ -186,8 +186,8 @@ const BookingDetailScreen = ({ route, navigation }) => {
 
           {/* ── Actions ── */}
           {(booking.status === 'CONFIRMED' || booking.status === 'PAID') && (
-            <TouchableOpacity 
-              style={styles.cancelBtn} 
+            <TouchableOpacity
+              style={styles.cancelBtn}
               onPress={handleRequestCancellation}
               disabled={loading}
               activeOpacity={0.8}
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
-  
+
   // ── Status Banner ──
   statusBanner: {
     flexDirection: 'row',
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.onBackground,
   },
-  
+
   // ── Turf Row ──
   turfRow: {
     flexDirection: 'row',

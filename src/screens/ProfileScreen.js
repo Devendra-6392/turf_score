@@ -7,13 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   User, LogOut, Award, Calendar, Edit3, Save, X, Phone, Mail,
-  Clock, CheckCircle, MapPin, ChevronRight, Wallet, Trophy
+  Clock, CheckCircle, MapPin, ChevronRight, Wallet, Trophy,
+  Ticket, MessageSquare
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Challenge Card ──────────────────────────────────────────
@@ -48,7 +49,7 @@ const ChallengeCard = memo(({ challenge, onPress }) => {
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.challengeCardBody}>
         {challenge.creator && (
           <View style={styles.challengeCreatorRow}>
@@ -137,9 +138,9 @@ const BookingCard = memo(({ booking, onPress }) => {
   return (
     <TouchableOpacity onPress={() => onPress(booking)} activeOpacity={0.9} style={styles.bookingCard}>
       <View style={styles.bookingImageContainer}>
-        <Image 
-          source={{ uri: booking.turf?.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }} 
-          style={styles.bookingImage} 
+        <Image
+          source={{ uri: booking.turf?.imageUrl || 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=400&q=80' }}
+          style={styles.bookingImage}
         />
         <View style={[styles.bookingStatusBadge, { backgroundColor: statusStyle.bg }]}>
           <Text style={[styles.bookingStatusText, { color: statusStyle.text }]}>
@@ -442,11 +443,8 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.headerDark} />
-      
-      {/* ── Top Header Background ── */}
-      <View style={styles.headerBg} />
-      
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -463,7 +461,7 @@ const ProfileScreen = ({ navigation }) => {
           {/* ── User Membership Card ── */}
           <View style={styles.userCardContainer}>
             <LinearGradient
-              colors={['#1A1A1A', '#2C2C2C']}
+              colors={Colors.gradient}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.userCard}
             >
@@ -550,6 +548,27 @@ const ProfileScreen = ({ navigation }) => {
               <ChallengeHistorySection challenges={challenges} loading={loadingChallenges} onPress={handleChallengePress} />
             )}
 
+            {/* Additional Options */}
+            {activeTab === 'info' && (
+              <View style={{ marginTop: 20 }}>
+                <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate('Coupons')} activeOpacity={0.8}>
+                  <View style={styles.optionBtnLeft}>
+                    <Ticket size={20} color={Colors.primary} />
+                    <Text style={styles.optionBtnText}>My Coupons</Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.onSurfaceVariant} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate('Support')} activeOpacity={0.8}>
+                  <View style={styles.optionBtnLeft}>
+                    <MessageSquare size={20} color={Colors.primary} />
+                    <Text style={styles.optionBtnText}>Help & Support</Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Logout */}
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
               <LogOut size={20} color={Colors.error} />
@@ -578,7 +597,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120,
   },
-  
+
   // ── Membership Card ──
   userCardContainer: {
     paddingHorizontal: 20,
@@ -737,7 +756,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.onBackground,
   },
-  
+
   // ── Personal Info ──
   infoSection: {},
   editBtn: {
@@ -1070,6 +1089,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: Colors.error,
+  },
+  optionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    marginBottom: 12,
+  },
+  optionBtnLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  optionBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.onBackground,
   },
 });
 

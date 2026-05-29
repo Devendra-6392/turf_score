@@ -19,6 +19,9 @@ const SlotManagement = Loadable(lazy(() => import('pages/management/SlotManageme
 const CheckInManagement = Loadable(lazy(() => import('pages/management/CheckInManagement')));
 const BannerManagement = Loadable(lazy(() => import('pages/management/BannerManagement')));
 const WalletManagement = Loadable(lazy(() => import('pages/management/WalletManagement')));
+const UsersManagement = Loadable(lazy(() => import('pages/management/UsersManagement')));
+const CouponsManagement = Loadable(lazy(() => import('pages/management/CouponsManagement')));
+const SupportTicketsManagement = Loadable(lazy(() => import('pages/management/SupportTicketsManagement')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -73,6 +76,18 @@ const MainRoutes = {
         {
           path: 'wallets',
           element: <WalletManagement />
+        },
+        {
+          path: 'users',
+          element: <UsersManagement />
+        },
+        {
+          path: 'coupons',
+          element: <CouponsManagement />
+        },
+        {
+          path: 'support',
+          element: <SupportTicketsManagement />
         }
       ]
     },

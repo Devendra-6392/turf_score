@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  Dimensions, 
-  Image, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+  Image,
   TouchableOpacity,
   Platform,
   StatusBar
@@ -49,12 +49,12 @@ const OnboardingScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      
+
       {/* Wavy header topography pattern */}
       <View style={styles.topHeaderContainer}>
-        <Image 
-          source={require('../assets/green_topography.png')} 
-          style={styles.headerPattern} 
+        <Image
+          source={require('../assets/green_topography.png')}
+          style={styles.headerPattern}
           resizeMode="cover"
         />
       </View>
@@ -85,17 +85,17 @@ const OnboardingScreen = ({ navigation }) => {
       <View style={styles.footer}>
         <View style={styles.pagination}>
           {SLIDES.map((_, i) => (
-            <View 
-              key={i} 
+            <View
+              key={i}
               style={[
-                styles.dot, 
+                styles.dot,
                 i === currentIndex && styles.activeDot
-              ]} 
+              ]}
             />
           ))}
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={handleNext}
           style={styles.continueRow}
           activeOpacity={0.8}

@@ -27,6 +27,9 @@ import AttractiveBottomTab from './src/components/AttractiveBottomTab';
 import AnimatedScreenWrapper from './src/components/AnimatedScreenWrapper';
 import { AuthProvider } from './src/context/AuthContext';
 
+import CouponsScreen from './src/screens/CouponsScreen';
+import SupportScreen from './src/screens/SupportScreen';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -79,6 +82,8 @@ export default function App() {
           <Stack.Screen name="ChallengeDetailByShare" component={ChallengeDetailScreen} />
           <Stack.Screen name="MatchResult" component={MatchResultScreen} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="Coupons" component={CouponsScreen} />
+          <Stack.Screen name="Support" component={SupportScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} position="top" topOffset={50} />

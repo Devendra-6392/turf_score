@@ -15,11 +15,11 @@ import { useAuth } from '../context/AuthContext';
 import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const BANNER_WIDTH = SCREEN_WIDTH - 40;
 const AUTO_SCROLL_INTERVAL = 5000;
-const HEADER_MAX_HEIGHT = 180;
-const HEADER_MIN_HEIGHT = 80;
+const HEADER_MAX_HEIGHT = 145;
+const HEADER_MIN_HEIGHT = 76;
 
 // ─── Sport Categories ───────────────────────────────────────
 const SPORT_CATEGORIES = [
@@ -145,7 +145,7 @@ const HomeScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [currentLocation, setCurrentLocation] = useState('Detecting...');
-  
+
   // Notifications state
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -185,9 +185,12 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       refreshUser();
+      if (token) {
+        fetchNotifications();
+      }
     });
     return unsubscribe;
-  }, [navigation, refreshUser]);
+  }, [navigation, refreshUser, token]);
 
   useEffect(() => {
     (async () => {
@@ -241,7 +244,29 @@ const HomeScreen = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => { fetchTurfs(); fetchBanners(); }, [fetchTurfs, fetchBanners]);
+  const fetchNotifications = useCallback(async () => {
+    if (!token) return;
+    setLoadingNotifications(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.log('Error fetching notifications', err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchTurfs();
+    fetchBanners();
+    fetchNotifications();
+  }, [fetchTurfs, fetchBanners, fetchNotifications]);
 
   // ── Banner auto-scroll ──
   useEffect(() => {
@@ -281,22 +306,7 @@ const HomeScreen = ({ navigation }) => {
     setSelectedCategory(prev => prev === catId ? null : catId);
   };
 
-  const fetchNotifications = async () => {
-    setLoadingNotifications(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-      }
-    } catch (err) {
-      console.log('Error fetching notifications', err);
-    } finally {
-      setLoadingNotifications(false);
-    }
-  };
+
 
   const openNotifications = () => {
     setShowNotifications(true);
@@ -311,7 +321,7 @@ const HomeScreen = ({ navigation }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, isRead: true } : n));
-      } catch (err) {}
+      } catch (err) { }
     }
 
     if (item.type === 'CHALLENGE_CREATED' && item.data?.shareCode) {
@@ -344,7 +354,7 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" translucent={false} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        
+
         {/* ── ScrollView with Animated Event ── */}
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
@@ -467,41 +477,61 @@ const HomeScreen = ({ navigation }) => {
         ]}>
           <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
             <View style={styles.userRow}>
-              <View style={styles.userInfo}>
-                <Text style={styles.greeting}>Hello,</Text>
-                <Text style={styles.userName}>{userName}</Text>
-                <View style={styles.locationPill}>
-                  <MapPin size={12} color="rgba(255,255,255,0.6)" />
-                  <Text style={styles.locationText} numberOfLines={1}>{currentLocation}</Text>
+              {/* Profile Avatar + Compact Welcome */}
+              <View style={styles.profileSection}>
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarText}>{userName.substring(0, 2).toUpperCase()}</Text>
+                </View>
+                <View style={styles.profileTextWrap}>
+                  <Text style={styles.greetingText}>Hey, {userName} 👋</Text>
+                  <View style={styles.locationContainer}>
+                    <MapPin size={11} color={Colors.primary} />
+                    <Text style={styles.locationLabel} numberOfLines={1}>{currentLocation}</Text>
+                  </View>
                 </View>
               </View>
+
+              {/* Action Buttons */}
               <View style={styles.headerActions}>
-                <TouchableOpacity style={styles.iconButton} onPress={openNotifications}>
-                  <Bell size={22} color="#FFF" />
+                {/* Wallet Balance */}
+                <TouchableOpacity style={styles.walletCompact} activeOpacity={0.8}>
+                  <Wallet size={12} color={Colors.primary} />
+                  <Text style={styles.walletCompactText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.walletButton}>
-                  <Wallet size={16} color="#FFF" />
-                  <Text style={styles.walletText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
+
+                {/* QR Scanner */}
+                <TouchableOpacity style={styles.actionIconBtn} onPress={() => navigation.navigate('QRScanner')} activeOpacity={0.85}>
+                  <QrCode size={16} color="#FFF" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.qrButton} onPress={() => navigation.navigate('QRScanner')}>
-                  <QrCode size={20} color="#FFF" />
+
+                {/* Notification Bell */}
+                <TouchableOpacity style={styles.actionIconBtn} onPress={openNotifications} activeOpacity={0.85}>
+                  <Bell size={16} color="#FFF" />
+                  {notifications.some(n => !n.isRead) && (
+                    <View style={styles.unreadDot} />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress} activeOpacity={0.9}>
-              <Search size={20} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.searchPlaceholder}>Find turfs, sports, venues...</Text>
+
+            {/* Compact Glassmorphic Search Bar */}
+            <TouchableOpacity style={styles.searchBarCompact} onPress={handleSearchPress} activeOpacity={0.9}>
+              <Search size={16} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.searchPlaceholderCompact}>Search turfs, sports, arenas...</Text>
             </TouchableOpacity>
           </Animated.View>
 
           {/* Compact Header */}
           <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
             <TouchableOpacity style={styles.compactSearchBar} onPress={handleSearchPress} activeOpacity={0.9}>
-              <Search size={18} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.searchPlaceholder}>Find turfs, sports, venues...</Text>
+              <Search size={16} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.searchPlaceholderCompact}>Search turfs, sports...</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.compactIconButton} onPress={openNotifications}>
-              <Bell size={20} color="#FFF" />
+              <Bell size={18} color="#FFF" />
+              {notifications.some(n => !n.isRead) && (
+                <View style={styles.unreadDot} />
+              )}
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>
@@ -569,7 +599,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  
+
   // ── Animated Header ──
   headerContainer: {
     backgroundColor: '#0A0A0A',
@@ -597,13 +627,13 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 36,
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
   },
-  
+
   // ── Compact Header ──
   compactHeader: {
     position: 'absolute',
@@ -613,136 +643,148 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 10,
+    paddingBottom: 8,
+    gap: 8,
   },
   compactSearchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   compactIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+    position: 'relative',
   },
-  
+
   userRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  userInfo: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  userName: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  locationPill: {
+  profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    gap: 4,
+    flex: 1,
+    paddingRight: 8,
   },
-  locationText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  profileTextWrap: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  greetingText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 3,
+  },
+  locationLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '500',
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  walletButton: {
+  walletCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 22,
-    gap: 6,
+    backgroundColor: 'rgba(75, 122, 47, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
+    borderColor: 'rgba(75, 122, 47, 0.25)',
   },
-  walletText: {
+  walletCompactText: {
     color: '#FFF',
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
   },
-  qrButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  actionIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+    position: 'relative',
   },
-  
-  // ── Search ──
-  searchBar: {
+  unreadDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#FF3B30',
+    borderWidth: 1,
+    borderColor: '#0A0A0A',
+  },
+  searchBarCompact: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 15,
-    gap: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  searchPlaceholder: {
-    fontSize: 15,
+  searchPlaceholderCompact: {
+    fontSize: 12,
     color: 'rgba(255,255,255,0.4)',
     fontWeight: '500',
     flex: 1,
   },
-  
+
   // ── ScrollView ──
   scrollContent: {
     paddingTop: HEADER_MAX_HEIGHT + (Platform.OS === 'android' ? StatusBar.currentHeight : 0) - 60,
     paddingBottom: 40,
   },
-  
+
   // ── Categories ──
   categoriesContainer: {
     marginBottom: -4,
@@ -784,7 +826,7 @@ const styles = StyleSheet.create({
   categoryLabelActive: {
     color: '#FFFFFF',
   },
-  
+
   // ── Banner ──
   bannerContainer: {
     marginTop: 20,
@@ -808,7 +850,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.onSurfaceVariant,
     borderRadius: 4,
   },
-  
+
   // ── Sections ──
   section: {
     marginTop: 28,
@@ -831,7 +873,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.onSurfaceVariant,
   },
-  
+
   // ── Recommended Cards ──
   recommendedList: {
     paddingHorizontal: 20,
@@ -919,7 +961,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
-  
+
   // ── Nearby Cards (Reduced Height) ──
   nearbyCard: {
     marginHorizontal: 20,
@@ -995,7 +1037,7 @@ const styles = StyleSheet.create({
     fontSize: 13, // Reduced from 14
     fontWeight: '700',
   },
-  
+
   // ── Empty State ──
   emptyState: {
     alignItems: 'center',
@@ -1018,12 +1060,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  
+
   // ── Loader ──
   loader: {
     marginVertical: 48,
   },
-  
+
   // ── Modal ──
   modalBackdrop: {
     flex: 1,

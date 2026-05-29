@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import ChallengeNotificationModal from '../components/ChallengeNotificationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 const ChallengeDetailScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
@@ -95,7 +95,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
       const updated = await response.json();
       console.log('Updated challenge:', updated);
       setChallenge(updated);
-      
+
       // Show the notification modal instead of Alert
       setShowAcceptModal(true);
     } catch (error) {
@@ -218,7 +218,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
       {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={Colors.text} />
+          <ArrowLeft size={24} color={Colors.onBackground} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Challenge Details</Text>
         <View style={{ width: 24 }} />
@@ -227,7 +227,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Challenge Card Header */}
         <LinearGradient
-          colors={['rgba(138, 43, 226, 0.15)', 'rgba(75, 0, 130, 0.15)']}
+          colors={['rgba(75, 122, 47, 0.15)', 'rgba(107, 142, 35, 0.15)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.cardHeader}
@@ -282,7 +282,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
         {challenge.message && (
           <View style={styles.messageSection}>
             <View style={styles.messageBanner}>
-              <MessageCircle size={20} color={Colors.accent} />
+              <MessageCircle size={20} color={Colors.warning} />
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <Text style={styles.messageTitle}>Challenge Message</Text>
                 <Text style={styles.messageText}>{challenge.message}</Text>
@@ -302,7 +302,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
         {/* Turf & Schedule */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>When & Where</Text>
-          
+
           {challenge.turf && (
             <View style={styles.infoRow}>
               <MapPin size={18} color={Colors.primary} />
@@ -339,7 +339,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
         {challenge.type === 'TEAM' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Teams</Text>
-            
+
             {challenge.challengerTeam && (
               <View style={styles.teamCard}>
                 <Text style={styles.teamLabel}>Challenger</Text>
@@ -375,7 +375,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
                 <Text style={styles.vsTeamName}>{challenge.challengerTeam.name}</Text>
               </View>
               <LinearGradient
-                colors={[Colors.primary, Colors.accent]}
+                colors={Colors.gradient}
                 style={styles.vsBadge}
               >
                 <Text style={styles.vsBadgeText}>VS</Text>
@@ -395,7 +395,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
               onPress={handleShareWhatsApp}
             >
               <LinearGradient
-                colors={[Colors.primary, Colors.accent]}
+                colors={Colors.gradient}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -413,7 +413,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
               disabled={accepting}
             >
               <LinearGradient
-                colors={[Colors.primary, Colors.accent]}
+                colors={Colors.gradient}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -434,56 +434,56 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
             <View>
               {/* Creator Payment */}
               {isCreator && !challenge.creatorPaid && (
-                 <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
-                   <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
-                     {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Creator)</Text>}
-                   </LinearGradient>
-                 </TouchableOpacity>
+                <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
+                  <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
+                    {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Creator)</Text>}
+                  </LinearGradient>
+                </TouchableOpacity>
               )}
               {isCreator && challenge.creatorPaid && !challenge.opponentPaid && (
-                 <Text style={{textAlign: 'center', marginVertical: 10, color: Colors.secondary, fontWeight: 'bold'}}>Waiting for opponent to pay...</Text>
+                <Text style={{ textAlign: 'center', marginVertical: 10, color: Colors.onSurfaceVariant, fontWeight: 'bold' }}>Waiting for opponent to pay...</Text>
               )}
 
               {/* Opponent Payment */}
               {isOpponent && !challenge.opponentPaid && (
-                 <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
-                   <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
-                     {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Opponent)</Text>}
-                   </LinearGradient>
-                 </TouchableOpacity>
+                <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
+                  <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
+                    {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Opponent)</Text>}
+                  </LinearGradient>
+                </TouchableOpacity>
               )}
               {isOpponent && challenge.opponentPaid && !challenge.creatorPaid && (
-                 <Text style={{textAlign: 'center', marginVertical: 10, color: Colors.secondary, fontWeight: 'bold'}}>Waiting for creator to pay...</Text>
+                <Text style={{ textAlign: 'center', marginVertical: 10, color: Colors.onSurfaceVariant, fontWeight: 'bold' }}>Waiting for creator to pay...</Text>
               )}
 
               {/* Both Paid -> Confirmed */}
               {challenge.creatorPaid && challenge.opponentPaid && (
-                 <View style={styles.successMessage}>
-                   <CheckCircle2 size={24} color={Colors.primary} />
-                   <Text style={styles.successText}>Match Confirmed! ✨</Text>
-                 </View>
+                <View style={styles.successMessage}>
+                  <CheckCircle2 size={24} color={Colors.primary} />
+                  <Text style={styles.successText}>Match Confirmed! ✨</Text>
+                </View>
               )}
             </View>
           )}
 
           {/* Submit Result Button */}
           {isAccepted && challenge.creatorPaid && challenge.opponentPaid && (
-             <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('MatchResult', { challengeId: challenge.id })}>
-               <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.buttonGradient}>
-                 <Trophy size={20} color="#fff" />
-                 <Text style={styles.primaryButtonText}>Submit Match Result</Text>
-               </LinearGradient>
-             </TouchableOpacity>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('MatchResult', { challengeId: challenge.id })}>
+              <LinearGradient colors={Colors.gradient} style={styles.buttonGradient}>
+                <Trophy size={20} color="#fff" />
+                <Text style={styles.primaryButtonText}>Submit Match Result</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           )}
 
           {/* Completed State */}
           {isCompleted && (
-             <View style={styles.successMessage}>
-               <Trophy size={24} color={Colors.primary} />
-               <Text style={styles.successText}>
-                 Challenge Completed!
-               </Text>
-             </View>
+            <View style={styles.successMessage}>
+              <Trophy size={24} color={Colors.primary} />
+              <Text style={styles.successText}>
+                Challenge Completed!
+              </Text>
+            </View>
           )}
 
           <TouchableOpacity
@@ -516,12 +516,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(138, 43, 226, 0.1)',
+    borderBottomColor: 'rgba(75, 122, 47, 0.1)',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   scrollContent: {
     paddingBottom: 20,
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.2)',
+    borderColor: 'rgba(75, 122, 47, 0.2)',
   },
   statusRow: {
     marginBottom: 12,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statusOpen: {
-    backgroundColor: 'rgba(255, 140, 0, 0.2)',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
   },
   statusAccepted: {
     backgroundColor: 'rgba(76, 175, 80, 0.2)',
@@ -551,12 +551,12 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.accent,
+    color: Colors.warning,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginBottom: 12,
   },
   creatorRow: {
@@ -580,11 +580,11 @@ const styles = StyleSheet.create({
   creatorName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   rating: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 4,
   },
   infoGrid: {
@@ -595,21 +595,21 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   infoLabel: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 8,
     fontWeight: '600',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginTop: 4,
   },
   messageSection: {
@@ -618,20 +618,20 @@ const styles = StyleSheet.create({
   },
   messageBanner: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 140, 0, 0.1)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: 12,
     padding: 12,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.accent,
+    borderLeftColor: Colors.warning,
   },
   messageTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
   },
   messageText: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.onBackground,
     marginTop: 4,
     lineHeight: 20,
   },
@@ -642,63 +642,63 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.onBackground,
     marginBottom: 12,
   },
   descriptionText: {
     fontSize: 14,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     lineHeight: 20,
   },
   infoRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
   },
   infoRowLabel: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     fontWeight: '600',
   },
   infoRowValue: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.onBackground,
     fontWeight: '600',
     marginTop: 2,
   },
   infoRowSubtitle: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 2,
   },
   teamCard: {
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
   },
   teamLabel: {
     fontSize: 11,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     fontWeight: '600',
     marginBottom: 4,
   },
   teamName: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   teamNamePlaceholder: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     fontStyle: 'italic',
   },
   teamCount: {
     fontSize: 12,
-    color: Colors.secondary,
+    color: Colors.onSurfaceVariant,
     marginTop: 4,
   },
   vsCard: {
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
   vsContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     padding: 16,
   },
   vsTeam: {
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   vsTeamName: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.onBackground,
   },
   vsBadge: {
     width: 56,
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.onBackground,
     marginBottom: 16,
   },
   backButton: {
@@ -811,3 +811,5 @@ const styles = StyleSheet.create({
 });
 
 export default ChallengeDetailScreen;
+
+

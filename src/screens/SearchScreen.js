@@ -12,7 +12,7 @@ import {
 import { Colors } from '../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES = [
@@ -59,7 +59,7 @@ const SearchResultCard = memo(({ turf, onPress }) => (
         </View>
       </View>
     </View>
-    
+
     <View style={styles.bottomSection}>
       <View style={styles.priceContainer}>
         <Text style={styles.priceLabel}>Starting from</Text>
@@ -155,7 +155,7 @@ const SearchScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      
+
       <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerTranslateY }] }]}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           {/* Top Bar */}
@@ -186,7 +186,7 @@ const SearchScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               )}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.filterBtn, showFilters && styles.filterBtnActive]}
               onPress={() => setShowFilters(!showFilters)}
             >
@@ -270,7 +270,7 @@ const SearchScreen = ({ navigation, route }) => {
               <Text style={styles.emptyEmoji}>🏟️</Text>
               <Text style={styles.emptyTitle}>No Turfs Found</Text>
               <Text style={styles.emptySubtitle}>We couldn't find any turfs matching your search. Try different keywords or filters.</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.clearSearchBtn}
                 onPress={() => {
                   setSearchQuery('');
