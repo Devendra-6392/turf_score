@@ -1,26 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const {
-  createChallenge,
-  listChallenges,
-  myChallenges,
-  getChallengeById,
-  getChallengeByShareCode,
-  acceptChallenge,
-  cancelChallenge,
+  createChallenge, listChallenges, myChallenges,
+  getChallengeById, getChallengeByShareCode,
+  acceptChallenge, cancelChallenge, lockSlot, payAdvance, submitResult
 } = require('../controllers/challengeController');
 
-// Public
+router.post('/', authMiddleware, createChallenge);
 router.get('/', listChallenges);
+router.get('/my-challenges', authMiddleware, myChallenges);
+router.post('/lock-slot', authMiddleware, lockSlot);
+router.post('/pay-advance', authMiddleware, payAdvance);
+router.post('/submit-result', authMiddleware, submitResult);
 router.get('/share/:shareCode', getChallengeByShareCode);
-
-// Protected
-router.use(auth);
-router.post('/', createChallenge);
-router.get('/me', myChallenges);
 router.get('/:id', getChallengeById);
-router.post('/:id/accept', acceptChallenge);
-router.post('/:id/cancel', cancelChallenge);
+router.post('/:id/accept', authMiddleware, acceptChallenge);
+router.post('/:id/cancel', authMiddleware, cancelChallenge);
 
 module.exports = router;

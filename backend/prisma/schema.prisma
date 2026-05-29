@@ -112,6 +112,8 @@ enum NotificationType {
   PROMOTION
   PAYMENT_SUCCESS
   CANCELLATION
+  CHALLENGE_CREATED
+  CHALLENGE_ACCEPTED
 }
 
 enum OverrideType {
@@ -252,6 +254,7 @@ model TurfSlot {
   bufferBefore Int        @default(0)
   bufferAfter  Int        @default(15)
   booking      Booking?
+  challenges   Challenge[]
 
   // Expert additions:
   sportType  SportType @default(FOOTBALL)
@@ -283,6 +286,8 @@ model Booking {
   addOns              BookingAddOn[]
   teamId              String?              @db.VarChar(36)
   team                Team?                @relation(fields: [teamId], references: [id])
+  challengeId         String?              @db.VarChar(36)
+  challenge           Challenge?           @relation(fields: [challengeId], references: [id])
   createdAt           DateTime             @default(now())
 
   // Expert additions:
@@ -694,6 +699,16 @@ model Challenge {
 
   expiresAt        DateTime?
   acceptedAt       DateTime?
+
+  creatorPaid      Boolean         @default(false)
+  opponentPaid     Boolean         @default(false)
+  creatorScore     Int?
+  opponentScore    Int?
+  winnerId         String?         @db.VarChar(36)
+  
+  slotId           String?         @db.VarChar(36)
+  slot             TurfSlot?       @relation(fields: [slotId], references: [id])
+  bookings         Booking[]
 
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt

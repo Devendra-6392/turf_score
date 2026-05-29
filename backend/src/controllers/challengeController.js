@@ -10,7 +10,7 @@ const createChallenge = async (req, res) => {
       return res.status(500).json({ error: 'Database connection failed' });
     }
 
-    const { title, description, sportType, type, challengerTeamId, turfId,
+    const { title, description, sportType, type, challengerTeamId, turfId, slotId,
       scheduledDate, scheduledTime, skillLevel, maxPlayers, message, isPublic } = req.body;
 
     if (!title || !sportType || !type) {
@@ -32,6 +32,7 @@ const createChallenge = async (req, res) => {
         creatorId: req.userId,
         challengerTeamId: type === 'TEAM' ? challengerTeamId : null,
         turfId: turfId || null,
+        slotId: slotId || null,
         scheduledDate: scheduledDate || null,
         scheduledTime: scheduledTime || null,
         skillLevel: skillLevel || 'ALL',
@@ -44,6 +45,17 @@ const createChallenge = async (req, res) => {
         creator: { select: { id: true, name: true, avatar: true, rating: true } },
         challengerTeam: { select: { id: true, name: true, sportType: true } },
         turf: { select: { id: true, name: true, location: true, city: true, imageUrl: true } },
+      }
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: req.userId,
+        title: 'Challenge Created! 🚀',
+        body: `Your challenge "${title}" is now live! Share the link or wait for someone to accept it.`,
+        type: 'CHALLENGE_CREATED',
+        data: { challengeId: challenge.id, shareCode: challenge.shareCode },
+        sentAt: new Date()
       }
     });
 
@@ -68,7 +80,10 @@ const listChallenges = async (req, res) => {
     const where = {
       status: 'OPEN',
       isPublic: true,
-      expiresAt: { gt: new Date() },
+      OR: [
+        { expiresAt: { gt: new Date() } },
+        { expiresAt: null }
+      ]
     };
     if (sport) where.sportType = sport;
     if (type) where.type = type;
@@ -211,6 +226,17 @@ const acceptChallenge = async (req, res) => {
       }
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: challenge.creatorId,
+        title: 'Challenge Accepted! 🔥',
+        body: `Someone accepted your challenge "${challenge.title}". Pay your advance to confirm the match!`,
+        type: 'CHALLENGE_ACCEPTED',
+        data: { challengeId: challenge.id },
+        sentAt: new Date()
+      }
+    });
+
     res.json(updated);
   } catch (err) {
     console.error('acceptChallenge:', err);
@@ -245,6 +271,107 @@ const cancelChallenge = async (req, res) => {
   }
 };
 
+// ─── LOCK SLOT ─────────────────────────────────────────────
+const lockSlot = async (req, res) => {
+  try {
+    const { slotId } = req.body;
+    const slot = await prisma.turfSlot.findUnique({ where: { id: slotId } });
+    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (slot.status !== 'AVAILABLE') return res.status(400).json({ error: 'Slot is not available' });
+
+    const updatedSlot = await prisma.turfSlot.update({
+      where: { id: slotId },
+      data: { status: 'ON_HOLD' }
+    });
+
+    res.json(updatedSlot);
+  } catch (err) {
+    console.error('lockSlot:', err);
+    res.status(500).json({ error: 'Failed to lock slot' });
+  }
+};
+
+// ─── PAY ADVANCE ─────────────────────────────────────────────
+const payAdvance = async (req, res) => {
+  try {
+    const { challengeId } = req.body;
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId }, include: { slot: true } });
+    
+    if (!challenge) return res.status(404).json({ error: 'Challenge not found' });
+
+    let dataToUpdate = {};
+    if (req.userId === challenge.creatorId) dataToUpdate.creatorPaid = true;
+    else if (req.userId === challenge.opponentId) dataToUpdate.opponentPaid = true;
+    else return res.status(403).json({ error: 'Not part of this challenge' });
+
+    const updatedChallenge = await prisma.challenge.update({
+      where: { id: challengeId },
+      data: dataToUpdate
+    });
+
+    // If both paid, confirm booking
+    if (updatedChallenge.creatorPaid && updatedChallenge.opponentPaid && challenge.slotId) {
+      const amount = challenge.slot ? challenge.slot.price : 1000;
+      await prisma.booking.create({
+        data: {
+          userId: challenge.creatorId,
+          turfId: challenge.turfId,
+          slotId: challenge.slotId,
+          challengeId: challenge.id,
+          amount: amount,
+          status: 'CONFIRMED'
+        }
+      });
+      await prisma.turfSlot.update({
+        where: { id: challenge.slotId },
+        data: { status: 'BOOKED' }
+      });
+    }
+
+    res.json(updatedChallenge);
+  } catch (err) {
+    console.error('payAdvance:', err);
+    res.status(500).json({ error: 'Failed to process payment' });
+  }
+};
+
+// ─── SUBMIT RESULT ─────────────────────────────────────────────
+const submitResult = async (req, res) => {
+  try {
+    const { challengeId, creatorScore, opponentScore } = req.body;
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+    if (!challenge) return res.status(404).json({ error: 'Challenge not found' });
+    if (challenge.status === 'COMPLETED') return res.status(400).json({ error: 'Challenge already completed' });
+    
+    let winnerId = null;
+    if (creatorScore > opponentScore) winnerId = challenge.creatorId;
+    else if (opponentScore > creatorScore) winnerId = challenge.opponentId;
+
+    const updated = await prisma.challenge.update({
+      where: { id: challengeId },
+      data: {
+        creatorScore,
+        opponentScore,
+        winnerId,
+        status: 'COMPLETED'
+      }
+    });
+
+    await prisma.user.updateMany({
+      where: { id: { in: [challenge.creatorId, challenge.opponentId].filter(Boolean) } },
+      data: {
+        matchesPlayed: { increment: 1 },
+        xp: { increment: 50 }
+      }
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error('submitResult:', err);
+    res.status(500).json({ error: 'Failed to submit result' });
+  }
+};
+
 module.exports = {
   createChallenge,
   listChallenges,
@@ -253,4 +380,7 @@ module.exports = {
   getChallengeByShareCode,
   acceptChallenge,
   cancelChallenge,
+  lockSlot,
+  payAdvance,
+  submitResult,
 };

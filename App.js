@@ -21,6 +21,8 @@ import QRScannerScreen from './src/screens/QRScannerScreen';
 import ChallengesScreen from './src/screens/ChallengesScreen';
 import CreateChallengeScreen from './src/screens/CreateChallengeScreen';
 import ChallengeDetailScreen from './src/screens/ChallengeDetailScreen';
+import MatchResultScreen from './src/screens/MatchResultScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
 import AttractiveBottomTab from './src/components/AttractiveBottomTab';
 import AnimatedScreenWrapper from './src/components/AnimatedScreenWrapper';
 import { AuthProvider } from './src/context/AuthContext';
@@ -75,6 +77,8 @@ export default function App() {
           <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
           <Stack.Screen name="ChallengeDetail" component={ChallengeDetailScreen} />
           <Stack.Screen name="ChallengeDetailByShare" component={ChallengeDetailScreen} />
+          <Stack.Screen name="MatchResult" component={MatchResultScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} position="top" topOffset={50} />

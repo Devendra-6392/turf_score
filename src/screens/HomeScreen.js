@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import {
   View, Text, ScrollView, Image, StyleSheet, TouchableOpacity,
   StatusBar, ActivityIndicator, Dimensions, FlatList, ImageBackground,
-  Platform, Animated
+  Platform, Animated, Modal, Share
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Search, MapPin, Star, QrCode, ChevronRight, Wallet
+  Search, MapPin, Star, QrCode, ChevronRight, Wallet, Bell,
+  Trophy, CheckCircle2, Calendar, AlertCircle, ArrowLeft, X
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = 'http://192.168.18.23:5000/api';
 const BANNER_WIDTH = SCREEN_WIDTH - 40;
 const AUTO_SCROLL_INTERVAL = 5000;
+const HEADER_MAX_HEIGHT = 180;
+const HEADER_MIN_HEIGHT = 80;
 
 // ─── Sport Categories ───────────────────────────────────────
 const SPORT_CATEGORIES = [
@@ -104,7 +107,7 @@ const RecommendedCard = memo(({ turf, onPress }) => (
   </TouchableOpacity>
 ));
 
-// ─── Nearby Card ────────────────────────────────────────────
+// ─── Nearby Card (Reduced Height) ────────────────────────────
 const NearbyCard = memo(({ turf, onPress }) => (
   <TouchableOpacity activeOpacity={0.88} onPress={onPress} style={styles.nearbyCard}>
     <Image
@@ -115,18 +118,18 @@ const NearbyCard = memo(({ turf, onPress }) => (
       <View style={styles.nearbyInfoLeft}>
         <Text style={styles.nearbyName} numberOfLines={1}>{turf.name}</Text>
         <View style={styles.nearbyLocationRow}>
-          <MapPin size={12} color={Colors.onSurfaceVariant} />
+          <MapPin size={11} color={Colors.onSurfaceVariant} />
           <Text style={styles.nearbyLocationText} numberOfLines={1}>
             {turf.location || turf.city || 'Unknown'}
           </Text>
         </View>
         <View style={styles.nearbyRatingRow}>
-          <Star size={13} color="#FFD700" fill="#FFD700" />
+          <Star size={12} color="#FFD700" fill="#FFD700" />
           <Text style={styles.nearbyRating}>{turf.rating || 4.5}</Text>
         </View>
       </View>
       <TouchableOpacity style={styles.bookNowBtn} onPress={onPress} activeOpacity={0.85}>
-        <Text style={styles.bookNowText}>Book now</Text>
+        <Text style={styles.bookNowText}>Book</Text>
       </TouchableOpacity>
     </View>
   </TouchableOpacity>
@@ -134,7 +137,7 @@ const NearbyCard = memo(({ turf, onPress }) => (
 
 // ─── Main HomeScreen ────────────────────────────────────────
 const HomeScreen = ({ navigation }) => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, token } = useAuth();
   const [turfs, setTurfs] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loadingTurfs, setLoadingTurfs] = useState(true);
@@ -142,10 +145,42 @@ const HomeScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [currentLocation, setCurrentLocation] = useState('Detecting...');
+  
+  // Notifications state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
+  // Animation for collapsible header
+  const scrollY = useRef(new Animated.Value(0)).current;
   const sliderRef = useRef(null);
   const timerRef = useRef(null);
   const userName = user?.name || user?.email?.split('@')[0] || 'Player';
+
+  // Header animation values
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
+    outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const headerBorderRadius = scrollY.interpolate({
+    inputRange: [0, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
+    outputRange: [30, 0],
+    extrapolate: 'clamp',
+  });
+
+  const compactHeaderOpacity = scrollY.interpolate({
+    inputRange: [HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT - 30, HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -246,54 +281,83 @@ const HomeScreen = ({ navigation }) => {
     setSelectedCategory(prev => prev === catId ? null : catId);
   };
 
+  const fetchNotifications = async () => {
+    setLoadingNotifications(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.log('Error fetching notifications', err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const openNotifications = () => {
+    setShowNotifications(true);
+    fetchNotifications();
+  };
+
+  const handleNotificationPress = async (item) => {
+    if (!item.isRead) {
+      try {
+        await fetch(`${BACKEND_URL}/notifications/${item.id}/read`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, isRead: true } : n));
+      } catch (err) {}
+    }
+
+    if (item.type === 'CHALLENGE_CREATED' && item.data?.shareCode) {
+      setShowNotifications(false);
+      setTimeout(() => {
+        navigation.navigate('ChallengeDetailByShare', { shareCode: item.data.shareCode });
+      }, 300);
+    } else if (item.type === 'CHALLENGE_ACCEPTED' && item.data?.challengeId) {
+      setShowNotifications(false);
+      setTimeout(() => {
+        navigation.navigate('ChallengeDetail', { challengeId: item.data.challengeId });
+      }, 300);
+    }
+  };
+
+  const renderNotifIcon = (type) => {
+    switch (type) {
+      case 'CHALLENGE_CREATED':
+      case 'CHALLENGE_ACCEPTED': return <Trophy size={20} color={Colors.primary} />;
+      case 'BOOKING_CONFIRMATION':
+      case 'PAYMENT_SUCCESS': return <CheckCircle2 size={20} color="#4CAF50" />;
+      case 'REMINDER': return <Calendar size={20} color="#FF9800" />;
+      case 'CANCELLATION':
+      case 'RAIN_ALERT': return <AlertCircle size={20} color="#F44336" />;
+      default: return <Bell size={20} color={Colors.secondary} />;
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.headerDark} translucent={false} />
-
-      {/* ── Top Header Background ── */}
-      <View style={styles.headerBgShape} />
-
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <ScrollView
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" translucent={false} />
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        
+        {/* ── ScrollView with Animated Event ── */}
+        <Animated.ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
         >
-          <View style={styles.headerSafe}>
-            <View style={styles.userRow}>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{userName}</Text>
-                <View style={styles.locationPill}>
-                  <MapPin size={13} color="rgba(255,255,255,0.5)" />
-                  <Text style={styles.locationText} numberOfLines={1}>{currentLocation}</Text>
-                </View>
-              </View>
-              <View style={styles.headerRightActions}>
-                <View style={styles.walletPill}>
-                  <Wallet size={13} color="#FFF" />
-                  <Text style={styles.walletBalanceText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
-                </View>
-                <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('QRScanner')} activeOpacity={0.8}>
-                  <View style={styles.avatarPlaceholder}>
-                    <QrCode size={20} color="#fff" />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Search Bar */}
-            <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress} activeOpacity={0.9}>
-              <Search size={18} color="rgba(255,255,255,0.5)" />
-              <Text style={styles.searchPlaceholder}>Search your next play</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* ─── Category Chips ─── */}
-          <View style={styles.categorySection}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryStrip}
-            >
+          {/* ─── Categories ─── */}
+          <View style={styles.categoriesContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesList}>
               {SPORT_CATEGORIES.map((cat) => {
                 const isActive = selectedCategory === cat.id;
                 return (
@@ -301,10 +365,10 @@ const HomeScreen = ({ navigation }) => {
                     key={cat.id}
                     style={[styles.categoryChip, isActive && styles.categoryChipActive]}
                     onPress={() => handleCategoryPress(cat.id)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.categoryEmoji}>{cat.icon}</Text>
-                    <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+                    <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                    <Text style={[styles.categoryLabel, isActive && styles.categoryLabelActive]}>
                       {cat.name}
                     </Text>
                   </TouchableOpacity>
@@ -315,7 +379,7 @@ const HomeScreen = ({ navigation }) => {
 
           {/* ─── Banner Slider ─── */}
           {banners.length > 0 && (
-            <View style={styles.bannerSection}>
+            <View style={styles.bannerContainer}>
               <FlatList
                 ref={sliderRef}
                 data={banners}
@@ -330,67 +394,166 @@ const HomeScreen = ({ navigation }) => {
                 getItemLayout={(_, index) => ({ length: BANNER_WIDTH, offset: BANNER_WIDTH * index, index })}
               />
               {banners.length > 1 && (
-                <View style={styles.dotsContainer}>
+                <View style={styles.pagination}>
                   {banners.map((_, i) => (
-                    <View key={i} style={[styles.dot, activeSlide === i && styles.activeDot]} />
+                    <View key={i} style={[styles.paginationDot, activeSlide === i && styles.paginationDotActive]} />
                   ))}
                 </View>
               )}
             </View>
           )}
 
-          {/* ─── Recommended Ground ─── */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended Ground</Text>
-            <TouchableOpacity onPress={handleSearchPress}>
-              <Text style={styles.seeAllText}>see all</Text>
-            </TouchableOpacity>
+          {/* ─── Recommended Section ─── */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recommended</Text>
+              <TouchableOpacity onPress={handleSearchPress}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            {loadingTurfs ? (
+              <ActivityIndicator color={Colors.onSurfaceVariant} size="large" style={styles.loader} />
+            ) : recommendedTurfs.length > 0 ? (
+              <FlatList
+                horizontal
+                data={recommendedTurfs}
+                keyExtractor={item => item.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recommendedList}
+                renderItem={({ item }) => (
+                  <RecommendedCard turf={item} onPress={() => handleTurfPress(item)} />
+                )}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>🏟️</Text>
+                <Text style={styles.emptyText}>No turfs available</Text>
+                <Text style={styles.emptySubtext}>
+                  {selectedCategory ? `No ${selectedCategory.toLowerCase()} turfs found` : 'Check back later for new venues'}
+                </Text>
+              </View>
+            )}
           </View>
 
-          {loadingTurfs ? (
-            <ActivityIndicator color={Colors.primary} size="large" style={{ marginVertical: 48 }} />
-          ) : recommendedTurfs.length > 0 ? (
-            <FlatList
-              horizontal
-              data={recommendedTurfs}
-              keyExtractor={item => item.id}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recList}
-              renderItem={({ item }) => (
-                <RecommendedCard turf={item} onPress={() => handleTurfPress(item)} />
-              )}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>🏟️</Text>
-              <Text style={styles.emptyTitle}>No turfs found</Text>
-              <Text style={styles.emptySubtitle}>
-                {selectedCategory ? `No ${selectedCategory.toLowerCase()} turfs yet.` : 'No turfs available.'}
-              </Text>
+          {/* ─── Nearby Section ─── */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Nearby</Text>
+              <TouchableOpacity onPress={handleSearchPress}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
             </View>
-          )}
-
-          {/* ─── Near By ─── */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Near by</Text>
-            <TouchableOpacity onPress={handleSearchPress}>
-              <Text style={styles.seeAllText}>see all</Text>
-            </TouchableOpacity>
+            {!loadingTurfs && nearbyTurfs.length > 0 ? (
+              nearbyTurfs.map((turf) => (
+                <NearbyCard key={turf.id} turf={turf} onPress={() => handleTurfPress(turf)} />
+              ))
+            ) : !loadingTurfs ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>📍</Text>
+                <Text style={styles.emptyText}>No nearby turfs</Text>
+              </View>
+            ) : null}
           </View>
+        </Animated.ScrollView>
 
-          {!loadingTurfs && nearbyTurfs.length > 0 ? (
-            nearbyTurfs.map((turf) => (
-              <NearbyCard key={turf.id} turf={turf} onPress={() => handleTurfPress(turf)} />
-            ))
-          ) : !loadingTurfs ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>📍</Text>
-              <Text style={styles.emptyTitle}>No nearby turfs</Text>
+        {/* ── Animated Fixed Collapsible Header ── */}
+        <Animated.View style={[
+          styles.headerContainerFixed,
+          {
+            height: headerHeight,
+            borderBottomLeftRadius: headerBorderRadius,
+            borderBottomRightRadius: headerBorderRadius,
+          }
+        ]}>
+          <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+            <View style={styles.userRow}>
+              <View style={styles.userInfo}>
+                <Text style={styles.greeting}>Hello,</Text>
+                <Text style={styles.userName}>{userName}</Text>
+                <View style={styles.locationPill}>
+                  <MapPin size={12} color="rgba(255,255,255,0.6)" />
+                  <Text style={styles.locationText} numberOfLines={1}>{currentLocation}</Text>
+                </View>
+              </View>
+              <View style={styles.headerActions}>
+                <TouchableOpacity style={styles.iconButton} onPress={openNotifications}>
+                  <Bell size={22} color="#FFF" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.walletButton}>
+                  <Wallet size={16} color="#FFF" />
+                  <Text style={styles.walletText}>₹{user?.wallet?.balance !== undefined ? Math.floor(user.wallet.balance) : '0'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.qrButton} onPress={() => navigation.navigate('QRScanner')}>
+                  <QrCode size={20} color="#FFF" />
+                </TouchableOpacity>
+              </View>
             </View>
-          ) : null}
+            <TouchableOpacity style={styles.searchBar} onPress={handleSearchPress} activeOpacity={0.9}>
+              <Search size={20} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.searchPlaceholder}>Find turfs, sports, venues...</Text>
+            </TouchableOpacity>
+          </Animated.View>
 
-        </ScrollView>
+          {/* Compact Header */}
+          <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
+            <TouchableOpacity style={styles.compactSearchBar} onPress={handleSearchPress} activeOpacity={0.9}>
+              <Search size={18} color="rgba(255,255,255,0.4)" />
+              <Text style={styles.searchPlaceholder}>Find turfs, sports, venues...</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.compactIconButton} onPress={openNotifications}>
+              <Bell size={20} color="#FFF" />
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
       </SafeAreaView>
+
+      {/* ─── Notifications Modal ─── */}
+      <Modal visible={showNotifications} animationType="slide" transparent={true}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle}>
+              <Text style={styles.modalTitle}>Notifications</Text>
+              <TouchableOpacity onPress={() => setShowNotifications(false)}>
+                <X size={24} color={Colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            </View>
+            {loadingNotifications ? (
+              <ActivityIndicator color={Colors.onSurfaceVariant} style={styles.modalLoader} />
+            ) : notifications.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Bell size={48} color={Colors.onSurfaceVariant} />
+                <Text style={styles.emptySubtext}>No notifications yet</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={notifications}
+                keyExtractor={item => item.id}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.notificationItem, !item.isRead && styles.notificationUnread]}
+                    onPress={() => handleNotificationPress(item)}
+                  >
+                    <View style={styles.notificationIcon}>
+                      {renderNotifIcon(item.type)}
+                    </View>
+                    <View style={styles.notificationContent}>
+                      <Text style={[styles.notificationTitle, !item.isRead && styles.notificationUnreadText]}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.notificationBody}>{item.body}</Text>
+                      <Text style={styles.notificationTime}>
+                        {new Date(item.createdAt).toLocaleString()}
+                      </Text>
+                    </View>
+                    {!item.isRead && <View style={styles.unreadIndicator} />}
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -403,202 +566,310 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scrollContent: {
-    paddingBottom: 110,
+  safeArea: {
+    flex: 1,
   },
-
-  // ── Header ──
-  headerBgShape: {
+  
+  // ── Animated Header ──
+  headerContainer: {
+    backgroundColor: '#0A0A0A',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 10,
+  },
+  headerContainerFixed: {
+    backgroundColor: '#0A0A0A',
     position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 220,
-    backgroundColor: Colors.headerDark,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 100,
   },
-  headerSafe: {
+  headerContent: {
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 24,
+    paddingTop: 16,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
+  
+  // ── Compact Header ──
+  compactHeader: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 10,
+  },
+  compactSearchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  compactIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  
   userRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  userInfo: { flex: 1 },
+  userInfo: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
   userName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
-    marginBottom: 4,
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
     gap: 4,
   },
   locationText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
   },
-  avatarBtn: {
-    width: 48, height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  avatarImage: { width: '100%', height: '100%' },
-  avatarPlaceholder: {
-    width: '100%', height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  headerRightActions: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  walletPill: {
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  walletButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 24,
-    gap: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 22,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
-  walletBalanceText: {
-    color: '#fff',
+  walletText: {
+    color: '#FFF',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
   },
-
+  qrButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  
   // ── Search ──
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
     paddingHorizontal: 18,
-    paddingVertical: 14,
-    gap: 10,
+    paddingVertical: 15,
+    gap: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
   searchPlaceholder: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '500',
     flex: 1,
   },
-
+  
+  // ── ScrollView ──
+  scrollContent: {
+    paddingTop: HEADER_MAX_HEIGHT + (Platform.OS === 'android' ? StatusBar.currentHeight : 0) - 60,
+    paddingBottom: 40,
+  },
+  
   // ── Categories ──
-  categorySection: { marginTop: 20 },
-  categoryStrip: { paddingHorizontal: 20, gap: 10 },
+  categoriesContainer: {
+    marginBottom: -4,
+  },
+  categoriesList: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
   categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 50,
+    paddingHorizontal: 18,
+    borderRadius: 25,
     gap: 8,
     borderWidth: 1.5,
-    borderColor: Colors.outline,
+    borderColor: '#E8E8EC',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   categoryChipActive: {
-    backgroundColor: Colors.headerDark,
-    borderColor: Colors.headerDark,
+    backgroundColor: '#0A0A0A',
+    borderColor: '#0A0A0A',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  categoryEmoji: { fontSize: 18 },
-  categoryText: {
+  categoryIcon: {
+    fontSize: 18,
+  },
+  categoryLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.onBackground,
+    color: '#333',
   },
-  categoryTextActive: { color: '#fff' },
-
+  categoryLabelActive: {
+    color: '#FFFFFF',
+  },
+  
   // ── Banner ──
-  bannerSection: {
-    marginTop: 22,
+  bannerContainer: {
+    marginTop: 20,
     marginHorizontal: 20,
   },
-  dotsContainer: {
+  pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 10,
     gap: 6,
   },
-  dot: {
-    width: 8, height: 8,
+  paginationDot: {
+    width: 8,
+    height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.outline,
+    backgroundColor: '#D1D1D6',
   },
-  activeDot: {
-    width: 24,
-    backgroundColor: Colors.primary,
+  paginationDotActive: {
+    width: 28,
+    backgroundColor: Colors.onSurfaceVariant,
     borderRadius: 4,
   },
-
-  // ── Section Headers ──
+  
+  // ── Sections ──
+  section: {
+    marginTop: 28,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 28,
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
-    color: Colors.onBackground,
+    color: '#1A1A2E',
     letterSpacing: -0.3,
   },
-  seeAllText: {
+  seeAll: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.onSurfaceVariant,
   },
-
+  
   // ── Recommended Cards ──
-  recList: { paddingHorizontal: 20, gap: 14 },
+  recommendedList: {
+    paddingHorizontal: 20,
+    gap: 14,
+  },
   recCard: {
     width: CARD_WIDTH,
-    borderRadius: 18,
-    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
     borderWidth: 1,
-    borderColor: Colors.outlineLight,
+    borderColor: '#F0F0F5',
   },
-  recImageContainer: { height: 130, position: 'relative' },
-  recImage: { width: '100%', height: '100%' },
+  recImageContainer: {
+    height: 130,
+    position: 'relative',
+  },
+  recImage: {
+    width: '100%',
+    height: '100%',
+  },
   recImageOverlay: {
     position: 'absolute',
-    bottom: 0, left: 0, right: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     height: 60,
   },
   recOverlayInfo: {
     position: 'absolute',
-    bottom: 8, left: 8, right: 8,
+    bottom: 8,
+    left: 8,
+    right: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -610,7 +881,7 @@ const styles = StyleSheet.create({
   },
   recDistanceText: {
     fontSize: 11,
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   recRatingBadge: {
@@ -619,74 +890,82 @@ const styles = StyleSheet.create({
     gap: 3,
     backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 8,
   },
   recRatingText: {
     fontSize: 12,
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '700',
   },
-  recInfo: { padding: 12 },
+  recInfo: {
+    padding: 14,
+  },
   recName: {
     fontSize: 15,
     fontWeight: '800',
-    color: Colors.onBackground,
+    color: '#1A1A2E',
     marginBottom: 4,
     letterSpacing: -0.2,
   },
   recLocationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   recLocationText: {
     fontSize: 12,
-    color: Colors.onSurfaceVariant,
+    color: '#8E8E93',
     fontWeight: '500',
     flex: 1,
   },
-
-  // ── Nearby Cards ──
+  
+  // ── Nearby Cards (Reduced Height) ──
   nearbyCard: {
     marginHorizontal: 20,
-    marginBottom: 18,
-    borderRadius: 22,
+    marginBottom: 14,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: Colors.outlineLight,
+    borderColor: '#F0F0F5',
   },
-  nearbyImage: { width: '100%', height: 170 },
+  nearbyImage: {
+    width: '100%',
+    height: 130, // Reduced from 180
+  },
   nearbyBottom: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14, // Reduced padding
+    paddingVertical: 12, // Reduced padding
   },
-  nearbyInfoLeft: { flex: 1, marginRight: 12 },
+  nearbyInfoLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
   nearbyName: {
-    fontSize: 18,
+    fontSize: 16, // Reduced from 18
     fontWeight: '800',
-    color: Colors.onBackground,
-    marginBottom: 4,
+    color: '#1A1A2E',
+    marginBottom: 3, // Reduced spacing
     letterSpacing: -0.2,
   },
   nearbyLocationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 6,
+    marginBottom: 4, // Reduced spacing
   },
   nearbyLocationText: {
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
+    fontSize: 12, // Reduced from 13
+    color: '#8E8E93',
     fontWeight: '500',
     flex: 1,
   },
@@ -696,40 +975,142 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   nearbyRating: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 15
     fontWeight: '800',
-    color: Colors.onBackground,
+    color: '#1A1A2E',
   },
   bookNowBtn: {
-    backgroundColor: Colors.headerDark,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 14,
+    backgroundColor: '#0A0A0A',
+    paddingHorizontal: 18, // Reduced from 24
+    paddingVertical: 10, // Reduced from 13
+    borderRadius: 14, // Reduced from 16
+    shadowColor: '#0A0A0A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   bookNowText: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontSize: 13, // Reduced from 14
     fontWeight: '700',
   },
-
-  // ── Empty ──
+  
+  // ── Empty State ──
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
     paddingHorizontal: 24,
   },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: {
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyText: {
     fontSize: 18,
     fontWeight: '800',
-    color: Colors.onBackground,
+    color: '#1A1A2E',
     marginBottom: 8,
   },
-  emptySubtitle: {
+  emptySubtext: {
     fontSize: 14,
-    color: Colors.onSurfaceVariant,
+    color: '#8E8E93',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  
+  // ── Loader ──
+  loader: {
+    marginVertical: 48,
+  },
+  
+  // ── Modal ──
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    height: '80%',
+    padding: 24,
+  },
+  modalHandle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F5',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1A1A2E',
+  },
+  modalLoader: {
+    marginTop: 40,
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    backgroundColor: '#F8F9FC',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E8E8EC',
+  },
+  notificationUnread: {
+    backgroundColor: '#F5F0FF',
+    borderColor: '#E0D5FF',
+  },
+  notificationIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1A1A2E',
+    marginBottom: 4,
+  },
+  notificationUnreadText: {
+    fontWeight: '800',
+    color: '#6D28D9',
+  },
+  notificationBody: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  notificationTime: {
+    fontSize: 11,
+    color: '#999',
+  },
+  unreadIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.onSurfaceVariant,
+    marginLeft: 10,
   },
 });
 

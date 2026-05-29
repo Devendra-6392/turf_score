@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   User, LogOut, Award, Calendar, Edit3, Save, X, Phone, Mail,
-  Clock, CheckCircle, MapPin, ChevronRight, Wallet
+  Clock, CheckCircle, MapPin, ChevronRight, Wallet, Trophy
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,107 @@ import Toast from 'react-native-toast-message';
 
 const BACKEND_URL = 'http://192.168.18.23:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// ─── Challenge Card ──────────────────────────────────────────
+const ChallengeCard = memo(({ challenge, onPress }) => {
+  const date = new Date(challenge.createdAt);
+  const formattedDate = date.toLocaleDateString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  });
+
+  const statusColors = {
+    OPEN: { bg: '#F59E0B', text: '#fff', label: 'Open' },
+    ACCEPTED: { bg: '#3B82F6', text: '#fff', label: 'Accepted' },
+    COMPLETED: { bg: '#10B981', text: '#fff', label: 'Completed' },
+  };
+
+  const statusStyle = statusColors[challenge.status] || statusColors.OPEN;
+
+  return (
+    <TouchableOpacity onPress={() => onPress(challenge)} activeOpacity={0.9} style={styles.challengeCard}>
+      <View style={styles.challengeCardHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.challengeTitle} numberOfLines={1}>{challenge.title}</Text>
+          <View style={styles.challengeInfoRow}>
+            <Trophy size={12} color={Colors.onSurfaceVariant} />
+            <Text style={styles.challengeInfoText}>{challenge.sportType}</Text>
+            <Text style={styles.challengeInfoText}>• {challenge.type}</Text>
+          </View>
+        </View>
+        <View style={[styles.challengeStatusBadge, { backgroundColor: statusStyle.bg }]}>
+          <Text style={[styles.challengeStatusText, { color: statusStyle.text }]}>
+            {statusStyle.label}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.challengeCardBody}>
+        {challenge.creator && (
+          <View style={styles.challengeCreatorRow}>
+            <View style={styles.challengeAvatarSmall}>
+              <Text style={styles.challengeAvatarText}>
+                {challenge.creator.name?.charAt(0) || 'P'}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.challengeCreatorLabel}>Creator</Text>
+              <Text style={styles.challengeCreatorName} numberOfLines={1}>
+                {challenge.creator.name || 'Unknown'}
+              </Text>
+            </View>
+            {challenge.opponent && (
+              <View style={styles.challengeAvatarSmall}>
+                <Text style={styles.challengeAvatarText}>
+                  {challenge.opponent.name?.charAt(0) || 'P'}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.challengeFooter}>
+          <Calendar size={12} color={Colors.onSurfaceVariant} />
+          <Text style={styles.challengeDateText}>{formattedDate}</Text>
+          <View style={styles.challengeFlexSpacer} />
+          <ChevronRight size={16} color={Colors.primary} />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+// ─── Challenge History Section ──────────────────────────────
+const ChallengeHistorySection = memo(({ challenges, loading, onPress }) => {
+  if (loading) {
+    return (
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.challengesContainer}>
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>Challenge History</Text>
+        <Text style={styles.challengeCount}>{challenges.length} {challenges.length === 1 ? 'Challenge' : 'Challenges'}</Text>
+      </View>
+
+      {challenges.length > 0 ? (
+        challenges.map(challenge => (
+          <ChallengeCard key={challenge.id} challenge={challenge} onPress={onPress} />
+        ))
+      ) : (
+        <View style={styles.emptyChallenges}>
+          <Trophy size={48} color={Colors.outline} />
+          <Text style={styles.emptyTitle}>No Challenges Yet</Text>
+          <Text style={styles.emptySubtitle}>When you create or accept a challenge, it will appear here.</Text>
+        </View>
+      )}
+    </View>
+  );
+});
+
 
 // ─── Booking Card (Premium) ──────────────────────────────────
 const BookingCard = memo(({ booking, onPress }) => {
@@ -233,10 +334,13 @@ const ProfileScreen = ({ navigation }) => {
   const { user, signOut, refreshUser, updateUser, token } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [challenges, setChallenges] = useState([]);
+  const [loadingChallenges, setLoadingChallenges] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasFetchedBookings, setHasFetchedBookings] = useState(false);
+  const [hasFetchedChallenges, setHasFetchedChallenges] = useState(false);
 
   useEffect(() => {
     if (token) refreshUser();
@@ -245,8 +349,10 @@ const ProfileScreen = ({ navigation }) => {
   useEffect(() => {
     if (activeTab === 'bookings' && !hasFetchedBookings && user?.id) {
       fetchUserBookings();
+    } else if (activeTab === 'challenges' && !hasFetchedChallenges && user?.id) {
+      fetchUserChallenges();
     }
-  }, [activeTab, hasFetchedBookings, user?.id]);
+  }, [activeTab, hasFetchedBookings, hasFetchedChallenges, user?.id]);
 
   const fetchUserBookings = useCallback(async () => {
     try {
@@ -264,11 +370,32 @@ const ProfileScreen = ({ navigation }) => {
     }
   }, [user?.id]);
 
+  const fetchUserChallenges = useCallback(async () => {
+    try {
+      setLoadingChallenges(true);
+      const response = await fetch(`${BACKEND_URL}/challenges/user/${user.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // data could be { challenges: [...] } or just [...]
+        const challengesArray = Array.isArray(data) ? data : (data.challenges || []);
+        setChallenges(challengesArray);
+        setHasFetchedChallenges(true);
+      }
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+    } finally {
+      setLoadingChallenges(false);
+    }
+  }, [user?.id, token]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await refreshUser();
       if (activeTab === 'bookings') setHasFetchedBookings(false);
+      if (activeTab === 'challenges') setHasFetchedChallenges(false);
     } finally {
       setRefreshing(false);
     }
@@ -285,6 +412,10 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleBookingPress = useCallback((booking) => {
     navigation.navigate('BookingDetail', { booking });
+  }, [navigation]);
+
+  const handleChallengePress = useCallback((challenge) => {
+    navigation.navigate('ChallengeDetail', { challengeId: challenge.id });
   }, [navigation]);
 
   const handleLogout = useCallback(() => {
@@ -388,7 +519,7 @@ const ProfileScreen = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <User size={16} color={activeTab === 'info' ? '#fff' : Colors.onSurfaceVariant} />
-                <Text style={[styles.segmentText, activeTab === 'info' && styles.segmentTextActive]}>Profile Info</Text>
+                <Text style={[styles.segmentText, activeTab === 'info' && styles.segmentTextActive]}>Profile</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.segmentBtn, activeTab === 'bookings' && styles.segmentBtnActive]}
@@ -398,6 +529,14 @@ const ProfileScreen = ({ navigation }) => {
                 <Calendar size={16} color={activeTab === 'bookings' ? '#fff' : Colors.onSurfaceVariant} />
                 <Text style={[styles.segmentText, activeTab === 'bookings' && styles.segmentTextActive]}>Bookings</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segmentBtn, activeTab === 'challenges' && styles.segmentBtnActive]}
+                onPress={() => setActiveTab('challenges')}
+                activeOpacity={0.8}
+              >
+                <Trophy size={16} color={activeTab === 'challenges' ? '#fff' : Colors.onSurfaceVariant} />
+                <Text style={[styles.segmentText, activeTab === 'challenges' && styles.segmentTextActive]}>Challenges</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -405,8 +544,10 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.contentWrap}>
             {activeTab === 'info' ? (
               <PersonalInfoSection user={user} onSave={handleSaveProfile} saving={saving} />
-            ) : (
+            ) : activeTab === 'bookings' ? (
               <BookingHistorySection bookings={bookings} loading={loadingBookings} onPress={handleBookingPress} />
+            ) : (
+              <ChallengeHistorySection challenges={challenges} loading={loadingChallenges} onPress={handleChallengePress} />
             )}
 
             {/* Logout */}
@@ -798,6 +939,118 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.onSurfaceVariant,
     textAlign: 'center',
+  },
+
+  // ── Challenges ──
+  challengesContainer: {},
+  challengeCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.onSurfaceVariant,
+  },
+  challengeCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  challengeCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 14,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.outlineLight,
+  },
+  challengeTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.onBackground,
+    marginBottom: 6,
+  },
+  challengeInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  challengeInfoText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.onSurfaceVariant,
+  },
+  challengeStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  challengeStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  challengeCardBody: {
+    padding: 12,
+  },
+  challengeCreatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  challengeAvatarSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  challengeAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  challengeCreatorLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.onSurfaceVariant,
+    marginBottom: 2,
+  },
+  challengeCreatorName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.onBackground,
+    flex: 1,
+  },
+  challengeFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  challengeDateText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.onSurfaceVariant,
+  },
+  challengeFlexSpacer: {
+    flex: 1,
+  },
+  emptyChallenges: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
   },
 
   // ── Logout ──

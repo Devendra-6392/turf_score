@@ -27,8 +27,12 @@ const CreateChallengeScreen = ({ navigation }) => {
   const [turfId, setTurfId] = useState(null);
   const [turfs, setTurfs] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState('14:00');
+  const [selectedTime, setSelectedTime] = useState('');
   const [maxPlayers, setMaxPlayers] = useState('10');
+  
+  const [turfSlots, setTurfSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -76,6 +80,29 @@ const CreateChallengeScreen = ({ navigation }) => {
       fetchTeams();
     }
   }, [challengeType, token]);
+
+  // Fetch slots when turf or date changes
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (!turfId || !selectedDate) return;
+      setLoadingSlots(true);
+      try {
+        const dateStr = selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : selectedDate;
+        const response = await fetch(`${BACKEND_URL}/turfs/${turfId}/slots?date=${dateStr}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setTurfSlots(data.filter(s => s.status === 'AVAILABLE'));
+        }
+      } catch (err) {
+        console.error('Error fetching slots:', err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+    fetchSlots();
+  }, [turfId, selectedDate, token]);
 
   const handleDateChange = (text) => {
     setSelectedDate(text);
@@ -134,6 +161,23 @@ const CreateChallengeScreen = ({ navigation }) => {
         dateStr = selectedDate || new Date().toISOString().split('T')[0];
       }
 
+      // Lock the slot if selected
+      let finalSlotId = null;
+      if (selectedSlot) {
+        const lockRes = await fetch(`${BACKEND_URL}/challenges/lock-slot`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ slotId: selectedSlot }),
+        });
+        if (!lockRes.ok) {
+          throw new Error('Failed to lock the selected slot. It might have been booked already.');
+        }
+        finalSlotId = selectedSlot;
+      }
+
       const payload = {
         title,
         description,
@@ -141,6 +185,7 @@ const CreateChallengeScreen = ({ navigation }) => {
         type: challengeType,
         challengerTeamId: challengeType === 'TEAM' ? selectedTeam : null,
         turfId: turfId || null,
+        slotId: finalSlotId,
         scheduledDate: dateStr,
         scheduledTime: selectedTime,
         maxPlayers: parseInt(maxPlayers) || 10,
@@ -332,14 +377,40 @@ const CreateChallengeScreen = ({ navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      <Text style={[styles.label, { marginTop: 16 }]}>Time</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="HH:MM"
-        placeholderTextColor={Colors.secondary}
-        value={selectedTime}
-        onChangeText={setSelectedTime}
-      />
+      <Text style={[styles.label, { marginTop: 16 }]}>Select Slot</Text>
+      {loadingSlots ? (
+        <ActivityIndicator size="small" color={Colors.primary} />
+      ) : turfSlots.length > 0 ? (
+        <View style={styles.optionsGrid}>
+          {turfSlots.map(slot => (
+            <TouchableOpacity
+              key={slot.id}
+              style={[
+                styles.optionCard,
+                selectedSlot === slot.id && styles.optionCardActive,
+                { paddingVertical: 10 }
+              ]}
+              onPress={() => {
+                setSelectedSlot(slot.id);
+                setSelectedTime(slot.startTime);
+              }}
+            >
+              <Text style={[
+                styles.optionText,
+                selectedSlot === slot.id && styles.optionTextActive,
+                { marginTop: 0, fontSize: 14 }
+              ]}>
+                {slot.startTime} - {slot.endTime}
+              </Text>
+              <Text style={{ fontSize: 10, color: Colors.secondary, marginTop: 4 }}>
+                ₹{slot.price}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : (
+        <Text style={styles.emptyText}>{turfId ? 'No slots available for this date' : 'Select a turf first'}</Text>
+      )}
     </ScrollView>
   );
 

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import ChallengeNotificationModal from '../components/ChallengeNotificationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = 'http://192.168.18.23:5000/api';
@@ -20,6 +21,8 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
 
   const challengeId = route.params?.challengeId;
   const shareCode = route.params?.shareCode;
@@ -92,16 +95,9 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
       const updated = await response.json();
       console.log('Updated challenge:', updated);
       setChallenge(updated);
-
-      Alert.alert('Success!', 'Challenge accepted! 🎉', [
-        {
-          text: 'View My Challenges',
-          onPress: () => navigation.navigate('Challenges'),
-        },
-        {
-          text: 'OK',
-        },
-      ]);
+      
+      // Show the notification modal instead of Alert
+      setShowAcceptModal(true);
     } catch (error) {
       console.error('Error accepting challenge:', error);
       Alert.alert('Error', error.message || 'Failed to accept challenge');
@@ -145,8 +141,39 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
     }
   };
 
+  const handlePayAdvance = async () => {
+    if (!challenge) return;
+    setPaying(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/challenges/pay-advance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ challengeId: challenge.id }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `Payment failed`);
+      }
+
+      const updated = await response.json();
+      setChallenge(updated);
+      Alert.alert('Success!', 'Advance paid successfully! 💸');
+    } catch (error) {
+      console.error('Error paying advance:', error);
+      Alert.alert('Payment Failed', error.message);
+    } finally {
+      setPaying(false);
+    }
+  };
+
   const isCreator = challenge && user && challenge.creatorId === user.id;
+  const isOpponent = challenge && user && challenge.opponentId === user.id;
   const isAccepted = challenge?.status === 'ACCEPTED';
+  const isCompleted = challenge?.status === 'COMPLETED';
 
   if (loading) {
     return (
@@ -176,6 +203,18 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Challenge Notification Modal */}
+      <ChallengeNotificationModal
+        visible={showAcceptModal}
+        challenge={challenge}
+        creatorName={challenge?.creator?.name || 'Challenger'}
+        onClose={() => setShowAcceptModal(false)}
+        onViewChallenge={() => {
+          setShowAcceptModal(false);
+          navigation.navigate('Challenges');
+        }}
+      />
+
       {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -350,7 +389,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
-          {isCreator && !isAccepted && (
+          {isCreator && challenge.status === 'OPEN' && (
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={handleShareWhatsApp}
@@ -367,7 +406,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           )}
 
-          {!isCreator && !isAccepted && (
+          {!isCreator && challenge.status === 'OPEN' && (
             <TouchableOpacity
               style={[styles.primaryButton, accepting && styles.buttonDisabled]}
               onPress={handleAcceptChallenge}
@@ -392,10 +431,59 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
           )}
 
           {isAccepted && (
-            <View style={styles.successMessage}>
-              <CheckCircle2 size={24} color={Colors.primary} />
-              <Text style={styles.successText}>Challenge Accepted! ✨</Text>
+            <View>
+              {/* Creator Payment */}
+              {isCreator && !challenge.creatorPaid && (
+                 <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
+                   <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
+                     {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Creator)</Text>}
+                   </LinearGradient>
+                 </TouchableOpacity>
+              )}
+              {isCreator && challenge.creatorPaid && !challenge.opponentPaid && (
+                 <Text style={{textAlign: 'center', marginVertical: 10, color: Colors.secondary, fontWeight: 'bold'}}>Waiting for opponent to pay...</Text>
+              )}
+
+              {/* Opponent Payment */}
+              {isOpponent && !challenge.opponentPaid && (
+                 <TouchableOpacity style={[styles.primaryButton, paying && styles.buttonDisabled]} onPress={handlePayAdvance} disabled={paying}>
+                   <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.buttonGradient}>
+                     {paying ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.primaryButtonText}>Pay Advance (Opponent)</Text>}
+                   </LinearGradient>
+                 </TouchableOpacity>
+              )}
+              {isOpponent && challenge.opponentPaid && !challenge.creatorPaid && (
+                 <Text style={{textAlign: 'center', marginVertical: 10, color: Colors.secondary, fontWeight: 'bold'}}>Waiting for creator to pay...</Text>
+              )}
+
+              {/* Both Paid -> Confirmed */}
+              {challenge.creatorPaid && challenge.opponentPaid && (
+                 <View style={styles.successMessage}>
+                   <CheckCircle2 size={24} color={Colors.primary} />
+                   <Text style={styles.successText}>Match Confirmed! ✨</Text>
+                 </View>
+              )}
             </View>
+          )}
+
+          {/* Submit Result Button */}
+          {isAccepted && challenge.creatorPaid && challenge.opponentPaid && (
+             <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('MatchResult', { challengeId: challenge.id })}>
+               <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.buttonGradient}>
+                 <Trophy size={20} color="#fff" />
+                 <Text style={styles.primaryButtonText}>Submit Match Result</Text>
+               </LinearGradient>
+             </TouchableOpacity>
+          )}
+
+          {/* Completed State */}
+          {isCompleted && (
+             <View style={styles.successMessage}>
+               <Trophy size={24} color={Colors.primary} />
+               <Text style={styles.successText}>
+                 Challenge Completed!
+               </Text>
+             </View>
           )}
 
           <TouchableOpacity

@@ -11,6 +11,7 @@ const teamRoutes = require('./src/routes/teamRoutes');
 const checkInRoutes = require('./src/routes/checkInRoutes');
 const bannerRoutes = require('./src/routes/bannerRoutes');
 const challengeRoutes = require('./src/routes/challengeRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +35,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/check-ins', checkInRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Database check and Start
 const prisma = require('./src/config/db');
