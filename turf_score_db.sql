@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 27, 2026 at 02:27 PM
+-- Generation Time: May 30, 2026 at 02:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -137,44 +137,45 @@ CREATE TABLE `booking` (
   `subTotal` double NOT NULL DEFAULT 0,
   `taxAmount` double NOT NULL DEFAULT 0,
   `checkedInById` varchar(36) DEFAULT NULL,
-  `teamId` varchar(36) DEFAULT NULL
+  `teamId` varchar(36) DEFAULT NULL,
+  `challengeId` varchar(36) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `booking`
 --
 
-INSERT INTO `booking` (`id`, `userId`, `turfId`, `slotId`, `amount`, `status`, `razorpayId`, `createdAt`, `additionalNotes`, `bookingNumber`, `cancelledBy`, `checkInStatus`, `checkInTime`, `couponCode`, `discountAmount`, `paymentStatus`, `subTotal`, `taxAmount`, `checkedInById`, `teamId`) VALUES
-('030c6759-3be3-413e-9121-ca201eeef812', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '87ed10a3-be0a-472e-ac29-9afd97b5acca', 1200, 'COMPLETED', NULL, '2026-05-26 04:30:00.000', NULL, '27964b4c-50ff-48aa-9198-f0fc023ee050', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('0ddc78f2-149f-4e6c-ace2-c1d1717c6b29', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '14e1b680-3cb3-43aa-af4e-06fde1d9a911', 1500, 'CONFIRMED', NULL, '2026-05-25 06:30:00.000', NULL, '9aee843d-041e-4e6f-9148-ca206285a5b9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('13ee95bd-2319-468e-b21e-5b17fd2c758b', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', 'c009d5e9-678a-41f7-9bb2-fc777ecaf309', 2781, 'CONFIRMED', 'pay_mock_7dxs2kx84', '2026-05-26 15:54:05.126', NULL, '2fe5f5ef-3bf8-4ee2-8c3b-31702ce6b3b9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('17f54512-d687-4630-8943-05a26070f148', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'f51e7f80-b535-46ce-b0d6-ed0e30fe114a', 1500, 'CONFIRMED', NULL, '2026-05-21 06:30:00.000', NULL, 'e6dfa689-93ab-420c-afbc-2328e368449f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('293cf900-060b-443a-b973-5ffc2369710e', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e3589eb7-f132-4ee0-b049-4b6c2f396f47', 1200, 'COMPLETED', NULL, '2026-05-20 05:30:00.000', NULL, 'a5cb75c0-83d4-49cd-a68e-774d0978f022', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('2e7af1a8-549c-4fee-875f-d9d0ece44989', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'dbb883d5-a929-4890-bd2d-12c942a47b4d', 1200, 'COMPLETED', NULL, '2026-05-24 06:30:00.000', NULL, 'df82ec08-91ec-486c-8382-ca93cd03d8a6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('2ec77a7b-b964-4a0c-b1c0-16388d261a2e', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'f3f43baa-6c5d-4d54-9e92-89a550b3e3f3', 1200, 'CONFIRMED', NULL, '2026-05-24 04:30:00.000', NULL, 'dbc52548-4200-4101-8f22-56780aab985f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('3a500afc-2318-4ae3-aa9b-59a9cda37d04', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'ac785769-d2c2-4241-9364-5330c840f61e', 1200, 'COMPLETED', NULL, '2026-05-25 04:30:00.000', NULL, '0afb04cf-3349-49a8-a981-fcd412ff1870', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('3d2d369f-5c2e-4406-9263-2e87dffd592e', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'dab0d67b-cd7f-436b-bbb9-9129b3602f29', 800, 'CONFIRMED', 'pay_mock_9av1103h8', '2026-05-27 10:47:25.594', NULL, '707a99bb-012f-403c-b7a8-5ef7cd54214c', NULL, 1, '2026-05-27 10:47:42.680', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL),
-('428c3b88-f537-4ce1-ac60-b0e24c0b8aa9', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'bf508521-f1e5-4b50-b111-6c042e0a35e5', 1200, 'CONFIRMED', NULL, '2026-05-21 04:30:00.000', NULL, 'c85eb916-9759-4f7a-8048-7972951d5d2e', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('4519fa7c-3e0b-49a0-8366-ae5029d013e9', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', 'a2ed5503-3316-45ba-97a8-55bb028e3948', '78864bff-dc23-4afa-ae2e-8c18d72bdd41', 1100, 'CANCELLED', 'pay_mock_r62ng1kxj', '2026-05-26 11:34:45.071', NULL, 'b7cf2d8c-63c7-444c-b3b3-beb4bff40384', NULL, 1, '2026-05-26 11:34:59.417', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL),
-('4b1756ab-360e-42ce-adfa-089a6880a31f', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '4f682c96-848d-453f-9c30-cd10b3bdd81d', 1200, 'CONFIRMED', NULL, '2026-05-25 05:30:00.000', NULL, '6ce1bfa6-8087-4e59-be22-d87782ad6f23', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('52a77de2-7e94-44b7-a9b6-76cbe455e951', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '651a3bab-e058-47aa-87bc-a1637e6c10c2', 1500, 'COMPLETED', NULL, '2026-05-23 05:30:00.000', NULL, '73977209-0a06-4ade-a14b-7f114d7261a6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('55737532-b58a-4311-99e8-d2f4af41b4a4', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'd2ae1af1-2c89-410e-b49e-404dfc680885', 1500, 'COMPLETED', NULL, '2026-05-26 06:30:00.000', NULL, '8b1d0f73-6f5f-493c-904c-8933eabb13d6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('576e74e0-a076-497c-a58c-b19fb1132c6b', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e19e12bc-b3a2-4f92-bdb2-cbd5829c22a5', 1200, 'CONFIRMED', NULL, '2026-05-26 05:30:00.000', NULL, 'a9d189dd-7f5d-49fc-9611-12b0e2be78dc', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('57d9ab7c-5ced-47d0-a017-31fc97563737', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'af071cc5-aa53-4628-8302-a744bb16a68b', 1200, 'CONFIRMED', 'pay_mock_nlo0dj5o5', '2026-05-26 16:24:54.534', NULL, '0d700e85-ce8a-41fc-be8c-32ee7161c3db', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('7669ec54-4684-4dac-b4d1-6fb38a82913b', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'a790c614-2cd6-4210-9f94-2323ca5486fe', 800, 'CONFIRMED', 'pay_mock_dhkqbjjhq', '2026-05-27 12:01:03.445', NULL, 'd4b7a0f8-cb08-4245-910d-49dbaded0fd9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('76adb764-15fc-4a4f-80f8-39cafc7201a2', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '16e42506-b3f4-4b05-bb48-0c55bd2bd959', 1200, 'COMPLETED', NULL, '2026-05-21 05:30:00.000', NULL, '27e85166-317d-49cb-ba50-01a983d51e6c', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('7a7c2d1d-93e6-4333-a780-83045e27b9e3', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '6238386a-4999-4101-b166-5b81dc965b9e', 3430, 'CONFIRMED', 'pay_mock_vof1syegt', '2026-05-26 14:50:02.659', NULL, 'f7f67d0d-7b92-459c-8a39-1abd6aa0f556', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('818d5570-cd51-4a49-b423-35e922a345c6', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '6306a22d-cd4e-4458-833e-00276546e38a', 1200, 'CONFIRMED', NULL, '2026-05-22 05:30:00.000', NULL, '5d5f7281-4268-4145-97e3-16afd9aa1a50', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('82f9be30-ee00-4ace-ba37-b6d5d1f44781', '6ecbee09-285f-4454-8c24-78e7e4045ede', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '6d7c32fc-08fc-48a2-8c55-e230bfff4e8f', 1200, 'CONFIRMED', 'pay_mock_ysts12jp4', '2026-05-27 10:59:21.425', NULL, '34c7bdf3-3e48-4707-8e37-54efef92caf0', NULL, 1, '2026-05-27 10:59:40.404', NULL, 0, 'PENDING', 0, 0, '6ecbee09-285f-4454-8c24-78e7e4045ede', NULL),
-('8d2e2cb8-5227-4aef-9d98-769d985ad065', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'a37b0d86-df71-42da-95b3-e94b1f64ac7b', 1500, 'COMPLETED', NULL, '2026-05-20 04:30:00.000', NULL, '3046edc0-b19f-4de4-b8f3-9ca4c26e86fa', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('8d9d566e-73cc-4998-9a20-5d5e0af11cc5', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'a7dd7a73-fb06-4e59-a22b-f50eafa720f2', 1500, 'COMPLETED', NULL, '2026-05-22 04:30:00.000', NULL, 'de593695-ef66-40c4-bacf-ccecffad747c', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('a7049a72-0738-4c24-85d4-abdd4a9c289e', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', 'a2ed5503-3316-45ba-97a8-55bb028e3948', 'fd9e51f4-d4f0-408c-80ff-dc8ebebe8df8', 800, 'CONFIRMED', 'pay_mock_7rfuoescl', '2026-05-26 11:30:29.201', NULL, '9ea5cfbb-f7d6-498a-84f9-da94dd9623e2', NULL, 1, '2026-05-26 11:30:46.654', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL),
-('b3266299-f616-405c-b9b1-a4dc204526e4', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '00505bca-7513-4356-88b5-ecbfd3db5bec', 1500, 'CONFIRMED', NULL, '2026-05-23 04:30:00.000', NULL, 'ddb94f1a-36ac-401e-9168-639f4de24acf', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('bed39a59-4a72-4e97-a835-3cf5bda74fce', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e0a063ab-f89f-4b40-8076-f53cb1721635', 1200, 'CONFIRMED', NULL, '2026-05-24 05:30:00.000', NULL, 'e04929f1-c834-4530-9589-3b194070055a', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('eb3a1993-63eb-496f-ac1b-32e553be3bf1', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', '0f196453-df2a-4cba-94cb-7d6a91f79168', 800, 'CONFIRMED', 'pay_mock_wnm5mqew2', '2026-05-27 10:43:50.203', NULL, '1d1d0520-a77d-48ec-8b61-832fb6177f69', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('f1c5cc49-c99f-4e7d-9612-ba0f3c27c773', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'c46bf224-798f-422d-b53a-190ba11a0412', 1500, 'CONFIRMED', NULL, '2026-05-22 06:30:00.000', NULL, '738034b7-e5bd-457f-90c9-fa60d4bae65f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('f2d78c64-6023-4e36-ad41-f74453274523', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'c3dee134-7b3b-4a0a-8985-6d0051e19e7c', 1200, 'CONFIRMED', NULL, '2026-05-23 06:30:00.000', NULL, '84579802-be08-48dd-9544-3f5731d5561e', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL),
-('fccb4320-6fbb-4f6d-8ab8-8e72833d0f1f', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '9ee721e9-14bd-426a-9660-bdfca1d9d1ee', 2603, 'CONFIRMED', 'pay_mock_6k1z2y1q0', '2026-05-26 15:55:23.844', NULL, 'f972ca24-47c9-43e3-b2e1-49eea19476df', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL);
+INSERT INTO `booking` (`id`, `userId`, `turfId`, `slotId`, `amount`, `status`, `razorpayId`, `createdAt`, `additionalNotes`, `bookingNumber`, `cancelledBy`, `checkInStatus`, `checkInTime`, `couponCode`, `discountAmount`, `paymentStatus`, `subTotal`, `taxAmount`, `checkedInById`, `teamId`, `challengeId`) VALUES
+('030c6759-3be3-413e-9121-ca201eeef812', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '87ed10a3-be0a-472e-ac29-9afd97b5acca', 1200, 'COMPLETED', NULL, '2026-05-26 04:30:00.000', NULL, '27964b4c-50ff-48aa-9198-f0fc023ee050', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('0ddc78f2-149f-4e6c-ace2-c1d1717c6b29', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '14e1b680-3cb3-43aa-af4e-06fde1d9a911', 1500, 'CONFIRMED', NULL, '2026-05-25 06:30:00.000', NULL, '9aee843d-041e-4e6f-9148-ca206285a5b9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('13ee95bd-2319-468e-b21e-5b17fd2c758b', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', 'c009d5e9-678a-41f7-9bb2-fc777ecaf309', 2781, 'CONFIRMED', 'pay_mock_7dxs2kx84', '2026-05-26 15:54:05.126', NULL, '2fe5f5ef-3bf8-4ee2-8c3b-31702ce6b3b9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('17f54512-d687-4630-8943-05a26070f148', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'f51e7f80-b535-46ce-b0d6-ed0e30fe114a', 1500, 'CONFIRMED', NULL, '2026-05-21 06:30:00.000', NULL, 'e6dfa689-93ab-420c-afbc-2328e368449f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('293cf900-060b-443a-b973-5ffc2369710e', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e3589eb7-f132-4ee0-b049-4b6c2f396f47', 1200, 'COMPLETED', NULL, '2026-05-20 05:30:00.000', NULL, 'a5cb75c0-83d4-49cd-a68e-774d0978f022', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('2e7af1a8-549c-4fee-875f-d9d0ece44989', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'dbb883d5-a929-4890-bd2d-12c942a47b4d', 1200, 'COMPLETED', NULL, '2026-05-24 06:30:00.000', NULL, 'df82ec08-91ec-486c-8382-ca93cd03d8a6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('2ec77a7b-b964-4a0c-b1c0-16388d261a2e', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'f3f43baa-6c5d-4d54-9e92-89a550b3e3f3', 1200, 'CONFIRMED', NULL, '2026-05-24 04:30:00.000', NULL, 'dbc52548-4200-4101-8f22-56780aab985f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('3a500afc-2318-4ae3-aa9b-59a9cda37d04', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'ac785769-d2c2-4241-9364-5330c840f61e', 1200, 'COMPLETED', NULL, '2026-05-25 04:30:00.000', NULL, '0afb04cf-3349-49a8-a981-fcd412ff1870', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('3d2d369f-5c2e-4406-9263-2e87dffd592e', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'dab0d67b-cd7f-436b-bbb9-9129b3602f29', 800, 'CONFIRMED', 'pay_mock_9av1103h8', '2026-05-27 10:47:25.594', NULL, '707a99bb-012f-403c-b7a8-5ef7cd54214c', NULL, 1, '2026-05-27 10:47:42.680', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL, NULL),
+('428c3b88-f537-4ce1-ac60-b0e24c0b8aa9', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'bf508521-f1e5-4b50-b111-6c042e0a35e5', 1200, 'CONFIRMED', NULL, '2026-05-21 04:30:00.000', NULL, 'c85eb916-9759-4f7a-8048-7972951d5d2e', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('4519fa7c-3e0b-49a0-8366-ae5029d013e9', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', 'a2ed5503-3316-45ba-97a8-55bb028e3948', '78864bff-dc23-4afa-ae2e-8c18d72bdd41', 1100, 'CANCELLED', 'pay_mock_r62ng1kxj', '2026-05-26 11:34:45.071', NULL, 'b7cf2d8c-63c7-444c-b3b3-beb4bff40384', NULL, 1, '2026-05-26 11:34:59.417', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL, NULL),
+('4b1756ab-360e-42ce-adfa-089a6880a31f', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '4f682c96-848d-453f-9c30-cd10b3bdd81d', 1200, 'CONFIRMED', NULL, '2026-05-25 05:30:00.000', NULL, '6ce1bfa6-8087-4e59-be22-d87782ad6f23', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('52a77de2-7e94-44b7-a9b6-76cbe455e951', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '651a3bab-e058-47aa-87bc-a1637e6c10c2', 1500, 'COMPLETED', NULL, '2026-05-23 05:30:00.000', NULL, '73977209-0a06-4ade-a14b-7f114d7261a6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('55737532-b58a-4311-99e8-d2f4af41b4a4', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'd2ae1af1-2c89-410e-b49e-404dfc680885', 1500, 'COMPLETED', NULL, '2026-05-26 06:30:00.000', NULL, '8b1d0f73-6f5f-493c-904c-8933eabb13d6', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('576e74e0-a076-497c-a58c-b19fb1132c6b', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e19e12bc-b3a2-4f92-bdb2-cbd5829c22a5', 1200, 'CONFIRMED', NULL, '2026-05-26 05:30:00.000', NULL, 'a9d189dd-7f5d-49fc-9611-12b0e2be78dc', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('57d9ab7c-5ced-47d0-a017-31fc97563737', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'af071cc5-aa53-4628-8302-a744bb16a68b', 1200, 'CONFIRMED', 'pay_mock_nlo0dj5o5', '2026-05-26 16:24:54.534', NULL, '0d700e85-ce8a-41fc-be8c-32ee7161c3db', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('7669ec54-4684-4dac-b4d1-6fb38a82913b', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', 'a790c614-2cd6-4210-9f94-2323ca5486fe', 800, 'CONFIRMED', 'pay_mock_dhkqbjjhq', '2026-05-27 12:01:03.445', NULL, 'd4b7a0f8-cb08-4245-910d-49dbaded0fd9', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('76adb764-15fc-4a4f-80f8-39cafc7201a2', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '16e42506-b3f4-4b05-bb48-0c55bd2bd959', 1200, 'COMPLETED', NULL, '2026-05-21 05:30:00.000', NULL, '27e85166-317d-49cb-ba50-01a983d51e6c', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('7a7c2d1d-93e6-4333-a780-83045e27b9e3', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '6238386a-4999-4101-b166-5b81dc965b9e', 3430, 'CONFIRMED', 'pay_mock_vof1syegt', '2026-05-26 14:50:02.659', NULL, 'f7f67d0d-7b92-459c-8a39-1abd6aa0f556', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('818d5570-cd51-4a49-b423-35e922a345c6', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', '6306a22d-cd4e-4458-833e-00276546e38a', 1200, 'CONFIRMED', NULL, '2026-05-22 05:30:00.000', NULL, '5d5f7281-4268-4145-97e3-16afd9aa1a50', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('82f9be30-ee00-4ace-ba37-b6d5d1f44781', '6ecbee09-285f-4454-8c24-78e7e4045ede', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '6d7c32fc-08fc-48a2-8c55-e230bfff4e8f', 1200, 'CONFIRMED', 'pay_mock_ysts12jp4', '2026-05-27 10:59:21.425', NULL, '34c7bdf3-3e48-4707-8e37-54efef92caf0', NULL, 1, '2026-05-27 10:59:40.404', NULL, 0, 'PENDING', 0, 0, '6ecbee09-285f-4454-8c24-78e7e4045ede', NULL, NULL),
+('8d2e2cb8-5227-4aef-9d98-769d985ad065', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'a37b0d86-df71-42da-95b3-e94b1f64ac7b', 1500, 'COMPLETED', NULL, '2026-05-20 04:30:00.000', NULL, '3046edc0-b19f-4de4-b8f3-9ca4c26e86fa', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('8d9d566e-73cc-4998-9a20-5d5e0af11cc5', '8078200b-c7c4-408b-811b-179cb0d3a781', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'a7dd7a73-fb06-4e59-a22b-f50eafa720f2', 1500, 'COMPLETED', NULL, '2026-05-22 04:30:00.000', NULL, 'de593695-ef66-40c4-bacf-ccecffad747c', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('a7049a72-0738-4c24-85d4-abdd4a9c289e', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', 'a2ed5503-3316-45ba-97a8-55bb028e3948', 'fd9e51f4-d4f0-408c-80ff-dc8ebebe8df8', 800, 'CONFIRMED', 'pay_mock_7rfuoescl', '2026-05-26 11:30:29.201', NULL, '9ea5cfbb-f7d6-498a-84f9-da94dd9623e2', NULL, 1, '2026-05-26 11:30:46.654', NULL, 0, 'PENDING', 0, 0, '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL, NULL),
+('b3266299-f616-405c-b9b1-a4dc204526e4', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', '00505bca-7513-4356-88b5-ecbfd3db5bec', 1500, 'CONFIRMED', NULL, '2026-05-23 04:30:00.000', NULL, 'ddb94f1a-36ac-401e-9168-639f4de24acf', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('bed39a59-4a72-4e97-a835-3cf5bda74fce', '8078200b-c7c4-408b-811b-179cb0d3a781', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'e0a063ab-f89f-4b40-8076-f53cb1721635', 1200, 'CONFIRMED', NULL, '2026-05-24 05:30:00.000', NULL, 'e04929f1-c834-4530-9589-3b194070055a', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('eb3a1993-63eb-496f-ac1b-32e553be3bf1', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '19e1f5f2-24ac-417e-ac84-e262e5640db9', '0f196453-df2a-4cba-94cb-7d6a91f79168', 800, 'CONFIRMED', 'pay_mock_wnm5mqew2', '2026-05-27 10:43:50.203', NULL, '1d1d0520-a77d-48ec-8b61-832fb6177f69', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('f1c5cc49-c99f-4e7d-9612-ba0f3c27c773', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '6a21c0c2-4d4c-4e9a-b24d-6a9e76b3db09', 'c46bf224-798f-422d-b53a-190ba11a0412', 1500, 'CONFIRMED', NULL, '2026-05-22 06:30:00.000', NULL, '738034b7-e5bd-457f-90c9-fa60d4bae65f', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('f2d78c64-6023-4e36-ad41-f74453274523', '9cd25fdc-9e9c-4b7a-b0c9-7413af3d1f41', '79e5f8d8-6dc7-4192-80e8-41cfbca3d1e4', 'c3dee134-7b3b-4a0a-8985-6d0051e19e7c', 1200, 'CONFIRMED', NULL, '2026-05-23 06:30:00.000', NULL, '84579802-be08-48dd-9544-3f5731d5561e', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL),
+('fccb4320-6fbb-4f6d-8ab8-8e72833d0f1f', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', '2c2f9127-805b-4892-8a1a-ad1cc06c5412', '9ee721e9-14bd-426a-9660-bdfca1d9d1ee', 2603, 'CONFIRMED', 'pay_mock_6k1z2y1q0', '2026-05-26 15:55:23.844', NULL, 'f972ca24-47c9-43e3-b2e1-49eea19476df', NULL, 0, NULL, NULL, 0, 'PENDING', 0, 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -242,6 +243,51 @@ CREATE TABLE `cancellationrequest` (
 
 INSERT INTO `cancellationrequest` (`id`, `bookingId`, `userId`, `reason`, `reasonType`, `refundAmount`, `refundStatus`, `weatherData`, `createdAt`, `processedAt`) VALUES
 ('1c5e350a-5cbd-4c19-916f-36c8220156ce', '4519fa7c-3e0b-49a0-8366-ae5029d013e9', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', 'User requested cancellation via App', 'PERSONAL', 1100, 'PROCESSED', NULL, '2026-05-26 11:36:22.166', '2026-05-26 11:40:03.807');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `challenge`
+--
+
+CREATE TABLE `challenge` (
+  `id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `sportType` enum('CRICKET','FOOTBALL','TENNIS','BADMINTON','BASKETBALL','VOLLEYBALL') NOT NULL,
+  `type` enum('INDIVIDUAL','TEAM') NOT NULL DEFAULT 'INDIVIDUAL',
+  `status` enum('OPEN','ACCEPTED','CANCELLED','COMPLETED','EXPIRED') NOT NULL DEFAULT 'OPEN',
+  `creatorId` varchar(36) NOT NULL,
+  `challengerTeamId` varchar(36) DEFAULT NULL,
+  `opponentId` varchar(36) DEFAULT NULL,
+  `opponentTeamId` varchar(36) DEFAULT NULL,
+  `turfId` varchar(36) DEFAULT NULL,
+  `scheduledDate` varchar(20) DEFAULT NULL,
+  `scheduledTime` varchar(10) DEFAULT NULL,
+  `skillLevel` varchar(50) NOT NULL DEFAULT 'ALL',
+  `maxPlayers` int(11) NOT NULL DEFAULT 10,
+  `message` text DEFAULT NULL,
+  `shareCode` varchar(36) NOT NULL,
+  `isPublic` tinyint(1) NOT NULL DEFAULT 1,
+  `expiresAt` datetime(3) DEFAULT NULL,
+  `acceptedAt` datetime(3) DEFAULT NULL,
+  `creatorPaid` tinyint(1) NOT NULL DEFAULT 0,
+  `opponentPaid` tinyint(1) NOT NULL DEFAULT 0,
+  `creatorScore` int(11) DEFAULT NULL,
+  `opponentScore` int(11) DEFAULT NULL,
+  `winnerId` varchar(36) DEFAULT NULL,
+  `slotId` varchar(36) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `updatedAt` datetime(3) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `challenge`
+--
+
+INSERT INTO `challenge` (`id`, `title`, `description`, `sportType`, `type`, `status`, `creatorId`, `challengerTeamId`, `opponentId`, `opponentTeamId`, `turfId`, `scheduledDate`, `scheduledTime`, `skillLevel`, `maxPlayers`, `message`, `shareCode`, `isPublic`, `expiresAt`, `acceptedAt`, `creatorPaid`, `opponentPaid`, `creatorScore`, `opponentScore`, `winnerId`, `slotId`, `createdAt`, `updatedAt`) VALUES
+('18fe03ce-c9a6-4b4c-8bf6-1bfd840bddf1', 'Sjse5', 'Djsxbnsx', 'TENNIS', 'INDIVIDUAL', 'ACCEPTED', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL, '6ecbee09-285f-4454-8c24-78e7e4045ede', NULL, '19e1f5f2-24ac-417e-ac84-e262e5640db9', '2026-05-29', NULL, 'ALL', 1, NULL, '382ead9c-42cb-405c-a579-52969f366797', 1, '2026-06-05 05:53:58.748', '2026-05-29 06:11:26.814', 0, 0, NULL, NULL, NULL, NULL, '2026-05-29 05:53:58.750', '2026-05-29 06:11:26.816'),
+('d6c25022-8574-4fa6-be04-2ffb70d4af31', 'Sjse5', 'Djsxbnsx', 'TENNIS', 'INDIVIDUAL', 'ACCEPTED', '03bb8fc4-aa47-48ab-922e-7ab3445cb1d9', NULL, '6ecbee09-285f-4454-8c24-78e7e4045ede', NULL, '19e1f5f2-24ac-417e-ac84-e262e5640db9', '2026-05-29', NULL, 'ALL', 1, NULL, '158718e0-676a-4705-85b5-08a7cab89093', 1, '2026-06-05 05:53:47.108', '2026-05-29 06:09:46.610', 0, 1, NULL, NULL, NULL, NULL, '2026-05-29 05:53:47.111', '2026-05-29 06:09:55.509');
 
 -- --------------------------------------------------------
 
@@ -336,7 +382,7 @@ CREATE TABLE `notification` (
   `userId` varchar(36) NOT NULL,
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL,
-  `type` enum('BOOKING_CONFIRMATION','REMINDER','RAIN_ALERT','PRICE_DROP','PROMOTION','PAYMENT_SUCCESS','CANCELLATION') NOT NULL,
+  `type` enum('BOOKING_CONFIRMATION','REMINDER','RAIN_ALERT','PRICE_DROP','PROMOTION','PAYMENT_SUCCESS','CANCELLATION','CHALLENGE_CREATED','CHALLENGE_ACCEPTED') NOT NULL,
   `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data`)),
   `isRead` tinyint(1) NOT NULL DEFAULT 0,
   `sentAt` datetime(3) NOT NULL,
@@ -824,7 +870,8 @@ ALTER TABLE `booking`
   ADD KEY `Booking_userId_idx` (`userId`),
   ADD KEY `Booking_turfId_idx` (`turfId`),
   ADD KEY `Booking_status_idx` (`status`),
-  ADD KEY `Booking_teamId_idx` (`teamId`);
+  ADD KEY `Booking_teamId_idx` (`teamId`),
+  ADD KEY `Booking_challengeId_fkey` (`challengeId`);
 
 --
 -- Indexes for table `bookingaddon`
@@ -849,6 +896,22 @@ ALTER TABLE `cancellationrequest`
   ADD UNIQUE KEY `CancellationRequest_bookingId_key` (`bookingId`),
   ADD KEY `CancellationRequest_userId_idx` (`userId`),
   ADD KEY `CancellationRequest_refundStatus_idx` (`refundStatus`);
+
+--
+-- Indexes for table `challenge`
+--
+ALTER TABLE `challenge`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `Challenge_shareCode_key` (`shareCode`),
+  ADD KEY `Challenge_creatorId_idx` (`creatorId`),
+  ADD KEY `Challenge_status_idx` (`status`),
+  ADD KEY `Challenge_sportType_idx` (`sportType`),
+  ADD KEY `Challenge_shareCode_idx` (`shareCode`),
+  ADD KEY `Challenge_challengerTeamId_fkey` (`challengerTeamId`),
+  ADD KEY `Challenge_opponentId_fkey` (`opponentId`),
+  ADD KEY `Challenge_opponentTeamId_fkey` (`opponentTeamId`),
+  ADD KEY `Challenge_turfId_fkey` (`turfId`),
+  ADD KEY `Challenge_slotId_fkey` (`slotId`);
 
 --
 -- Indexes for table `coupon`
@@ -1008,6 +1071,7 @@ ALTER TABLE `adminpaneluser`
 -- Constraints for table `booking`
 --
 ALTER TABLE `booking`
+  ADD CONSTRAINT `Booking_challengeId_fkey` FOREIGN KEY (`challengeId`) REFERENCES `challenge` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `Booking_slotId_fkey` FOREIGN KEY (`slotId`) REFERENCES `turfslot` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `Booking_teamId_fkey` FOREIGN KEY (`teamId`) REFERENCES `team` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `Booking_turfId_fkey` FOREIGN KEY (`turfId`) REFERENCES `turf` (`id`) ON UPDATE CASCADE,
@@ -1032,6 +1096,17 @@ ALTER TABLE `cancellationpolicy`
 ALTER TABLE `cancellationrequest`
   ADD CONSTRAINT `CancellationRequest_bookingId_fkey` FOREIGN KEY (`bookingId`) REFERENCES `booking` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `CancellationRequest_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `challenge`
+--
+ALTER TABLE `challenge`
+  ADD CONSTRAINT `Challenge_challengerTeamId_fkey` FOREIGN KEY (`challengerTeamId`) REFERENCES `team` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `Challenge_creatorId_fkey` FOREIGN KEY (`creatorId`) REFERENCES `user` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `Challenge_opponentId_fkey` FOREIGN KEY (`opponentId`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `Challenge_opponentTeamId_fkey` FOREIGN KEY (`opponentTeamId`) REFERENCES `team` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `Challenge_slotId_fkey` FOREIGN KEY (`slotId`) REFERENCES `turfslot` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `Challenge_turfId_fkey` FOREIGN KEY (`turfId`) REFERENCES `turf` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `favorite`
@@ -1097,6 +1172,7 @@ ALTER TABLE `team`
 -- Constraints for table `teammember`
 --
 ALTER TABLE `teammember`
+  ADD CONSTRAINT `TeamMember_teamId_fkey` FOREIGN KEY (`teamId`) REFERENCES `team` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `TeamMember_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
