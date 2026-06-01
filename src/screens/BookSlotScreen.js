@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  StatusBar, Platform, ActivityIndicator, Alert, Dimensions
+  StatusBar, Platform, ActivityIndicator, Alert, Dimensions, Switch, Animated, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-react-native';
@@ -13,7 +13,7 @@ import { NativeModules } from 'react-native';
 import Constants from 'expo-constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -260,9 +260,38 @@ const BookSlotScreen = ({ route, navigation }) => {
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [booking, setBooking] = useState(false);
+  const [acceptsChallenges, setAcceptsChallenges] = useState(false);
+  const bookingShine = useRef(new Animated.Value(0)).current;
 
   const peopleCounts = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
   const dateStr = selectedDate.toISOString().split('T')[0];
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bookingShine, {
+          toValue: 1,
+          duration: 1650,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.delay(950),
+        Animated.timing(bookingShine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+    return () => loop.stop();
+  }, [bookingShine]);
+
+  const bookingShineTranslate = bookingShine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
+  });
 
   // ── Fetch slots ──
   useEffect(() => {
@@ -385,7 +414,8 @@ const BookSlotScreen = ({ route, navigation }) => {
           razorpayPaymentId: paymentData.razorpay_payment_id,
           razorpaySignature: paymentData.razorpay_signature,
           paymentMethod: 'razorpay',
-          teamId: selectedTeamId || undefined
+          teamId: selectedTeamId || undefined,
+          acceptsChallenges: acceptsChallenges
         })
       });
       const result = await response.json();
@@ -484,6 +514,22 @@ const BookSlotScreen = ({ route, navigation }) => {
           </View>
         )}
 
+        {/* ── Challenge Toggle ── */}
+        <View style={styles.section}>
+          <View style={styles.challengeToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>Open for Challenge</Text>
+              <Text style={styles.challengeHint}>Save 50% by letting another team challenge you for this slot!</Text>
+            </View>
+            <Switch
+              value={acceptsChallenges}
+              onValueChange={setAcceptsChallenges}
+              trackColor={{ false: Colors.outlineLight, true: Colors.primary }}
+              thumbColor={Platform.OS === 'ios' ? '#fff' : (acceptsChallenges ? '#fff' : '#f4f3f4')}
+            />
+          </View>
+        </View>
+
         {/* ── Booking Summary ── */}
         {selectedSlot && (
           <View style={styles.summaryCard}>
@@ -525,6 +571,15 @@ const BookSlotScreen = ({ route, navigation }) => {
           disabled={!selectedSlot || booking}
           activeOpacity={0.85}
         >
+          {selectedSlot && !booking && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.confirmBtnShine,
+                { transform: [{ translateX: bookingShineTranslate }, { rotate: '18deg' }] },
+              ]}
+            />
+          )}
           <Text style={styles.confirmBtnText}>
             {booking ? 'Processing...' : 'Confirm Booking'}
           </Text>
@@ -684,6 +739,25 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
+  // ── Challenge Toggle ──
+  challengeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+  },
+  challengeHint: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontWeight: '600',
+    marginTop: 2,
+    paddingRight: 10,
+  },
+
   // ── Summary Card ──
   summaryCard: {
     backgroundColor: Colors.surface,
@@ -756,6 +830,14 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     borderRadius: 30,
     gap: 12,
+    overflow: 'hidden',
+  },
+  confirmBtnShine: {
+    position: 'absolute',
+    top: -18,
+    bottom: -18,
+    width: 58,
+    backgroundColor: 'rgba(255,255,255,0.22)',
   },
   confirmBtnDisabled: {
     opacity: 0.5,

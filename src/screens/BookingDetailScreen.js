@@ -12,14 +12,14 @@ import {
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BookingDetailScreen = ({ route, navigation }) => {
   const { booking } = route.params;
   const [loading, setLoading] = useState(false);
 
-  const date = new Date(booking.bookingDate || booking.createdAt);
+  const date = new Date(booking.bookingDate || booking.scheduledDate || booking.createdAt || Date.now());
   const formattedDate = date.toLocaleDateString('en-IN', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
@@ -148,7 +148,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
               <View style={styles.scheduleDivider} />
               <View style={styles.scheduleItem}>
                 <Text style={styles.scheduleLabel}>Time Slot</Text>
-                <Text style={styles.scheduleValue}>{booking.timeSlot}</Text>
+                <Text style={styles.scheduleValue}>{booking.timeSlot || 'Time not specified'}</Text>
               </View>
             </View>
           </View>
@@ -161,7 +161,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Booking Amount</Text>
-              <Text style={styles.paymentValue}>₹{booking.amount}</Text>
+              <Text style={styles.paymentValue}>₹{booking.amount || '0'}</Text>
             </View>
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Convenience Fee</Text>
@@ -170,7 +170,7 @@ const BookingDetailScreen = ({ route, navigation }) => {
             <View style={styles.divider} />
             <View style={styles.paymentRow}>
               <Text style={styles.totalLabel}>Total Paid</Text>
-              <Text style={styles.totalValue}>₹{booking.amount}</Text>
+              <Text style={styles.totalValue}>₹{booking.amount || '0'}</Text>
             </View>
           </View>
 

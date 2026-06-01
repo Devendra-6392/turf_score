@@ -115,14 +115,24 @@ exports.getActiveCoupons = async (req, res) => {
 
     const coupons = await prisma.coupon.findMany({
       where: whereClause,
-      include: {
-        turf: {
-          select: { name: true }
-        }
-      },
       orderBy: { createdAt: 'desc' }
     });
-    res.json(coupons);
+
+    // Fetch turf details separately if turfId exists
+    const enrichedCoupons = await Promise.all(
+      coupons.map(async (coupon) => {
+        if (coupon.turfId) {
+          const turf = await prisma.turf.findUnique({
+            where: { id: coupon.turfId },
+            select: { name: true }
+          });
+          return { ...coupon, turf };
+        }
+        return { ...coupon, turf: null };
+      })
+    );
+
+    res.json(enrichedCoupons);
   } catch (error) {
     console.error('Error fetching active coupons:', error);
     res.status(500).json({ error: 'Failed to fetch active coupons' });

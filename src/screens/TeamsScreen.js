@@ -15,12 +15,13 @@ import {
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield, X, CheckCircle2, Trophy } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];
 
 const SPORT_POSITIONS = {
@@ -41,6 +42,8 @@ export default function TeamsScreen({ navigation }) {
   const [sportType, setSportType] = useState('CRICKET');
   const [members, setMembers] = useState([{ email: '', name: '', position: '' }]);
   const [focusedInput, setFocusedInput] = useState(null);
+  const completedMembers = members.filter((member) => member.email.trim() || member.name.trim()).length;
+  const selectedPositions = SPORT_POSITIONS[sportType] || [];
 
   const loadTeams = useCallback(async () => {
     if (!token) return;
@@ -117,10 +120,7 @@ export default function TeamsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} translucent={false} />
-
-      {/* ── Top Header Background ── */}
-      <View style={styles.headerBg} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} translucent={false} />
 
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.header}>
@@ -129,13 +129,13 @@ export default function TeamsScreen({ navigation }) {
             <Text style={styles.subtitle}>Up to 8 registered players per squad</Text>
           </View>
           <TouchableOpacity style={styles.scanButton} onPress={() => navigation.navigate('QRScanner')}>
-            <QrCode size={20} color="#fff" />
+            <QrCode size={20} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.createButton} onPress={() => { resetForm(); setOpen(true); }} activeOpacity={0.88}>
-          <Plus size={20} color="#fff" />
-          <Text style={styles.createButtonText}>Create New Team</Text>
+          <Plus size={17} color="#fff" />
+          <Text style={styles.createButtonText}>Create Team</Text>
         </TouchableOpacity>
 
         {loading ? (
@@ -147,7 +147,9 @@ export default function TeamsScreen({ navigation }) {
             contentContainerStyle={styles.list}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>👥</Text>
+                <View style={styles.emptyIcon}>
+                  <Users size={34} color={Colors.primary} />
+                </View>
                 <Text style={styles.emptyTitle}>No squads created yet</Text>
                 <Text style={styles.emptyText}>Create your first squad and invite players to book grounds together.</Text>
               </View>
@@ -162,9 +164,9 @@ export default function TeamsScreen({ navigation }) {
                     </View>
                   </View>
                   {item.captainId === user?.id && (
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <TouchableOpacity onPress={() => openEdit(item)} style={[styles.deleteBtn, { backgroundColor: '#E0F2FE' }]} activeOpacity={0.7}>
-                        <Text style={{ color: Colors.primary, fontSize: 12, fontWeight: 'bold' }}>Edit</Text>
+                    <View style={styles.cardActions}>
+                      <TouchableOpacity onPress={() => openEdit(item)} style={styles.editBtn} activeOpacity={0.7}>
+                        <Text style={styles.editBtnText}>Edit</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => deleteTeam(item)} style={styles.deleteBtn} activeOpacity={0.7}>
                         <Trash2 size={16} color={Colors.error} />
@@ -179,6 +181,9 @@ export default function TeamsScreen({ navigation }) {
                   <Users size={14} color={Colors.primary} />
                   <Text style={styles.memberCount}>{item.members.length} / 8 Players</Text>
                 </View>
+                <View style={styles.memberProgressTrack}>
+                  <View style={[styles.memberProgressFill, { width: `${Math.min(item.members.length / 8, 1) * 100}%` }]} />
+                </View>
 
                 <View style={styles.membersList}>
                   {item.members.map((member) => (
@@ -187,7 +192,7 @@ export default function TeamsScreen({ navigation }) {
                       <Text style={styles.memberName} numberOfLines={1}>
                         {member.name || member.user?.name || member.email || member.user?.email || 'Unknown Player'}
                         {member.role === 'CAPTAIN' ? ' (Captain)' : ''}
-                        {member.position ? ` • ${member.position}` : ''}
+                        {member.position ? ` - ${member.position}` : ''}
                       </Text>
                     </View>
                   ))}
@@ -206,9 +211,38 @@ export default function TeamsScreen({ navigation }) {
           <View style={styles.modal}>
             <View style={styles.modalHeaderIndicator} />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-              <Text style={styles.modalTitle}>{editingTeam ? 'Edit Team' : 'Create Team'}</Text>
+              <View style={styles.modalHero}>
+                <View style={styles.modalHeroTop}>
+                  <View style={styles.modalHeroIcon}>
+                    <Trophy size={22} color={Colors.primary} />
+                  </View>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => { setOpen(false); resetForm(); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <X size={20} color={Colors.onSurfaceVariant} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalTitle}>{editingTeam ? 'Edit Team' : 'Create Team'}</Text>
+                <Text style={styles.modalSubtitle}>Set the sport, invite teammates, and choose positions before starting team challenges.</Text>
+                <View style={styles.formStatsRow}>
+                  <View style={styles.formStat}>
+                    <Text style={styles.formStatValue}>{completedMembers + 1}/8</Text>
+                    <Text style={styles.formStatLabel}>Players</Text>
+                  </View>
+                  <View style={styles.formStatDivider} />
+                  <View style={styles.formStat}>
+                    <Text style={styles.formStatValue}>{sportType}</Text>
+                    <Text style={styles.formStatLabel}>Sport</Text>
+                  </View>
+                </View>
+              </View>
               
               <View style={styles.teamDetailsCard}>
+                <View style={styles.sectionHeader}>
+                  <View>
+                    <Text style={styles.sectionKicker}>Team Details</Text>
+                    <Text style={styles.sectionTitle}>Name your squad</Text>
+                  </View>
+                  <CheckCircle2 size={18} color={name.trim() ? Colors.primary : Colors.outline} />
+                </View>
                 <Text style={styles.sectionLabel}>Team Name</Text>
                 <TextInput
                   style={[styles.input, focusedInput === 'teamName' && styles.inputFocused]}
@@ -240,14 +274,33 @@ export default function TeamsScreen({ navigation }) {
                 </View>
               </View>
 
-              <Text style={styles.sectionLabelMain}>Invite Teammates</Text>
-              <Text style={styles.hint}>Add teammate details. They will be linked if they register with this email.</Text>
+              <View style={styles.inviteHeader}>
+                <View>
+                  <Text style={styles.sectionKicker}>Invite Teammates</Text>
+                  <Text style={styles.sectionTitle}>Add players</Text>
+                </View>
+                <View style={styles.playerCounter}>
+                  <Users size={14} color={Colors.primary} />
+                  <Text style={styles.playerCounterText}>{completedMembers + 1}/8</Text>
+                </View>
+              </View>
+              <Text style={styles.hint}>You are added as captain. Teammates link automatically when they register with the same email.</Text>
+
+              <View style={styles.captainCard}>
+                <View style={styles.captainIcon}>
+                  <Shield size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.captainCopy}>
+                  <Text style={styles.captainName}>{user?.name || 'You'}</Text>
+                  <Text style={styles.captainRole}>Captain</Text>
+                </View>
+              </View>
 
               {members.map((member, index) => (
                 <View key={index} style={styles.memberInputCard}>
                   <View style={styles.memberCardHeader}>
                     <View style={styles.memberBadge}>
-                      <Text style={styles.memberBadgeText}>Player {index + 1}</Text>
+                      <Text style={styles.memberBadgeText}>Teammate {index + 1}</Text>
                     </View>
                     {members.length > 1 && (
                       <TouchableOpacity onPress={() => setMembers(members.filter((_, i) => i !== index))} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -292,7 +345,7 @@ export default function TeamsScreen({ navigation }) {
                     />
                   </View>
 
-                  {SPORT_POSITIONS[sportType] && (
+                  {selectedPositions.length > 0 && (
                     <View style={styles.positionWrapper}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 4 }}>
                         <Shield size={14} color={Colors.onSurfaceVariant} />
@@ -300,7 +353,7 @@ export default function TeamsScreen({ navigation }) {
                       </View>
                       <View style={styles.positionRow}>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                          {SPORT_POSITIONS[sportType].map(pos => {
+                          {selectedPositions.map(pos => {
                             const isActive = member.position === pos;
                             return (
                               <TouchableOpacity
@@ -337,7 +390,13 @@ export default function TeamsScreen({ navigation }) {
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.saveBtn, !name.trim() && styles.saveBtnDisabled]} onPress={saveTeam} disabled={!name.trim()} activeOpacity={0.8}>
-                <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
+                {name.trim() ? (
+                  <LinearGradient colors={Colors.gradient} style={styles.saveGradient}>
+                    <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -349,51 +408,56 @@ export default function TeamsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  headerBg: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 160,
-    backgroundColor: Colors.primary,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 15,
-    marginBottom: 20
+    paddingTop: 12,
+    marginBottom: 12
   },
-  title: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
-  subtitle: { color: 'rgba(255,255,255,0.6)', marginTop: 4, fontSize: 13 },
+  title: { fontSize: 25, fontWeight: '800', color: Colors.onBackground },
+  subtitle: { color: Colors.onSurfaceVariant, marginTop: 3, fontSize: 13 },
   scanButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  createButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    backgroundColor: Colors.primary + '14',
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4
+    borderWidth: 1,
+    borderColor: Colors.primary + '20'
   },
-  createButtonText: { color: '#fff', fontWeight: '750', fontSize: 15 },
-  list: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
+  createButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginHorizontal: 20,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.14,
+    shadowRadius: 7,
+    elevation: 3
+  },
+  createButtonText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  list: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60, paddingHorizontal: 20 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    backgroundColor: Colors.primary + '12',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.primary + '20'
+  },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: Colors.onBackground, marginBottom: 8 },
   emptyText: { fontSize: 14, color: Colors.onSurfaceVariant, textAlign: 'center', lineHeight: 22 },
   card: {
@@ -420,6 +484,19 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start'
   },
   sportText: { color: Colors.primary, fontWeight: '750', fontSize: 11 },
+  cardActions: { flexDirection: 'row', gap: 8 },
+  editBtn: {
+    minWidth: 46,
+    height: 32,
+    paddingHorizontal: 10,
+    backgroundColor: Colors.primary + '12',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary + '24'
+  },
+  editBtnText: { color: Colors.primary, fontSize: 12, fontWeight: '800' },
   deleteBtn: {
     width: 32,
     height: 32,
@@ -431,6 +508,18 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: Colors.outlineLight, marginVertical: 14 },
   membersLabel: { flexDirection: 'row', gap: 6, alignItems: 'center', marginBottom: 10 },
   memberCount: { color: Colors.primary, fontWeight: '750', fontSize: 13 },
+  memberProgressTrack: {
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: Colors.surfaceContainer,
+    overflow: 'hidden',
+    marginBottom: 12
+  },
+  memberProgressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: Colors.primary
+  },
   membersList: { gap: 8 },
   memberItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   memberDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primary },
@@ -442,7 +531,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    padding: 22,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
@@ -457,7 +548,54 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16
   },
-  modalTitle: { fontSize: 24, fontWeight: '800', marginBottom: 18, color: Colors.onBackground, letterSpacing: -0.5 },
+  modalHero: {
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+    overflow: 'hidden'
+  },
+  modalHeroTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  modalHeroIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: Colors.primary + '14',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.outlineLight
+  },
+  modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 6, color: Colors.onBackground },
+  modalSubtitle: { color: Colors.onSurfaceVariant, fontSize: 13, lineHeight: 18, marginBottom: 12 },
+  formStatsRow: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight
+  },
+  formStat: { flex: 1 },
+  formStatValue: { color: Colors.primary, fontSize: 14, fontWeight: '800' },
+  formStatLabel: { color: Colors.onSurfaceVariant, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  formStatDivider: { width: 1, backgroundColor: Colors.outlineLight, marginHorizontal: 12 },
   sectionLabelMain: { fontSize: 16, fontWeight: '800', color: Colors.onBackground, marginTop: 12, marginBottom: 8 },
   teamDetailsCard: {
     backgroundColor: Colors.surface,
@@ -472,6 +610,20 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14
+  },
+  sectionKicker: {
+    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: 3
+  },
+  sectionTitle: { color: Colors.onBackground, fontSize: 17, fontWeight: '800' },
   sectionLabel: { fontSize: 13, fontWeight: '750', color: Colors.onSurfaceVariant, marginBottom: 8 },
   input: {
     borderWidth: 1.5,
@@ -501,6 +653,47 @@ const styles = StyleSheet.create({
   sportChipText: { fontSize: 13, fontWeight: '750', color: Colors.onSurfaceVariant },
   sportChipTextActive: { color: '#fff' },
   hint: { color: Colors.onSurfaceVariant, fontSize: 13, lineHeight: 18, marginBottom: 14 },
+  inviteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 8
+  },
+  playerCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary + '12',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: Colors.primary + '20'
+  },
+  playerCounterText: { color: Colors.primary, fontWeight: '800', fontSize: 12 },
+  captainCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: 16,
+    padding: 13,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight
+  },
+  captainIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: Colors.primary + '14',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
+  },
+  captainCopy: { flex: 1 },
+  captainName: { color: Colors.onBackground, fontSize: 14, fontWeight: '800' },
+  captainRole: { color: Colors.onSurfaceVariant, fontSize: 12, fontWeight: '700', marginTop: 2 },
 
   memberInputCard: {
     backgroundColor: Colors.surface,
@@ -593,10 +786,11 @@ const styles = StyleSheet.create({
   cancelText: { color: Colors.onSurfaceVariant, fontWeight: '800', fontSize: 15 },
   saveBtn: { 
     flex: 1, 
-    padding: 16, 
     alignItems: 'center', 
+    justifyContent: 'center',
     borderRadius: 14, 
     backgroundColor: Colors.primary,
+    overflow: 'hidden',
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -604,9 +798,16 @@ const styles = StyleSheet.create({
     elevation: 4
   },
   saveBtnDisabled: {
+    padding: 16,
     backgroundColor: Colors.outline,
     shadowOpacity: 0,
     elevation: 0
+  },
+  saveGradient: {
+    width: '100%',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   saveText: { color: '#fff', fontWeight: '800', fontSize: 15 }
 });

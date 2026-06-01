@@ -30,6 +30,8 @@ import { AuthProvider } from './src/context/AuthContext';
 import CouponsScreen from './src/screens/CouponsScreen';
 import SupportScreen from './src/screens/SupportScreen';
 
+import { requestNotificationPermission, setupNotificationHandler } from './src/utils/notifications';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -59,6 +61,11 @@ const TabNavigator = () => (
 );
 
 export default function App() {
+  useEffect(() => {
+    setupNotificationHandler();
+    requestNotificationPermission();
+  }, []);
+
   return (
     <AuthProvider>
       <NavigationContainer>

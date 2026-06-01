@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
-  Alert, Share, Linking, Animated, Dimensions
+  Alert, Share, Linking, Animated, Dimensions, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import ChallengeNotificationModal from '../components/ChallengeNotificationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 
 const ChallengeDetailScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
@@ -23,6 +23,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
   const [accepting, setAccepting] = useState(false);
   const [paying, setPaying] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const acceptShine = useRef(new Animated.Value(0)).current;
 
   const challengeId = route.params?.challengeId;
   const shareCode = route.params?.shareCode;
@@ -30,6 +31,33 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
   useEffect(() => {
     fetchChallenge();
   }, [challengeId, shareCode]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(acceptShine, {
+          toValue: 1,
+          duration: 1550,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.delay(900),
+        Animated.timing(acceptShine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+    return () => loop.stop();
+  }, [acceptShine]);
+
+  const acceptShineTranslate = acceptShine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
+  });
 
   const fetchChallenge = async () => {
     try {
@@ -418,6 +446,15 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
+                {!accepting && (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.buttonShine,
+                      { transform: [{ translateX: acceptShineTranslate }, { rotate: '18deg' }] },
+                    ]}
+                  />
+                )}
                 {accepting ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
@@ -749,6 +786,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    overflow: 'hidden',
+  },
+  buttonShine: {
+    position: 'absolute',
+    top: -18,
+    bottom: -18,
+    width: 54,
+    backgroundColor: 'rgba(255,255,255,0.24)',
   },
   primaryButtonText: {
     color: '#fff',

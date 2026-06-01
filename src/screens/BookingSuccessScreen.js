@@ -145,6 +145,18 @@ const BookingSuccessScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.footer}>
+          {!booking?.challengeId && (
+            <PremiumButton
+              title="Create Challenge to Save 50%"
+              onPress={() => navigation.navigate('CreateChallenge', { 
+                prefillTurfId: booking?.turfId,
+                prefillSlotId: booking?.slotId,
+                prefillDate: booking?.bookingDate,
+                prefillTime: booking?.timeSlot
+              })}
+              style={styles.challengeAction}
+            />
+          )}
           <PremiumButton
             title="Scan Gate QR to Enter"
             onPress={() => navigation.navigate('QRScanner')}
@@ -305,6 +317,11 @@ const styles = StyleSheet.create({
   scanAction: {
     width: '100%',
     marginBottom: 12,
+  },
+  challengeAction: {
+    width: '100%',
+    marginBottom: 12,
+    backgroundColor: Colors.primary, // Could change if we want it to stand out
   }
 });
 

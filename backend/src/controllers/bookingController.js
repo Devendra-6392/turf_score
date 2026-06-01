@@ -13,6 +13,8 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+const { sendBookingBillEmail } = require('../utils/emailService');
+
 // Create a new Razorpay order
 exports.createRazorpayOrder = async (req, res) => {
   try {
@@ -34,7 +36,7 @@ exports.createRazorpayOrder = async (req, res) => {
 // Create a new booking after successful payment
 exports.createBooking = async (req, res) => {
   try {
-    const { userId, turfId, bookingDate, timeSlot, amount, razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentMethod, teamId } = req.body;
+    const { userId, turfId, bookingDate, timeSlot, amount, razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentMethod, teamId, acceptsChallenges, challengeTitle, challengeType, challengeSkillLevel } = req.body;
 
     const userExists = await prisma.user.findUnique({ where: { id: userId } });
     if (!userExists) {
@@ -123,6 +125,36 @@ exports.createBooking = async (req, res) => {
       include: { turf: true, slot: true, paymentDetail: true, team: { include: { members: true } } }
     });
 
+    // Create challenge if requested
+    let challengeRecord = null;
+    if (acceptsChallenges) {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      challengeRecord = await prisma.challenge.create({
+        data: {
+          title: challengeTitle || `Match at ${booking.turf.name}`,
+          description: 'Created from a turf booking.',
+          sportType: slot.sportType || 'FOOTBALL',
+          type: challengeType || (teamId ? 'TEAM' : 'INDIVIDUAL'),
+          creatorId: userId,
+          challengerTeamId: teamId || null,
+          turfId: turfId,
+          slotId: slot.id,
+          scheduledDate: bookingDate,
+          scheduledTime: timeSlot,
+          skillLevel: challengeSkillLevel || 'ALL',
+          maxPlayers: slot.maxPlayers || 10,
+          isPublic: true,
+          expiresAt: expiresAt,
+          creatorPaid: true // Creator already paid the full booking amount
+        }
+      });
+      // Optionally link it back to the booking if there's a relation
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { challengeId: challengeRecord.id }
+      });
+    }
+
     await prisma.user.update({
       where: { id: userId },
       data: { 
@@ -130,6 +162,16 @@ exports.createBooking = async (req, res) => {
         matchesPlayed: { increment: 1 }
       }
     });
+
+    // Send Email
+    if (userExists.email) {
+      sendBookingBillEmail(userExists.email, {
+        turfName: booking.turf.name,
+        date: parsedDate.toDateString(),
+        time: timeSlot,
+        amount: amount
+      });
+    }
 
     res.status(201).json(booking);
   } catch (error) {
@@ -332,5 +374,100 @@ exports.getAllBookings = async (req, res) => {
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch all bookings' });
+  }
+};
+
+// Get other users' bookings for a specific turf and date
+// Used to show challenge suggestions in mobile app
+exports.getOtherUsersBookingsForTurfDate = async (req, res) => {
+  try {
+    const { turfId, date } = req.params;
+    const currentUserId = req.user?.id || req.body.userId; // Get from auth or request
+    
+    if (!turfId || !date) {
+      return res.status(400).json({ error: 'Turf ID and date are required' });
+    }
+
+    // Parse the date to get start and end of day
+    const startOfDay = parseCalendarDate(date);
+    if (!startOfDay) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+    
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Find all bookings for this turf on this date, excluding current user
+    const bookings = await prisma.booking.findMany({
+      where: {
+        turfId,
+        userId: { not: currentUserId }, // Exclude current user
+        slot: {
+          date: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        },
+        status: { in: ['CONFIRMED', 'PAID'] } // Only confirmed/paid bookings
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            rating: true,
+            matchesPlayed: true,
+            email: true
+          }
+        },
+        slot: {
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            date: true,
+            sportType: true
+          }
+        },
+        turf: {
+          select: {
+            id: true,
+            name: true,
+            location: true
+          }
+        }
+      },
+      orderBy: [
+        { slot: { startTime: 'asc' } },
+        { user: { rating: 'desc' } }
+      ]
+    });
+
+    // Format response for mobile app
+    const formattedBookings = bookings.map(booking => ({
+      userId: booking.user.id,
+      user: {
+        id: booking.user.id,
+        name: booking.user.name,
+        avatar: booking.user.avatar,
+        rating: booking.user.rating,
+        matchesPlayed: booking.user.matchesPlayed,
+        email: booking.user.email
+      },
+      bookingId: booking.id,
+      turfId: booking.turf.id,
+      turf: booking.turf,
+      slot: booking.slot,
+      timeSlot: `${booking.slot.startTime} - ${booking.slot.endTime}`,
+      sportType: booking.slot.sportType,
+      bookingDate: booking.slot.date,
+      status: booking.status
+    }));
+
+    res.json(formattedBookings);
+  } catch (error) {
+    console.error('Error fetching other users bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch other users bookings' });
   }
 };

@@ -8,12 +8,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight, ChevronLeft, CheckCircle2, Trophy, MapPin, Calendar, MessageSquare, Award, Flame, Target, Sparkles, User, Users, Check } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { useUserBookings, useBookingForTurfDate, useOtherBookingsInTurf } from '../hooks/useChallengeFlow';
+import OtherUsersBookings from '../components/OtherUsersBookings';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 
-const CreateChallengeScreen = ({ navigation }) => {
+const CreateChallengeScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
+  const { prefillTurfId, prefillSlotId, prefillDate, prefillTime } = route?.params || {};
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
@@ -24,21 +27,42 @@ const CreateChallengeScreen = ({ navigation }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
-  const [turfId, setTurfId] = useState(null);
+  const [turfId, setTurfId] = useState(prefillTurfId || null);
   const [turfs, setTurfs] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedDate, setSelectedDate] = useState(prefillDate ? new Date(prefillDate) : new Date());
+  const [selectedTime, setSelectedTime] = useState(prefillTime || '');
   const [maxPlayers, setMaxPlayers] = useState('10');
 
   const [turfSlots, setTurfSlots] = useState([]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(prefillSlotId || null);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
+  // Enhanced: Load user's bookings and find matching bookings in turf
+  const { bookings: userBookings } = useUserBookings(token);
+  const matchingBooking = useBookingForTurfDate(turfId, selectedDate, userBookings);
+  const { otherBookings, loading: loadingOtherBookings } = useOtherBookingsInTurf(
+    turfId,
+    selectedDate,
+    user?.id,
+    token
+  );
+
   const sports = ['CRICKET', 'FOOTBALL', 'TENNIS', 'BADMINTON', 'BASKETBALL'];
   const types = ['INDIVIDUAL', 'TEAM'];
+
+  // Auto-prefill if matching booking found
+  useEffect(() => {
+    if (matchingBooking && !selectedSlot) {
+      setSelectedSlot(matchingBooking.slotId);
+      setSelectedTime(matchingBooking.timeSlot || matchingBooking.scheduledTime || '');
+      if (matchingBooking.turf?.name) {
+        // Turf name can be displayed in UI but turfId is already set
+      }
+    }
+  }, [matchingBooking, selectedSlot]);
 
   // Fetch turfs
   useEffect(() => {
@@ -93,7 +117,9 @@ const CreateChallengeScreen = ({ navigation }) => {
         });
         if (response.ok) {
           const data = await response.json();
-          setTurfSlots(data.filter(s => s.status === 'AVAILABLE'));
+          // If prefill is provided, we might have already booked the slot, so we can't filter out by AVAILABLE.
+          // In that case, we should manually inject the slot if it's missing or allow BOOKED slots if it matches prefillSlotId.
+          setTurfSlots(data.filter(s => s.status === 'AVAILABLE' || s.id === prefillSlotId));
         }
       } catch (err) {
         console.error('Error fetching slots:', err);
@@ -102,7 +128,7 @@ const CreateChallengeScreen = ({ navigation }) => {
       }
     };
     fetchSlots();
-  }, [turfId, selectedDate, token]);
+  }, [turfId, selectedDate, token, prefillSlotId]);
 
   const handleDateChange = (text) => {
     setSelectedDate(text);
@@ -161,19 +187,21 @@ const CreateChallengeScreen = ({ navigation }) => {
         dateStr = selectedDate || new Date().toISOString().split('T')[0];
       }
 
-      // Lock the slot if selected
+      // Lock the slot if selected (skip lock if it's prefilled, because it's already booked)
       let finalSlotId = null;
       if (selectedSlot) {
-        const lockRes = await fetch(`${BACKEND_URL}/challenges/lock-slot`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ slotId: selectedSlot }),
-        });
-        if (!lockRes.ok) {
-          throw new Error('Failed to lock the selected slot. It might have been booked already.');
+        if (!prefillSlotId) {
+          const lockRes = await fetch(`${BACKEND_URL}/challenges/lock-slot`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ slotId: selectedSlot }),
+          });
+          if (!lockRes.ok) {
+            throw new Error('Failed to lock the selected slot. It might have been booked already.');
+          }
         }
         finalSlotId = selectedSlot;
       }
@@ -225,7 +253,7 @@ const CreateChallengeScreen = ({ navigation }) => {
         {
           text: 'Go to Feed',
           onPress: () => {
-            navigation.navigate('Challenges');
+            navigation.navigate('Main', { screen: 'Challenges' });
           },
         },
       ]);
@@ -465,6 +493,35 @@ const CreateChallengeScreen = ({ navigation }) => {
         </View>
       ) : (
         <Text style={styles.emptyText}>{turfId ? 'No slots available for this date' : 'Select a turf first'}</Text>
+      )}
+
+      {/* Show other users' bookings & quick challenge options */}
+      {turfId && selectedDate && (
+        <OtherUsersBookings
+          otherBookings={otherBookings}
+          loading={loadingOtherBookings}
+          onSendChallenge={(otherUser) => {
+            // This will be implemented when user sends quick challenge
+            console.log('Sending challenge to:', otherUser);
+            // Could pre-fill and navigate to challenge confirmation
+          }}
+          currentUserName={user?.name || 'You'}
+          turfName={turfs.find(t => t.id === turfId)?.name || 'this turf'}
+          bookingDate={selectedDate instanceof Date ? selectedDate.toDateString() : selectedDate}
+        />
+      )}
+
+      {/* Show if user already booked this slot */}
+      {matchingBooking && (
+        <View style={styles.alreadyBookedBanner}>
+          <CheckCircle2 size={20} color={Colors.success} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.alreadyBookedTitle}>You're already booked here!</Text>
+            <Text style={styles.alreadyBookedText}>
+              We've pre-filled your details. Just add challenge details!
+            </Text>
+          </View>
+        </View>
       )}
     </ScrollView>
   );
@@ -961,6 +1018,27 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  alreadyBookedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.success + '15',
+    borderRadius: 12,
+    padding: 14,
+    marginVertical: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.success,
+  },
+  alreadyBookedTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.success,
+    marginBottom: 2,
+  },
+  alreadyBookedText: {
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+    lineHeight: 16,
   },
 });
 

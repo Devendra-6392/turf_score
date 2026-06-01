@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const { sendChallengeAcceptedEmail } = require('../utils/emailService');
 
 console.log('Prisma client loaded:', prisma ? 'YES' : 'NO');
 
@@ -309,23 +310,68 @@ const payAdvance = async (req, res) => {
       data: dataToUpdate
     });
 
-    // If both paid, confirm booking
+    // If both paid, confirm booking OR refund creator if booking already exists
     if (updatedChallenge.creatorPaid && updatedChallenge.opponentPaid && challenge.slotId) {
       const amount = challenge.slot ? challenge.slot.price : 1000;
-      await prisma.booking.create({
-        data: {
-          userId: challenge.creatorId,
-          turfId: challenge.turfId,
-          slotId: challenge.slotId,
-          challengeId: challenge.id,
-          amount: amount,
-          status: 'CONFIRMED'
+      
+      if (challenge.slot && challenge.slot.status === 'BOOKED') {
+        // The slot is already booked (created via booking flow).
+        // Refund half to creator.
+        const halfAmount = amount / 2;
+        const creator = await prisma.user.findUnique({ where: { id: challenge.creatorId } });
+        const opponent = await prisma.user.findUnique({ where: { id: challenge.opponentId } });
+        
+        await prisma.wallet.upsert({
+          where: { userId: challenge.creatorId },
+          update: {
+            balance: { increment: halfAmount },
+            transactions: {
+              create: {
+                amount: halfAmount,
+                type: 'CASHBACK',
+                description: `Half payment received for challenge ${challenge.id}`,
+                status: 'COMPLETED'
+              }
+            }
+          },
+          create: {
+            userId: challenge.creatorId,
+            balance: halfAmount,
+            transactions: {
+              create: {
+                amount: halfAmount,
+                type: 'CASHBACK',
+                description: `Half payment received for challenge ${challenge.id}`,
+                status: 'COMPLETED'
+              }
+            }
+          }
+        });
+
+        if (creator && creator.email) {
+          sendChallengeAcceptedEmail(creator.email, opponent?.name || 'An opponent', {
+            title: challenge.title,
+            turfName: challenge.turf?.name || 'Turf',
+            cashbackAmount: halfAmount
+          });
         }
-      });
-      await prisma.turfSlot.update({
-        where: { id: challenge.slotId },
-        data: { status: 'BOOKED' }
-      });
+      } else {
+        // Create new booking if it wasn't booked before
+        await prisma.booking.create({
+          data: {
+            userId: challenge.creatorId,
+            turfId: challenge.turfId,
+            slotId: challenge.slotId,
+            challengeId: challenge.id,
+            amount: amount,
+            status: 'CONFIRMED'
+          }
+        });
+        await prisma.turfSlot.update({
+          where: { id: challenge.slotId },
+          data: { status: 'BOOKED' }
+        });
+      }
     }
 
     res.json(updatedChallenge);
