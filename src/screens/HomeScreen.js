@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const BANNER_WIDTH = SCREEN_WIDTH - 40;
 const AUTO_SCROLL_INTERVAL = 5000;
 const HEADER_MAX_HEIGHT = 145;
@@ -853,14 +853,14 @@ const styles = StyleSheet.create({
 
   // ── Sections ──
   section: {
-    marginTop: 28,
+    marginTop: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 22,
@@ -876,8 +876,10 @@ const styles = StyleSheet.create({
 
   // ── Recommended Cards ──
   recommendedList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     gap: 14,
+    // margin: 2,
+    marginBottom: 12,
   },
   recCard: {
     width: CARD_WIDTH,
@@ -964,7 +966,7 @@ const styles = StyleSheet.create({
 
   // ── Nearby Cards (Reduced Height) ──
   nearbyCard: {
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     marginBottom: 14,
     borderRadius: 20,
     overflow: 'hidden',

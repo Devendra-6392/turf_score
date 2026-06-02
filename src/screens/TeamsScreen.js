@@ -21,7 +21,7 @@ import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];
 
 const SPORT_POSITIONS = {
@@ -204,8 +204,8 @@ export default function TeamsScreen({ navigation }) {
       </SafeAreaView>
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalBackdrop}
         >
           <View style={styles.modal}>
@@ -234,7 +234,7 @@ export default function TeamsScreen({ navigation }) {
                   </View>
                 </View>
               </View>
-              
+
               <View style={styles.teamDetailsCard}>
                 <View style={styles.sectionHeader}>
                   <View>
@@ -759,11 +759,11 @@ const styles = StyleSheet.create({
   },
   positionRow: { flexDirection: 'row' },
 
-  addPlayerBtn: { 
-    flexDirection: 'row', 
-    gap: 8, 
-    paddingVertical: 14, 
-    alignItems: 'center', 
+  addPlayerBtn: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: Colors.primaryContainer,
@@ -784,11 +784,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.outlineLight
   },
   cancelText: { color: Colors.onSurfaceVariant, fontWeight: '800', fontSize: 15 },
-  saveBtn: { 
-    flex: 1, 
-    alignItems: 'center', 
+  saveBtn: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14, 
+    borderRadius: 14,
     backgroundColor: Colors.primary,
     overflow: 'hidden',
     shadowColor: Colors.primary,

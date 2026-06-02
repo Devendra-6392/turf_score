@@ -13,7 +13,7 @@ import { NativeModules } from 'react-native';
 import Constants from 'expo-constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -301,7 +301,21 @@ const BookSlotScreen = ({ route, navigation }) => {
         setLoadingSlots(true);
         const res = await fetch(`${BACKEND_URL}/turfs/${turf.id}/slots?date=${dateStr}`);
         const data = await res.json();
-        setAvailableSlots(data);
+
+        // Filter out past slots for today
+        const now = new Date();
+        const isToday = new Date(dateStr).toDateString() === now.toDateString();
+
+        const filteredData = data.filter(slot => {
+          if (!isToday) return true;
+          // Format slot start time
+          const [hours, minutes] = slot.startTime.split(':').map(Number);
+          const slotTime = new Date();
+          slotTime.setHours(hours, minutes, 0, 0);
+          return slotTime > now;
+        });
+
+        setAvailableSlots(filteredData);
         setSelectedSlot(null);
       } catch (e) {
         console.log('Error fetching slots', e);

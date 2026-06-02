@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api/auth';
+const BACKEND_URL = 'http://10.185.142.203:5000/api/auth';
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {

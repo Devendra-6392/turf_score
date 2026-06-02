@@ -22,7 +22,12 @@ import {
   Box,
   CircularProgress,
   Chip,
-  Alert
+  Alert,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  FormControl,
+  FormLabel
 } from '@mui/material';
 import { PlusOutlined, DeleteOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 
@@ -48,10 +53,22 @@ export default function SlotManagement() {
   const [editingSlot, setEditingSlot] = useState(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
+    endDate: '',
+    daysOfWeek: [],
     startTime: '06:00',
     endTime: '07:00',
     price: 800
   });
+
+  const daysOptions = [
+    { value: '0', label: 'Sun' },
+    { value: '1', label: 'Mon' },
+    { value: '2', label: 'Tue' },
+    { value: '3', label: 'Wed' },
+    { value: '4', label: 'Thu' },
+    { value: '5', label: 'Fri' },
+    { value: '6', label: 'Sat' }
+  ];
 
   const handleOpen = (slot = null) => {
     if (slot) {
@@ -66,6 +83,8 @@ export default function SlotManagement() {
       setEditingSlot(null);
       setFormData({
         date: new Date().toISOString().split('T')[0],
+        endDate: '',
+        daysOfWeek: [],
         startTime: '06:00',
         endTime: '07:00',
         price: 800
@@ -78,24 +97,52 @@ export default function SlotManagement() {
 
   const handleSubmit = async () => {
     try {
-      const url = editingSlot 
-        ? `${import.meta.env.VITE_APP_API_URL}/turfs/slots/${editingSlot.id}`
-        : `${import.meta.env.VITE_APP_API_URL}/turfs/${id}/slots`;
-      
-      const method = editingSlot ? 'PUT' : 'POST';
+      if (editingSlot) {
+        const url = `${import.meta.env.VITE_APP_API_URL}/turfs/slots/${editingSlot.id}`;
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: authHeaders(true),
+          body: JSON.stringify(formData)
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Unable to save slot');
+      } else {
+        const url = `${import.meta.env.VITE_APP_API_URL}/turfs/${id}/slots`;
+        let datesToCreate = [formData.date];
 
-      const res = await fetch(url, {
-        method,
-        headers: authHeaders(true),
-        body: JSON.stringify(formData)
-      });
+        if (formData.endDate && formData.daysOfWeek.length > 0) {
+          datesToCreate = [];
+          let current = new Date(formData.date);
+          const end = new Date(formData.endDate);
+          while (current <= end) {
+            if (formData.daysOfWeek.includes(current.getDay().toString())) {
+              // Ensure we use local date string
+              const year = current.getFullYear();
+              const month = String(current.getMonth() + 1).padStart(2, '0');
+              const day = String(current.getDate()).padStart(2, '0');
+              datesToCreate.push(`${year}-${month}-${day}`);
+            }
+            current.setDate(current.getDate() + 1);
+          }
+          if (datesToCreate.length === 0) throw new Error('No dates match the selected days of week in the given range.');
+        }
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Unable to save slot');
-      
+        for (const d of datesToCreate) {
+          const payload = { ...formData, date: d };
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: authHeaders(true),
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) {
+            console.error(`Failed to create slot for ${d}`);
+          }
+        }
+      }
+
       mutate(`${import.meta.env.VITE_APP_API_URL}/turfs/${id}/slots`);
       handleClose();
-      if (result.message) window.alert(result.message);
+      window.alert('Slot(s) saved successfully');
     } catch (err) {
       alert(err.message);
     }
@@ -119,12 +166,12 @@ export default function SlotManagement() {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
+      <Grid item size={12}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <Button startIcon={<ArrowLeftOutlined />} onClick={() => navigate('/manage/turfs')}>
-                Back to Turfs
-            </Button>
-            <Typography variant="h4">Manage Slots: {turf?.name}</Typography>
+          <Button startIcon={<ArrowLeftOutlined />} onClick={() => navigate('/manage/turfs')}>
+            Back to Turfs
+          </Button>
+          <Typography variant="h4">Manage Slots: {turf?.name}</Typography>
         </Stack>
         <MainCard
           title="Availability Slots"
@@ -167,7 +214,7 @@ export default function SlotManagement() {
                   ))}
                   {slots?.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={5} align="center">No slots found</TableCell>
+                      <TableCell colSpan={5} align="center">No slots found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -182,30 +229,66 @@ export default function SlotManagement() {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Date"
+              label={editingSlot ? "Date" : "Start Date"}
               type="date"
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             />
+            {!editingSlot && (
+              <>
+                <TextField
+                  label="Repeat Until Date (Optional)"
+                  type="date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                />
+                {formData.endDate && (
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">Repeat on Days</FormLabel>
+                    <FormGroup row>
+                      {daysOptions.map(day => (
+                        <FormControlLabel
+                          key={day.value}
+                          control={
+                            <Checkbox
+                              checked={formData.daysOfWeek.includes(day.value)}
+                              onChange={(e) => {
+                                const newDays = e.target.checked
+                                  ? [...formData.daysOfWeek, day.value]
+                                  : formData.daysOfWeek.filter(d => d !== day.value);
+                                setFormData({ ...formData, daysOfWeek: newDays });
+                              }}
+                            />
+                          }
+                          label={day.label}
+                        />
+                      ))}
+                    </FormGroup>
+                  </FormControl>
+                )}
+              </>
+            )}
             <Stack direction="row" spacing={2}>
-                <TextField
-                    label="Start Time"
-                    type="time"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                    value={formData.startTime}
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                />
-                <TextField
-                    label="End Time"
-                    type="time"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                    value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                />
+              <TextField
+                label="Start Time"
+                type="time"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+              />
+              <TextField
+                label="End Time"
+                type="time"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={formData.endTime}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+              />
             </Stack>
             <TextField
               label="Price"

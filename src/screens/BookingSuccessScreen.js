@@ -9,9 +9,10 @@ import {
   Share,
   Platform,
   Dimensions,
-  TouchableOpacity
+  TouchableOpacity,
+  Linking
 } from 'react-native';
-import { CheckCircle2, Calendar, Clock, MapPin, Share2, Trophy } from 'lucide-react-native';
+import { CheckCircle2, Calendar, Clock, MapPin, Share2, Trophy, Navigation } from 'lucide-react-native';
 import { Audio } from 'expo-av';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { Colors } from '../constants/Colors';
@@ -100,10 +101,35 @@ const BookingSuccessScreen = ({ route, navigation }) => {
             <View style={styles.arenaIcon}>
               <MapPin size={24} color={Colors.primary} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
               <Text style={styles.arenaName}>{booking?.turf?.name || 'Galaxy Turf'}</Text>
-              <Text style={styles.pitchInfo}>{booking?.turf?.location || 'Location loading...'}</Text>
+              <Text style={styles.pitchInfo} numberOfLines={2}>{booking?.turf?.location || 'Location loading...'}</Text>
             </View>
+            <TouchableOpacity 
+              style={styles.directionBtn}
+              onPress={() => {
+                const lat = booking?.turf?.latitude;
+                const lng = booking?.turf?.longitude;
+                const label = encodeURIComponent(booking?.turf?.name || 'Turf Location');
+                let url = '';
+                if (lat && lng) {
+                  url = Platform.select({
+                    ios: `maps:${lat},${lng}?q=${label}`,
+                    android: `geo:${lat},${lng}?q=${lat},${lng}(${label})`
+                  });
+                } else {
+                  const query = encodeURIComponent(booking?.turf?.location || booking?.turf?.name);
+                  url = Platform.select({
+                    ios: `maps:0,0?q=${query}`,
+                    android: `geo:0,0?q=${query}`
+                  });
+                }
+                Linking.openURL(url).catch(() => console.log('Error opening maps'));
+              }}
+            >
+              <Navigation size={18} color={Colors.primary} />
+              <Text style={styles.directionText}>Directions</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.divider} />
@@ -129,6 +155,27 @@ const BookingSuccessScreen = ({ route, navigation }) => {
                 <Text style={styles.infoValue}>{booking?.timeSlot || '19:30'}</Text>
               </View>
             </View>
+          </View>
+
+          <View style={styles.extraInfoContainer}>
+            <View style={styles.extraInfoRow}>
+               <Text style={styles.extraInfoLabel}>Booking ID</Text>
+               <Text style={styles.extraInfoValue}>{booking?.bookingNumber || booking?.id?.slice(0, 8).toUpperCase() || 'N/A'}</Text>
+            </View>
+            <View style={styles.extraInfoRow}>
+               <Text style={styles.extraInfoLabel}>Amount Paid</Text>
+               <Text style={styles.extraInfoValue}>₹{booking?.amount || '0'}</Text>
+            </View>
+            <View style={styles.extraInfoRow}>
+               <Text style={styles.extraInfoLabel}>Payment Method</Text>
+               <Text style={styles.extraInfoValue}>{booking?.paymentDetail?.paymentMethod?.toUpperCase() || 'ONLINE'}</Text>
+            </View>
+            {booking?.paymentDetail?.razorpayPaymentId && (
+              <View style={styles.extraInfoRow}>
+                 <Text style={styles.extraInfoLabel}>Transaction ID</Text>
+                 <Text style={styles.extraInfoValue}>{booking.paymentDetail.razorpayPaymentId}</Text>
+              </View>
+            )}
           </View>
         </PremiumCard>
 
@@ -249,6 +296,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '600',
   },
+  directionBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  directionText: {
+    color: Colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 4,
+  },
   divider: {
     height: 1,
     backgroundColor: Colors.surfaceVariant,
@@ -279,6 +340,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.onBackground,
     marginTop: 2,
+  },
+  extraInfoContainer: {
+    marginTop: 20,
+    backgroundColor: Colors.surfaceVariant + '30', // Very light background
+    padding: 16,
+    borderRadius: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+  },
+  extraInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  extraInfoLabel: {
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  extraInfoValue: {
+    fontSize: 13,
+    color: Colors.onBackground,
+    fontWeight: '800',
   },
   passSection: {
     alignItems: 'center',

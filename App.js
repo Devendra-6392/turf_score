@@ -48,6 +48,9 @@ const TabNavigator = () => (
     <Tab.Screen name="Search">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><SearchScreen {...props} /></AnimatedScreenWrapper>}
     </Tab.Screen>
+    <Tab.Screen name="Scanner">
+      {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><QRScannerScreen {...props} /></AnimatedScreenWrapper>}
+    </Tab.Screen>
     <Tab.Screen name="Challenges">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><ChallengesScreen {...props} /></AnimatedScreenWrapper>}
     </Tab.Screen>
@@ -82,7 +85,6 @@ export default function App() {
           <Stack.Screen name="BookSlot" component={BookSlotScreen} />
           <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
           <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
-          <Stack.Screen name="QRScanner" component={QRScannerScreen} />
           <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
           <Stack.Screen name="ChallengeDetail" component={ChallengeDetailScreen} />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 /**
  * Hook to fetch user's existing bookings
@@ -59,14 +59,14 @@ export const useBookingForTurfDate = (turfId, selectedDate, bookings) => {
       return;
     }
 
-    const dateStr = selectedDate instanceof Date 
+    const dateStr = selectedDate instanceof Date
       ? selectedDate.toISOString().split('T')[0]
       : selectedDate;
 
     const booking = bookings.find(b => {
       const bookingTurfId = b.turf?.id || b.turfId;
       const bookingDateStr = (b.bookingDate || b.scheduledDate || '').split('T')[0];
-      
+
       return bookingTurfId === turfId && bookingDateStr === dateStr;
     });
 
@@ -90,7 +90,7 @@ export const useOtherBookingsInTurf = (turfId, selectedDate, currentUserId, toke
     const fetchOtherBookings = async () => {
       setLoading(true);
       try {
-        const dateStr = selectedDate instanceof Date 
+        const dateStr = selectedDate instanceof Date
           ? selectedDate.toISOString().split('T')[0]
           : selectedDate;
 

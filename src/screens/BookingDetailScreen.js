@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, ActivityIndicator, Image, Dimensions, StatusBar
+  Alert, ActivityIndicator, Image, Dimensions, StatusBar, Linking, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,7 +12,7 @@ import {
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BookingDetailScreen = ({ route, navigation }) => {
@@ -126,7 +126,28 @@ const BookingDetailScreen = ({ route, navigation }) => {
               <View style={styles.turfInfo}>
                 <Text style={styles.turfName}>{booking.turf?.name || 'Turf Arena'}</Text>
                 <Text style={styles.turfLocation}>{booking.turf?.location || 'Location not available'}</Text>
-                <TouchableOpacity style={styles.directionBtn}>
+                <TouchableOpacity
+                  style={styles.directionBtn}
+                  onPress={() => {
+                    const lat = booking.turf?.latitude;
+                    const lng = booking.turf?.longitude;
+                    const label = encodeURIComponent(booking.turf?.name || 'Turf Location');
+                    let url = '';
+                    if (lat && lng) {
+                      url = Platform.select({
+                        ios: `maps:${lat},${lng}?q=${label}`,
+                        android: `geo:${lat},${lng}?q=${lat},${lng}(${label})`
+                      });
+                    } else {
+                      const query = encodeURIComponent(booking.turf?.location || booking.turf?.name);
+                      url = Platform.select({
+                        ios: `maps:0,0?q=${query}`,
+                        android: `geo:0,0?q=${query}`
+                      });
+                    }
+                    Linking.openURL(url).catch(() => console.log('Error opening maps'));
+                  }}
+                >
                   <Text style={styles.directionText}>Get Directions</Text>
                   <ChevronRight size={14} color={Colors.primary} />
                 </TouchableOpacity>
@@ -159,6 +180,16 @@ const BookingDetailScreen = ({ route, navigation }) => {
               <CreditCard size={18} color={Colors.primary} />
               <Text style={styles.cardTitle}>Payment Summary</Text>
             </View>
+            <View style={styles.paymentRow}>
+              <Text style={styles.paymentLabel}>Payment Method</Text>
+              <Text style={styles.paymentValue}>{booking?.paymentDetail?.paymentMethod?.toUpperCase() || 'ONLINE'}</Text>
+            </View>
+            {booking?.paymentDetail?.razorpayPaymentId && (
+              <View style={styles.paymentRow}>
+                <Text style={styles.paymentLabel}>Transaction ID</Text>
+                <Text style={styles.paymentValue}>{booking.paymentDetail.razorpayPaymentId}</Text>
+              </View>
+            )}
             <View style={styles.paymentRow}>
               <Text style={styles.paymentLabel}>Booking Amount</Text>
               <Text style={styles.paymentValue}>₹{booking.amount || '0'}</Text>

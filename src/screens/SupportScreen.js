@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 export default function SupportScreen({ navigation }) {
   const [tickets, setTickets] = useState([]);
@@ -43,7 +43,7 @@ export default function SupportScreen({ navigation }) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
       return;
     }
-    
+
     setSubmitting(true);
     try {
       const response = await fetch(`${BACKEND_URL}/support-tickets`, {
@@ -137,7 +137,7 @@ export default function SupportScreen({ navigation }) {
                 placeholder="Brief summary of the issue"
                 placeholderTextColor={Colors.onSurfaceVariant}
                 value={formData.subject}
-                onChangeText={(text) => setFormData({...formData, subject: text})}
+                onChangeText={(text) => setFormData({ ...formData, subject: text })}
               />
             </View>
 
@@ -148,15 +148,15 @@ export default function SupportScreen({ navigation }) {
                 placeholder="Explain your issue in detail..."
                 placeholderTextColor={Colors.onSurfaceVariant}
                 value={formData.description}
-                onChangeText={(text) => setFormData({...formData, description: text})}
+                onChangeText={(text) => setFormData({ ...formData, description: text })}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
             </View>
 
-            <TouchableOpacity 
-              style={[styles.submitBtn, submitting && { opacity: 0.7 }]} 
+            <TouchableOpacity
+              style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
               onPress={handleSubmit}
               disabled={submitting}
             >
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.onSurfaceVariant,
   },
-  
+
   /* Modal Styles */
   modalOverlay: {
     flex: 1,

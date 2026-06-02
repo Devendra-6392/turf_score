@@ -12,7 +12,7 @@ import { useUserBookings, useBookingForTurfDate, useOtherBookingsInTurf } from '
 import OtherUsersBookings from '../components/OtherUsersBookings';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 const CreateChallengeScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
@@ -276,8 +276,8 @@ const CreateChallengeScreen = ({ route, navigation }) => {
     };
 
     return (
-      <ScrollView 
-        ref={scrollRef} 
+      <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.stepContainer}
       >
@@ -336,8 +336,8 @@ const CreateChallengeScreen = ({ route, navigation }) => {
             const isSelected = challengeType === type;
             const FormatIcon = type === 'INDIVIDUAL' ? User : Users;
             const titleText = type === 'INDIVIDUAL' ? '1v1 Match' : 'Squad Match';
-            const descText = type === 'INDIVIDUAL' 
-              ? 'Face another player.' 
+            const descText = type === 'INDIVIDUAL'
+              ? 'Face another player.'
               : 'Squad vs Squad battle.';
 
             return (

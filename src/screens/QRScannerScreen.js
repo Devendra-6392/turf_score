@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, QrCode } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = 'http://10.185.142.203:5000/api';
 
 export default function QRScannerScreen({ navigation }) {
   const { token } = useAuth();
@@ -56,9 +56,13 @@ export default function QRScannerScreen({ navigation }) {
           <View style={styles.result}>
             {result.success && <CheckCircle2 size={32} color={Colors.primary} />}
             <Text style={styles.resultText}>{result.message}</Text>
-            {!result.success && (
+            {!result.success ? (
               <TouchableOpacity style={styles.button} onPress={() => { setResult(null); setScanning(true); }}>
                 <Text style={styles.buttonText}>Try Again</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+                <Text style={styles.buttonText}>Done</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '700' },
   overlay: { flex: 1, justifyContent: 'space-between', padding: 20 },
   back: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  guide: { alignItems: 'center' },
+  guide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scanTitle: { color: '#fff', fontSize: 26, fontWeight: '800' },
   scanSubtitle: { color: '#fff', marginTop: 6 },
   frame: { height: 255, width: 255, borderWidth: 3, borderColor: Colors.primaryContainer, borderRadius: 28, marginTop: 28 },

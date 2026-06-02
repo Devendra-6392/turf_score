@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform, Animated, Dimensions } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Platform, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Trophy, Search, Users, User, Home, Target } from 'lucide-react-native';
+import { Trophy, Search, Users, User, Home, Target, Scan, Menu } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +42,7 @@ const TabItem = ({ route, index, isFocused, onPress }) => {
     switch (route.name) {
       case 'Home': return <Home {...props} />;
       case 'Search': return <Search {...props} />;
+      case 'Scanner': return <Scan {...props} />;
       case 'Challenges': return <Target {...props} />;
       case 'Teams': return <Users {...props} />;
       case 'Profile': return <User {...props} />;
@@ -69,38 +70,102 @@ const TabItem = ({ route, index, isFocused, onPress }) => {
 };
 
 const AttractiveBottomTab = ({ state, descriptors, navigation }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const timeoutRef = useRef(null);
+  const marginAnim = useRef(new Animated.Value(width * 0.05)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+
+  const resetTimer = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsExpanded(true);
+    timeoutRef.current = setTimeout(() => {
+      setIsExpanded(false);
+    }, 4000);
+  };
+
+  useEffect(() => {
+    resetTimer();
+    return () => clearTimeout(timeoutRef.current);
+  }, [state.index]); // reset timer on tab change
+
+  useEffect(() => {
+    if (isExpanded) {
+      Animated.parallel([
+        Animated.spring(marginAnim, {
+          toValue: width * 0.05,
+          useNativeDriver: false,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: false,
+        })
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(marginAnim, {
+          toValue: (width - 70) / 2,
+          duration: 300,
+          useNativeDriver: false,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: false,
+        })
+      ]).start();
+    }
+  }, [isExpanded]);
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { left: marginAnim, right: marginAnim }]}>
       <BlurView intensity={80} tint="light" style={styles.blurContainer}>
-        <View style={styles.tabContent}>
-          {state.routes.map((route, index) => {
-            const isFocused = state.index === index;
+        <TouchableWithoutFeedback onPress={resetTimer}>
+          <View style={{ flex: 1 }}>
 
-            const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
+            <Animated.View style={[styles.tabContent, { opacity: opacityAnim }]} pointerEvents={isExpanded ? 'auto' : 'none'}>
+              {state.routes.map((route, index) => {
+                const isFocused = state.index === index;
 
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
-              }
-            };
+                const onPress = () => {
+                  resetTimer();
+                  const event = navigation.emit({
+                    type: 'tabPress',
+                    target: route.key,
+                    canPreventDefault: true,
+                  });
 
-            return (
-              <TabItem
-                key={index}
-                route={route}
-                index={index}
-                isFocused={isFocused}
-                onPress={onPress}
-              />
-            );
-          })}
-        </View>
+                  if (!isFocused && !event.defaultPrevented) {
+                    navigation.navigate(route.name);
+                  }
+                };
+
+                return (
+                  <TabItem
+                    key={index}
+                    route={route}
+                    index={index}
+                    isFocused={isFocused}
+                    onPress={onPress}
+                  />
+                );
+              })}
+            </Animated.View>
+
+            <Animated.View
+              style={[
+                styles.collapsedIcon,
+                { opacity: opacityAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }
+              ]}
+              pointerEvents={isExpanded ? 'none' : 'auto'}
+            >
+              <Menu color="#000" size={28} />
+            </Animated.View>
+
+          </View>
+        </TouchableWithoutFeedback>
       </BlurView>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -108,8 +173,7 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 30 : 20,
-    left: width * 0.05,
-    right: width * 0.05,
+    // left and right are animated
     height: 70,
     borderRadius: 35,
     overflow: 'hidden',
@@ -149,7 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#000000',
-    overflow: 'hidden', // This ensures the icon disappears when moving up/down out of the circle
+    overflow: 'hidden',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -164,6 +228,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     overflow: 'hidden',
+  },
+  collapsedIcon: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
 
