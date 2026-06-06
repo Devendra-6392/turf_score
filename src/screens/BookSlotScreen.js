@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  StatusBar, Platform, ActivityIndicator, Alert, Dimensions, Switch, Animated, Easing
+  StatusBar, Platform, ActivityIndicator, Dimensions, Switch, Animated, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
-import RazorpayCheckout from 'react-native-razorpay';
-import { NativeModules } from 'react-native';
 import Constants from 'expo-constants';
+import RazorpayModal from '../components/RazorpayModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -260,6 +259,8 @@ const BookSlotScreen = ({ route, navigation }) => {
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [booking, setBooking] = useState(false);
+  const [showRazorpay, setShowRazorpay] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
   const [acceptsChallenges, setAcceptsChallenges] = useState(false);
   const bookingShine = useRef(new Animated.Value(0)).current;
 
@@ -340,81 +341,16 @@ const BookSlotScreen = ({ route, navigation }) => {
       Toast.show({ type: 'info', text1: 'Select a Time Slot', text2: 'Please choose a time slot to book.' });
       return;
     }
-
-    try {
-      setBooking(true);
-      const bookingAmount = selectedSlot.price || (turf?.pricePerHour || 3500);
-
-      // Create order
-      const orderRes = await fetch(`${BACKEND_URL}/bookings/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: bookingAmount })
-      });
-      const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to initialize payment');
-
-      // Payment options
-      const options = {
-        description: `Booking for ${turf.name}`,
-        image: turf.imageUrl || 'https://i.imgur.com/3g7nmJC.png',
-        currency: 'INR',
-        key: 'rzp_live_SRnIHqpELg4O62',
-        amount: orderData.amount,
-        name: 'Turf Score',
-        order_id: orderData.id,
-        prefill: { email: user?.email || '', contact: '', name: user?.name || '' },
-        theme: { color: Colors.primary }
-      };
-
-      const nativeBridge = NativeModules.RazorpayCheckout;
-      const isExpoGo = Constants?.appOwnership === 'expo' || Constants?.expoVersion;
-      const isNativeFunctional = nativeBridge && typeof nativeBridge.open === 'function';
-      const shouldSimulate = isExpoGo || !isNativeFunctional;
-
-      if (shouldSimulate) {
-        if (__DEV__) {
-          Alert.alert(
-            'Simulation Mode',
-            'Native Razorpay is unavailable in Expo Go. Simulate success?',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Simulate Success',
-                onPress: () => {
-                  const mockData = {
-                    razorpay_payment_id: 'pay_mock_' + Math.random().toString(36).substr(2, 9),
-                    razorpay_order_id: orderData.id,
-                    razorpay_signature: 'mock_signature'
-                  };
-                  handlePaymentSuccess(mockData, bookingAmount);
-                }
-              }
-            ]
-          );
-        } else {
-          Alert.alert('Error', 'Payment bridge missing. Please contact support.');
-        }
-        return;
-      }
-
-      const rzp = RazorpayCheckout || nativeBridge;
-      rzp.open(options)
-        .then((data) => handlePaymentSuccess(data, bookingAmount))
-        .catch((error) => {
-          if (error.code !== 2) Alert.alert(`Error: ${error.code}`, error.description);
-        });
-
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Payment Error', error.message);
-    } finally {
-      setBooking(false);
-    }
+    const bookingAmount = selectedSlot.price || (turf?.pricePerHour || 3500);
+    setPaymentAmount(bookingAmount);
+    setShowRazorpay(true);
   };
 
-  const handlePaymentSuccess = async (paymentData, amount) => {
+  const handlePaymentSuccess = async (paymentData) => {
     try {
+      setShowRazorpay(false);
+      setBooking(true);
+
       const response = await fetch(`${BACKEND_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -423,7 +359,7 @@ const BookSlotScreen = ({ route, navigation }) => {
           turfId: turf?.id,
           bookingDate: dateStr,
           timeSlot: selectedSlot.startTime,
-          amount: amount,
+          amount: paymentAmount,
           razorpayOrderId: paymentData.razorpay_order_id,
           razorpayPaymentId: paymentData.razorpay_payment_id,
           razorpaySignature: paymentData.razorpay_signature,
@@ -437,6 +373,8 @@ const BookSlotScreen = ({ route, navigation }) => {
       navigation.navigate('BookingSuccess', { booking: result });
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Booking Error', text2: error.message });
+    } finally {
+      setBooking(false);
     }
   };
 
@@ -602,6 +540,17 @@ const BookSlotScreen = ({ route, navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+      <RazorpayModal
+        visible={showRazorpay}
+        onClose={() => setShowRazorpay(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        amount={paymentAmount}
+        bookingDetails={{
+          description: `Booking for ${turf?.name}`,
+          name: user?.name,
+          email: user?.email,
+        }}
+      />
     </View>
   );
 };

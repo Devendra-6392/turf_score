@@ -5,12 +5,13 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { ArrowLeft, Star, MapPin, Clock, Users, Wifi, ShieldCheck, Coffee, Zap, ChevronRight, Phone, Mail, Info } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 // ─── Amenity Icon Mapper ────────────────────────────────────
 const AMENITY_DATA = {

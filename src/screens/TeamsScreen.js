@@ -16,12 +16,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield, X, CheckCircle2, Trophy } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];
 
 const SPORT_POSITIONS = {

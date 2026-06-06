@@ -4,11 +4,12 @@ import { ArrowLeft, Ticket, Copy } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 export default function CouponsScreen({ navigation }) {
   const [coupons, setCoupons] = useState([]);

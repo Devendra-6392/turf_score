@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { ChevronRight, ChevronLeft, CheckCircle2, Trophy, MapPin, Calendar, MessageSquare, Award, Flame, Target, Sparkles, User, Users, Check } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +13,7 @@ import { useUserBookings, useBookingForTurfDate, useOtherBookingsInTurf } from '
 import OtherUsersBookings from '../components/OtherUsersBookings';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 const CreateChallengeScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();

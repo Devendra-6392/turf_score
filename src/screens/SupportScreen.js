@@ -5,8 +5,9 @@ import Toast from 'react-native-toast-message';
 
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import Constants from 'expo-constants';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 export default function SupportScreen({ navigation }) {
   const [tickets, setTickets] = useState([]);

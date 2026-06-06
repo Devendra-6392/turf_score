@@ -4,11 +4,12 @@ import {
   ActivityIndicator, Alert, SafeAreaView, Share
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { Bell, ArrowLeft, Share2, Calendar, Trophy, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 const NotificationsScreen = ({ navigation }) => {
   const { token } = useAuth();

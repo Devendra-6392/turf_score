@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, CheckCircle2, QrCode } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
 export default function QRScannerScreen({ navigation }) {
   const { token } = useAuth();

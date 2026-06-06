@@ -1,36 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Modal, 
-  TouchableOpacity, 
-  Image,
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Alert,
 } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { X, ShieldCheck, CreditCard, ChevronRight } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
+import { X, ShieldCheck, CheckCircle, XCircle } from 'lucide-react-native';
+import RazorpayCheckout from 'react-native-razorpay';
+import Constants from 'expo-constants';
 
 const { height } = Dimensions.get('window');
 
-const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, keyId }) => {
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('idle'); // idle, processing, success
+const RAZORPAY_KEY_ID = Constants.expoConfig?.extra?.RAZORPAY_KEY_ID || 'rzp_test_Sx2Yhd3xvB6nWM';
+const API_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
 
-  const handlePay = () => {
-    setLoading(true);
-    // Simulate Razorpay network processing
-    setTimeout(() => {
+const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, bookingDetails }) => {
+  const [loading, setLoading] = useState(false);
+
+  const handlePay = async () => {
+    try {
+      setLoading(true);
+
+      const orderRes = await fetch(`${API_URL}/bookings/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order');
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Turf Score',
+        description: bookingDetails?.description || 'Turf Booking Payment',
+        order_id: orderData.id,
+        prefill: {
+          email: bookingDetails?.email || '',
+          contact: bookingDetails?.phone || '',
+          name: bookingDetails?.name || '',
+        },
+        theme: { color: Colors.headerDark },
+      };
+
+      const paymentData = await RazorpayCheckout.open(options);
+
+      onPaymentSuccess({
+        razorpay_order_id: paymentData.razorpay_order_id || paymentData.razorpayOrderId,
+        razorpay_payment_id: paymentData.razorpay_payment_id || paymentData.razorpayPaymentId,
+        razorpay_signature: paymentData.razorpay_signature || paymentData.razorpaySignature,
+      });
+
+      onClose();
+    } catch (error) {
+      if (error.code === 2) {
+        Alert.alert('Payment Cancelled', 'You cancelled the payment.');
+      } else {
+        Alert.alert('Payment Error', error.description || error.message || 'Something went wrong');
+      }
+    } finally {
       setLoading(false);
-      setStatus('success');
-      setTimeout(() => {
-        onPaymentSuccess();
-        onClose();
-        setStatus('idle');
-      }, 2000);
-    }, 3000);
+    }
   };
 
   return (
@@ -38,11 +74,7 @@ const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, keyId }) =>
       <View style={styles.overlay}>
         <View style={styles.checkoutContainer}>
           <View style={styles.header}>
-            <Image 
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/89/Razorpay_logo.svg/1200px-Razorpay_logo.svg.png' }} 
-              style={styles.rzpLogo}
-              resizeMode="contain"
-            />
+            <Text style={styles.headerTitle}>Pay with Razorpay</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={Colors.onSurfaceVariant} />
             </TouchableOpacity>
@@ -52,68 +84,41 @@ const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, keyId }) =>
             <View style={styles.merchantLogo}>
               <Text style={styles.logoText}>TS</Text>
             </View>
-            <View>
-              <Text style={styles.merchantName}>Turf Score Premium</Text>
-              <Text style={styles.merchantId}>ID: {keyId.slice(0, 10)}...</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.merchantName}>Turf Score</Text>
+              <Text style={styles.merchantDesc}>{bookingDetails?.description || 'Secure Payment'}</Text>
             </View>
-            <View style={styles.amountContainer}>
-              <Text style={styles.amountText}>₹{amount}</Text>
-            </View>
+          </View>
+
+          <View style={styles.priceSection}>
+            <Text style={styles.priceLabel}>Total Amount</Text>
+            <Text style={styles.priceValue}>₹{amount}</Text>
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.sectionTitle}>PAYMENT METHODS</Text>
-            
-            <TouchableOpacity style={styles.methodItem} onPress={handlePay}>
-              <View style={[styles.methodIcon, { backgroundColor: '#528FF0' }]}>
-                <CreditCard size={20} color="#fff" />
-              </View>
-              <View style={styles.methodDetails}>
-                <Text style={styles.methodName}>Cards (Visa, MaterCard, Rupay)</Text>
-                <Text style={styles.methodSub}>Pay via Debit/Credit card</Text>
-              </View>
-              <ChevronRight size={20} color={Colors.surfaceContainerHighest} />
+            <TouchableOpacity style={styles.payButton} onPress={handlePay} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.payButtonText}>Pay ₹{amount}</Text>
+              )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.methodItem} onPress={handlePay}>
-              <View style={[styles.methodIcon, { backgroundColor: '#2AD38E' }]}>
-                <Image source={{ uri: 'https://cdn.iconscout.com/icon/free/png-256/free-upi-2085056-1747946.png' }} style={{ width: 24, height: 24 }} />
+            <View style={styles.featuresList}>
+              <View style={styles.featureItem}>
+                <ShieldCheck size={16} color="#4ECB71" />
+                <Text style={styles.featureText}>Secured by Razorpay</Text>
               </View>
-              <View style={styles.methodDetails}>
-                <Text style={styles.methodName}>UPI (PhonePe, Google Pay)</Text>
-                <Text style={styles.methodSub}>Instant payment using UPI</Text>
+              <View style={styles.featureItem}>
+                <CheckCircle size={16} color="#4ECB71" />
+                <Text style={styles.featureText}>UPI, Cards, NetBanking & Wallet</Text>
               </View>
-              <ChevronRight size={20} color={Colors.surfaceContainerHighest} />
-            </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.footer}>
-            <View style={styles.securityInfo}>
-              <ShieldCheck size={16} color="#4ECB71" />
-              <Text style={styles.securityText}>Trusted by 10M+ businesses</Text>
-            </View>
-            <Text style={styles.secureBadge}>SECURE CHECKOUT</Text>
+            <Text style={styles.footerText}>Powered by Razorpay</Text>
           </View>
-
-          {loading && (
-            <BlurView intensity={80} style={StyleSheet.absoluteFill}>
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#3392FF" />
-                <Text style={styles.loadingText}>Processing Payment...</Text>
-                <Text style={styles.loadingSub}>Please do not press back or close</Text>
-              </View>
-            </BlurView>
-          )}
-
-          {status === 'success' && (
-            <View style={[StyleSheet.absoluteFill, styles.successOverlay]}>
-              <View style={styles.successIcon}>
-                <ShieldCheck size={64} color="#fff" />
-              </View>
-              <Text style={styles.successTitle}>Payment Successful</Text>
-              <Text style={styles.successSub}>Transaction ID: rzp_pay_PKs82...</Text>
-            </View>
-          )}
         </View>
       </View>
     </Modal>
@@ -130,20 +135,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: height * 0.7,
+    height: height * 0.55,
     overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 18,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  rzpLogo: {
-    width: 100,
-    height: 30,
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#222',
   },
   closeBtn: {
     padding: 8,
@@ -153,6 +159,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#fbfbfb',
+    gap: 14,
   },
   merchantLogo: {
     width: 48,
@@ -161,7 +168,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
   logoText: {
     color: '#fff',
@@ -173,122 +179,69 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#222',
   },
-  merchantId: {
-    fontSize: 12,
+  merchantDesc: {
+    fontSize: 13,
     color: '#888',
     marginTop: 2,
   },
-  amountContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
+  priceSection: {
+    padding: 20,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  amountText: {
-    fontSize: 20,
-    fontWeight: '800',
+  priceLabel: {
+    fontSize: 13,
+    color: '#888',
+    fontWeight: '600',
+  },
+  priceValue: {
+    fontSize: 34,
+    fontWeight: '900',
     color: '#222',
+    marginTop: 4,
   },
   content: {
     padding: 20,
     flex: 1,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#888',
-    letterSpacing: 1,
-    marginBottom: 20,
-  },
-  methodItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  payButton: {
+    backgroundColor: Colors.headerDark,
+    borderRadius: 14,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f4f4f4',
-  },
-  methodIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    minHeight: 52,
   },
-  methodDetails: {
-    flex: 1,
+  payButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
-  methodName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#222',
+  featuresList: {
+    marginTop: 20,
+    gap: 10,
   },
-  methodSub: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 2,
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featureText: {
+    fontSize: 13,
+    color: '#666',
   },
   footer: {
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
   },
-  securityInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  securityText: {
-    fontSize: 12,
-    color: '#4ECB71',
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  secureBadge: {
-    fontSize: 10,
-    fontWeight: '800',
+  footerText: {
+    fontSize: 11,
     color: '#aaa',
-    letterSpacing: 2,
+    fontWeight: '600',
   },
-  loadingOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 20,
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#3392FF',
-  },
-  loadingSub: {
-    marginTop: 8,
-    color: '#666',
-  },
-  successOverlay: {
-    backgroundColor: '#3392FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  successIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#fff',
-  },
-  successSub: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 8,
-  }
 });
 
 export default RazorpayModal;
