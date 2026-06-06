@@ -8,7 +8,7 @@ import { Trophy, ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 
 const MatchResultScreen = ({ route, navigation }) => {
   const { challengeId } = route.params;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const BACKEND_URL = 'http://10.185.142.203:5000/api';
+const BACKEND_URL = 'http://192.168.18.23:5000/api';
 
 /**
  * Hook to fetch user's existing bookings
