@@ -817,5 +817,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
   saveBtnDisabled: { opacity: 0.5 },
 });

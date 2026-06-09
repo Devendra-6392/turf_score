@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +17,7 @@ import { Colors } from '../constants/Colors';
 import { Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
+import { scheduleLocalNotification } from '../utils/notifications';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,10 +27,10 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  
+
   const { login } = useAuth();
 
   const handleLogin = async () => {
@@ -41,6 +42,7 @@ const LoginScreen = ({ navigation }) => {
     try {
       await login(email, password);
       Toast.show({ type: 'success', text1: 'Welcome back!', text2: 'Login successful' });
+      scheduleLocalNotification('Welcome Back! 👋', 'You have successfully logged in.', 1);
       navigation.replace('Main');
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Login Failed', text2: error.message });
@@ -52,17 +54,17 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      
+
       {/* Top half wave background pattern */}
       <View style={styles.topHeaderContainer}>
-        <Image 
-          source={require('../assets/green_topography.png')} 
-          style={styles.headerPattern} 
+        <Image
+          source={require('../assets/green_topography.png')}
+          style={styles.headerPattern}
           resizeMode="cover"
         />
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
@@ -76,7 +78,7 @@ const LoginScreen = ({ navigation }) => {
               emailFocused && styles.inputContainerFocused
             ]}>
               <Mail size={16} color={emailFocused ? Colors.primary : Colors.onSurfaceVariant} style={styles.icon} />
-              <TextInput 
+              <TextInput
                 placeholder="demo@email.com"
                 placeholderTextColor={Colors.onSurfaceVariant + '60'}
                 value={email}
@@ -95,7 +97,7 @@ const LoginScreen = ({ navigation }) => {
               passwordFocused && styles.inputContainerFocused
             ]}>
               <Lock size={16} color={passwordFocused ? Colors.primary : Colors.onSurfaceVariant} style={styles.icon} />
-              <TextInput 
+              <TextInput
                 placeholder="Enter your password"
                 placeholderTextColor={Colors.onSurfaceVariant + '60'}
                 secureTextEntry={!showPassword}
@@ -116,8 +118,8 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Checkbox & Forgot Password */}
             <View style={styles.actionsRow}>
-              <TouchableOpacity 
-                style={styles.rememberRow} 
+              <TouchableOpacity
+                style={styles.rememberRow}
                 onPress={() => setRememberMe(!rememberMe)}
                 activeOpacity={0.8}
               >
@@ -135,8 +137,8 @@ const LoginScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
-              style={styles.loginBtn} 
+            <TouchableOpacity
+              style={styles.loginBtn}
               onPress={handleLogin}
               activeOpacity={0.85}
             >

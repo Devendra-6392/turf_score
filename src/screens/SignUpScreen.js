@@ -18,6 +18,7 @@ import { Colors } from '../constants/Colors';
 import { User, Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
+import { scheduleLocalNotification } from '../utils/notifications';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,6 +45,7 @@ const SignUpScreen = ({ navigation }) => {
     try {
       await register(name, email, password);
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully' });
+      scheduleLocalNotification('Welcome to Turf Score! 🎉', 'Your account has been created successfully.', 1);
       navigation.replace('Main');
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Sign Up Failed', text2: error.message });

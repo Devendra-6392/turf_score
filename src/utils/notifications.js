@@ -25,11 +25,20 @@ export function setupNotificationHandler() {
   });
 }
 
-export async function requestNotificationPermission() {
+export async function registerForPushNotificationsAsync() {
   const Notifications = getNotifications();
   if (!Notifications) {
     console.log('Push notifications are skipped in Expo Go. Use a development build for remote notifications.');
-    return false;
+    return null;
+  }
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -42,27 +51,26 @@ export async function requestNotificationPermission() {
 
   if (finalStatus !== 'granted') {
     console.log('Notification permission denied');
-    return false;
+    return null;
   }
 
-  if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
+  try {
+    const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    console.log("Expo Push Token:", token);
+    return token;
+  } catch (error) {
+    console.error("Error getting push token:", error);
+    return null;
   }
-
-  return true;
 }
 
 export async function scheduleLocalNotification(title, body, seconds = 2) {
   const Notifications = getNotifications();
   if (!Notifications) return;
 
-  const hasPermission = await requestNotificationPermission();
-  if (!hasPermission) return;
+  const token = await registerForPushNotificationsAsync();
+  if (!token) return;
 
   await Notifications.scheduleNotificationAsync({
     content: {

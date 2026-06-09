@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { registerForPushNotificationsAsync } from '../utils/notifications';
 
 const API_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 const BACKEND_URL = `${API_URL}/auth`;
@@ -35,6 +36,23 @@ export const AuthProvider = ({ children }) => {
     setToken(data.token);
     await SecureStore.setItemAsync('userToken', data.token);
     await SecureStore.setItemAsync('userData', JSON.stringify(data.user));
+
+    // Register push token and sync with backend
+    try {
+      const pushToken = await registerForPushNotificationsAsync();
+      if (pushToken) {
+        await fetch(`${BACKEND_URL}/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`
+          },
+          body: JSON.stringify({ fcmToken: pushToken })
+        });
+      }
+    } catch (e) {
+      console.log('Push token registration failed', e);
+    }
   }, []);
 
   const login = useCallback(async (email, password) => {

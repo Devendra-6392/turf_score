@@ -14,6 +14,7 @@ const razorpay = new Razorpay({
 });
 
 const { sendBookingBillEmail } = require('../utils/emailService');
+const { sendPushNotification } = require('../utils/pushHelper');
 
 // Create a new Razorpay order
 exports.createRazorpayOrder = async (req, res) => {
@@ -49,21 +50,57 @@ exports.createBooking = async (req, res) => {
       }
     }
 
-    // Verify payment signature
-    const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpayOrderId + "|" + razorpayPaymentId)
-      .digest('hex');
+    // Handle Payment Methods
+    let bookingStatus = 'CONFIRMED';
+    let paymentDetailStatus = 'SUCCESS';
+    let finalPaymentMethod = paymentMethod || 'razorpay';
 
-    const isSimulation = razorpaySignature === 'mock_signature';
+    if (finalPaymentMethod === 'cod') {
+      paymentDetailStatus = 'PENDING';
+      // Mark internally as pending payment, but booking confirmed
+      // We will set paymentStatus to PENDING in booking creation
+    } else if (finalPaymentMethod === 'wallet') {
+      // Check wallet balance
+      const wallet = await prisma.wallet.findUnique({ where: { userId } });
+      if (!wallet || wallet.balance < amount) {
+        return res.status(400).json({ error: 'Insufficient wallet balance' });
+      }
+      
+      // Deduct balance
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { decrement: amount } }
+      });
+      
+      // Create transaction
+      await prisma.transaction.create({
+        data: {
+          walletId: wallet.id,
+          amount: amount,
+          type: 'DEBIT',
+          description: `Booking payment for turf slot`,
+          status: 'COMPLETED',
+          previousBalance: wallet.balance,
+          newBalance: wallet.balance - amount
+        }
+      });
+    } else {
+      // Razorpay
+      const generated_signature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(razorpayOrderId + "|" + razorpayPaymentId)
+        .digest('hex');
 
-    if (!isSimulation && generated_signature !== razorpaySignature) {
-      console.error('Signature Mismatch:', { generated_signature, razorpaySignature });
-      return res.status(400).json({ error: 'Invalid payment signature' });
-    }
+      const isSimulation = razorpaySignature === 'mock_signature';
 
-    if (isSimulation) {
-      console.log('✅ Processing Simulated Booking (Simulation Mode)');
+      if (!isSimulation && generated_signature !== razorpaySignature) {
+        console.error('Signature Mismatch:', { generated_signature, razorpaySignature });
+        return res.status(400).json({ error: 'Invalid payment signature' });
+      }
+
+      if (isSimulation) {
+        console.log('✅ Processing Simulated Booking (Simulation Mode)');
+      }
     }
 
     const parsedDate = parseCalendarDate(bookingDate);
@@ -111,14 +148,15 @@ exports.createBooking = async (req, res) => {
         teamId: teamId || null,
         razorpayId: razorpayPaymentId,
         status: 'CONFIRMED',
+        paymentStatus: finalPaymentMethod === 'cod' ? 'PENDING' : 'PAID',
         paymentDetail: {
           create: {
-            razorpayOrderId,
-            razorpayPaymentId,
-            razorpaySignature,
-            paymentMethod: paymentMethod || "card",
+            razorpayOrderId: razorpayOrderId || null,
+            razorpayPaymentId: razorpayPaymentId || null,
+            razorpaySignature: razorpaySignature || null,
+            paymentMethod: finalPaymentMethod,
             amount,
-            status: "SUCCESS"
+            status: paymentDetailStatus
           }
         }
       },
@@ -171,6 +209,19 @@ exports.createBooking = async (req, res) => {
         time: timeSlot,
         amount: amount
       });
+    }
+
+    // Send Push Notification
+    if (userExists.fcmToken) {
+      const formattedDate = parsedDate.toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+      sendPushNotification(
+        userExists.fcmToken,
+        'Booking Confirmed! 🎉',
+        `Your turf at ${booking.turf.name} is booked for ${formattedDate} at ${timeSlot}.`,
+        { bookingId: booking.id, type: 'BOOKING_CONFIRMATION' }
+      );
     }
 
     res.status(201).json(booking);

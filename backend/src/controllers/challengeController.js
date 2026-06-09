@@ -1,5 +1,6 @@
 const prisma = require('../config/db');
 const { sendChallengeAcceptedEmail } = require('../utils/emailService');
+const { sendPushNotification } = require('../utils/pushHelper');
 
 console.log('Prisma client loaded:', prisma ? 'YES' : 'NO');
 
@@ -200,7 +201,10 @@ const acceptChallenge = async (req, res) => {
     }
 
     const { opponentTeamId } = req.body;
-    const challenge = await prisma.challenge.findUnique({ where: { id: req.params.id } });
+    const challenge = await prisma.challenge.findUnique({ 
+      where: { id: req.params.id },
+      include: { creator: true }
+    });
 
     if (!challenge) return res.status(404).json({ error: 'Challenge not found' });
     if (challenge.status !== 'OPEN') return res.status(400).json({ error: 'Challenge is no longer open' });
@@ -237,6 +241,16 @@ const acceptChallenge = async (req, res) => {
         sentAt: new Date()
       }
     });
+
+    // Send push notification to creator
+    if (challenge.creator && challenge.creator.fcmToken) {
+      sendPushNotification(
+        challenge.creator.fcmToken,
+        'Challenge Accepted! 🔥',
+        `Someone accepted your challenge "${challenge.title}". Pay your advance to confirm the match!`,
+        { challengeId: challenge.id, type: 'CHALLENGE_ACCEPTED' }
+      );
+    }
 
     res.json(updated);
   } catch (err) {

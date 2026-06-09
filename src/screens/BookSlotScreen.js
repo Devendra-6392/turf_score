@@ -4,7 +4,7 @@ import {
   StatusBar, Platform, ActivityIndicator, Dimensions, Switch, Animated, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-react-native';
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Wallet, Banknote, CreditCard } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
@@ -249,7 +249,7 @@ const PeopleChip = memo(({ count, isSelected, onPress }) => (
 // ─── Main BookSlotScreen ────────────────────────────────────
 const BookSlotScreen = ({ route, navigation }) => {
   const { turf } = route.params || {};
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -262,6 +262,7 @@ const BookSlotScreen = ({ route, navigation }) => {
   const [showRazorpay, setShowRazorpay] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [acceptsChallenges, setAcceptsChallenges] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay', 'wallet', 'cod'
   const bookingShine = useRef(new Animated.Value(0)).current;
 
   const peopleCounts = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
@@ -343,7 +344,44 @@ const BookSlotScreen = ({ route, navigation }) => {
     }
     const bookingAmount = selectedSlot.price || (turf?.pricePerHour || 3500);
     setPaymentAmount(bookingAmount);
-    setShowRazorpay(true);
+
+    if (paymentMethod === 'razorpay') {
+      setShowRazorpay(true);
+    } else {
+      processDirectBooking(bookingAmount);
+    }
+  };
+
+  const processDirectBooking = async (amount) => {
+    try {
+      setBooking(true);
+      const response = await fetch(`${BACKEND_URL}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          turfId: turf?.id,
+          bookingDate: dateStr,
+          timeSlot: selectedSlot.startTime,
+          amount: amount,
+          paymentMethod: paymentMethod,
+          teamId: selectedTeamId || undefined,
+          acceptsChallenges: acceptsChallenges
+        })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to save booking');
+      
+      if (paymentMethod === 'wallet' && refreshUser) {
+        await refreshUser();
+      }
+      
+      navigation.navigate('BookingSuccess', { booking: result });
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Booking Error', text2: error.message });
+    } finally {
+      setBooking(false);
+    }
   };
 
   const handlePaymentSuccess = async (paymentData) => {
@@ -482,6 +520,70 @@ const BookSlotScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* ── Payment Method ── */}
+        {selectedSlot && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <View style={{ gap: 10 }}>
+              <TouchableOpacity
+                style={[styles.paymentMethodCard, paymentMethod === 'razorpay' && styles.paymentMethodCardSelected]}
+                onPress={() => setPaymentMethod('razorpay')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.paymentIconBox, paymentMethod === 'razorpay' && styles.paymentIconBoxSelected]}>
+                  <CreditCard size={20} color={paymentMethod === 'razorpay' ? '#fff' : Colors.onSurfaceVariant} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.paymentMethodTitle, paymentMethod === 'razorpay' && styles.paymentMethodTitleSelected]}>Pay Online</Text>
+                  <Text style={styles.paymentMethodDesc}>UPI, Cards, NetBanking via Razorpay</Text>
+                </View>
+                <View style={[styles.radioOuter, paymentMethod === 'razorpay' && styles.radioOuterSelected]}>
+                  {paymentMethod === 'razorpay' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodCard, 
+                  paymentMethod === 'wallet' && styles.paymentMethodCardSelected,
+                  (user?.wallet?.balance || 0) < (selectedSlot.price || turf?.pricePerHour || 3500) && styles.paymentMethodCardDisabled
+                ]}
+                onPress={() => setPaymentMethod('wallet')}
+                disabled={(user?.wallet?.balance || 0) < (selectedSlot.price || turf?.pricePerHour || 3500)}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.paymentIconBox, paymentMethod === 'wallet' && styles.paymentIconBoxSelected]}>
+                  <Wallet size={20} color={paymentMethod === 'wallet' ? '#fff' : Colors.onSurfaceVariant} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.paymentMethodTitle, paymentMethod === 'wallet' && styles.paymentMethodTitleSelected]}>Wallet Balance</Text>
+                  <Text style={styles.paymentMethodDesc}>Available: ₹{user?.wallet?.balance || 0}</Text>
+                </View>
+                <View style={[styles.radioOuter, paymentMethod === 'wallet' && styles.radioOuterSelected]}>
+                  {paymentMethod === 'wallet' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.paymentMethodCard, paymentMethod === 'cod' && styles.paymentMethodCardSelected]}
+                onPress={() => setPaymentMethod('cod')}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.paymentIconBox, paymentMethod === 'cod' && styles.paymentIconBoxSelected]}>
+                  <Banknote size={20} color={paymentMethod === 'cod' ? '#fff' : Colors.onSurfaceVariant} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.paymentMethodTitle, paymentMethod === 'cod' && styles.paymentMethodTitleSelected]}>Pay at Turf</Text>
+                  <Text style={styles.paymentMethodDesc}>Pay cash or UPI upon arrival</Text>
+                </View>
+                <View style={[styles.radioOuter, paymentMethod === 'cod' && styles.radioOuterSelected]}>
+                  {paymentMethod === 'cod' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* ── Booking Summary ── */}
         {selectedSlot && (
           <View style={styles.summaryCard}>
@@ -536,7 +638,7 @@ const BookSlotScreen = ({ route, navigation }) => {
             {booking ? 'Processing...' : 'Confirm Booking'}
           </Text>
           <View style={[styles.confirmBtnArrow, (!selectedSlot || booking) && { opacity: 0.5 }]}>
-            <ChevronRight size={22} color={Colors.primary} />
+            <ChevronRight size={22} color={'#fff'} />
           </View>
         </TouchableOpacity>
       </View>
@@ -719,6 +821,64 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
     paddingRight: 10,
+  },
+
+  // ── Payment Methods ──
+  paymentMethodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
+  },
+  paymentMethodCardSelected: {
+    backgroundColor: Colors.headerDark,
+    borderColor: Colors.headerDark,
+  },
+  paymentMethodCardDisabled: {
+    opacity: 0.5,
+  },
+  paymentIconBox: {
+    width: 40, height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surfaceContainerLow,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  paymentIconBoxSelected: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  paymentMethodTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.onBackground,
+    marginBottom: 4,
+  },
+  paymentMethodTitleSelected: {
+    color: '#fff',
+  },
+  paymentMethodDesc: {
+    fontSize: 13,
+    color: Colors.onSurfaceVariant,
+  },
+  radioOuter: {
+    width: 22, height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: Colors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuterSelected: {
+    borderColor: Colors.primary,
+  },
+  radioInner: {
+    width: 10, height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.primary,
   },
 
   // ── Summary Card ──
