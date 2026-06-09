@@ -1,24 +1,33 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { TouchableOpacity, Text, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 
-const PremiumButton = ({ title, onPress, type = 'primary', style }) => {
+const PremiumButton = ({ title, onPress, type = 'primary', style, loading = false, disabled = false, icon: Icon }) => {
   if (type === 'primary') {
     return (
-      <TouchableOpacity onPress={onPress} style={[styles.container, style]}>
-        <LinearGradient
-          colors={Colors.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        >
-          {typeof title === 'string' ? (
-            <Text style={styles.primaryText}>{title}</Text>
+      <TouchableOpacity 
+        onPress={onPress} 
+        style={[styles.container, style, disabled && styles.disabled]}
+        disabled={disabled || loading}
+        activeOpacity={0.85}
+      >
+        <View style={styles.primaryGrad}>
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
           ) : (
-            title
+            <>
+              {typeof title === 'string' ? (
+                <Text style={styles.primaryText}>{title}</Text>
+              ) : (
+                title
+              )}
+              <View style={styles.primaryArrow}>
+                {Icon ? <Icon size={18} color="#fff" /> : <ChevronRight size={18} color="#fff" />}
+              </View>
+            </>
           )}
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   }
@@ -26,9 +35,13 @@ const PremiumButton = ({ title, onPress, type = 'primary', style }) => {
   return (
     <TouchableOpacity 
       onPress={onPress} 
-      style={[styles.container, styles.secondary, style]}
+      style={[styles.container, styles.secondary, style, disabled && styles.disabled]}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
     >
-      {typeof title === 'string' ? (
+      {loading ? (
+        <ActivityIndicator size="small" color={Colors.primary} />
+      ) : typeof title === 'string' ? (
         <Text style={styles.secondaryText}>{title}</Text>
       ) : (
         title
@@ -39,33 +52,50 @@ const PremiumButton = ({ title, onPress, type = 'primary', style }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 50,
+    borderRadius: 16,
     overflow: 'hidden',
     marginVertical: 8,
   },
-  gradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+  disabled: {
+    opacity: 0.5,
+  },
+  primaryGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 24,
+    paddingRight: 6,
+    paddingVertical: 6,
+    backgroundColor: '#1A1A1A',
+    minHeight: 54,
+  },
+  primaryText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  primaryArrow: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondary: {
-    backgroundColor: Colors.surfaceContainerHighest,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    backgroundColor: Colors.surface,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  primaryText: {
-    color: Colors.onPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'System', // Will update to Plus Jakarta Sans later
+    borderWidth: 1.5,
+    borderColor: Colors.outlineLight,
+    minHeight: 54,
   },
   secondaryText: {
     color: Colors.onBackground,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
 

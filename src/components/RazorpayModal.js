@@ -17,7 +17,7 @@ import Constants from 'expo-constants';
 const { height } = Dimensions.get('window');
 
 const RAZORPAY_KEY_ID = Constants.expoConfig?.extra?.RAZORPAY_KEY_ID || 'rzp_test_Sx2Yhd3xvB6nWM';
-const API_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const API_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, bookingDetails }) => {
   const [loading, setLoading] = useState(false);

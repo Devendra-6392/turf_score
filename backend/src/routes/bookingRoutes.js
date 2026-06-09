@@ -16,6 +16,11 @@ router.post('/', bookingController.createBooking);
 router.post('/:bookingId/approve-cancellation', adminAuth, authorize('bookings', 'edit'), bookingController.cancelBooking);
 router.post('/:bookingId/cancel', adminAuth, authorize('bookings', 'delete'), bookingController.cancelBooking);
 router.post('/:bookingId/request-cancellation', bookingController.requestCancellation);
+
+// Require a basic user authentication for my-bookings
+const authMiddleware = require('../middleware/authMiddleware');
+router.get('/my-bookings', authMiddleware, bookingController.getMyBookings);
+
 router.get('/user/:userId', bookingController.getUserBookings);
 
 module.exports = router;

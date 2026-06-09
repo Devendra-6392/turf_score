@@ -6,19 +6,39 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
-import { ChevronRight, ChevronLeft, CheckCircle2, Trophy, MapPin, Calendar, MessageSquare, Award, Flame, Target, Sparkles, User, Users, Check } from 'lucide-react-native';
+import {
+  ChevronRight, ChevronLeft, CheckCircle2, Trophy, MapPin, Calendar,
+  Award, Flame, Target, Sparkles, User, Users, Zap
+} from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { useUserBookings, useBookingForTurfDate, useOtherBookingsInTurf } from '../hooks/useChallengeFlow';
-import OtherUsersBookings from '../components/OtherUsersBookings';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
+// ─── Sport Config ─────────────────────────────────────────────────────────────
+const SPORT_CONFIG = {
+  CRICKET: { icon: Award, label: 'Cricket', color: '#E0A96D', bg: '#FFF4E6' },
+  FOOTBALL: { icon: Flame, label: 'Football', color: '#FF7E67', bg: '#FFF0EE' },
+  TENNIS: { icon: Target, label: 'Tennis', color: '#4E9F3D', bg: '#F0FAF0' },
+  BADMINTON: { icon: Sparkles, label: 'Badminton', color: '#9B59B6', bg: '#F8F0FC' },
+  BASKETBALL: { icon: Trophy, label: 'Basketball', color: '#F0A500', bg: '#FFFBEA' },
+};
+
+// ─── No Step Indicator (Single Page Layout) ───────────────────────────────────
+
+// ─── Section Label ────────────────────────────────────────────────────────────
+const SectionLabel = ({ children }) => (
+  <Text style={{ fontSize: 11, fontWeight: '800', color: Colors.primary, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 10, marginTop: 4 }}>
+    {children}
+  </Text>
+);
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 const CreateChallengeScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
   const { prefillTurfId, prefillSlotId, prefillDate, prefillTime } = route?.params || {};
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
 
@@ -26,1022 +46,459 @@ const CreateChallengeScreen = ({ route, navigation }) => {
   const [sportType, setSportType] = useState('CRICKET');
   const [challengeType, setChallengeType] = useState('INDIVIDUAL');
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
   const [turfId, setTurfId] = useState(prefillTurfId || null);
   const [turfs, setTurfs] = useState([]);
   const [selectedDate, setSelectedDate] = useState(prefillDate ? new Date(prefillDate) : new Date());
   const [selectedTime, setSelectedTime] = useState(prefillTime || '');
   const [maxPlayers, setMaxPlayers] = useState('10');
-
   const [turfSlots, setTurfSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(prefillSlotId || null);
   const [loadingSlots, setLoadingSlots] = useState(false);
-
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  // Enhanced: Load user's bookings and find matching bookings in turf
   const { bookings: userBookings } = useUserBookings(token);
   const matchingBooking = useBookingForTurfDate(turfId, selectedDate, userBookings);
-  const { otherBookings, loading: loadingOtherBookings } = useOtherBookingsInTurf(
-    turfId,
-    selectedDate,
-    user?.id,
-    token
-  );
+  const { otherBookings, loading: loadingOtherBookings } = useOtherBookingsInTurf(turfId, selectedDate, user?.id, token);
 
-  const sports = ['CRICKET', 'FOOTBALL', 'TENNIS', 'BADMINTON', 'BASKETBALL'];
-  const types = ['INDIVIDUAL', 'TEAM'];
-
-  // Auto-prefill if matching booking found
+  // ── Auto-prefill from booking ─────────────────────────────────────────────
   useEffect(() => {
     if (matchingBooking && !selectedSlot) {
       setSelectedSlot(matchingBooking.slotId);
       setSelectedTime(matchingBooking.timeSlot || matchingBooking.scheduledTime || '');
-      if (matchingBooking.turf?.name) {
-        // Turf name can be displayed in UI but turfId is already set
-      }
     }
   }, [matchingBooking, selectedSlot]);
 
-  // Fetch turfs
+  // ── Fetch turfs ───────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchTurfs = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/turfs`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setTurfs(data.slice(0, 10));
-        }
-      } catch (error) {
-        console.error('Error fetching turfs:', error);
-      }
+        const res = await fetch(`${BACKEND_URL}/turfs`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) { const d = await res.json(); setTurfs(d.slice(0, 10)); }
+      } catch (e) { console.error('Turfs:', e); }
     };
     fetchTurfs();
   }, [token]);
 
-  // Fetch teams if user is logged in
+  // ── Fetch teams ───────────────────────────────────────────────────────────
   useEffect(() => {
+    if (challengeType !== 'TEAM') return;
     const fetchTeams = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/teams/my-teams`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setTeams(data);
-          if (data.length > 0) {
-            setSelectedTeam(data[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-      }
+        const res = await fetch(`${BACKEND_URL}/teams/my-teams`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) { const d = await res.json(); setTeams(d); if (d.length) setSelectedTeam(d[0].id); }
+      } catch (e) { console.error('Teams:', e); }
     };
-    if (challengeType === 'TEAM') {
-      fetchTeams();
-    }
+    fetchTeams();
   }, [challengeType, token]);
 
-  // Fetch slots when turf or date changes
+  // ── Fetch slots ───────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!turfId || !selectedDate) return;
     const fetchSlots = async () => {
-      if (!turfId || !selectedDate) return;
       setLoadingSlots(true);
       try {
         const dateStr = selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : selectedDate;
-        const response = await fetch(`${BACKEND_URL}/turfs/${turfId}/slots?date=${dateStr}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // If prefill is provided, we might have already booked the slot, so we can't filter out by AVAILABLE.
-          // In that case, we should manually inject the slot if it's missing or allow BOOKED slots if it matches prefillSlotId.
-          setTurfSlots(data.filter(s => s.status === 'AVAILABLE' || s.id === prefillSlotId));
+        const res = await fetch(`${BACKEND_URL}/turfs/${turfId}/slots?date=${dateStr}`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const d = await res.json();
+          setTurfSlots(d.filter(s => s.status === 'AVAILABLE' || s.id === prefillSlotId));
         }
-      } catch (err) {
-        console.error('Error fetching slots:', err);
-      } finally {
-        setLoadingSlots(false);
-      }
+      } catch (e) { console.error('Slots:', e); }
+      finally { setLoadingSlots(false); }
     };
     fetchSlots();
   }, [turfId, selectedDate, token, prefillSlotId]);
 
-  const handleDateChange = (text) => {
-    setSelectedDate(text);
-  };
-
+  // ── Date picker ───────────────────────────────────────────────────────────
   const openDatePicker = async () => {
     try {
       if (Platform.OS === 'android') {
-        const { action, year, month, day } = await DatePickerAndroid.open({
-          date: selectedDate instanceof Date ? selectedDate : new Date(),
-        });
-        if (action !== DatePickerAndroid.dismissedAction) {
-          const date = new Date(year, month, day);
-          setSelectedDate(date);
-        }
+        const { action, year, month, day } = await DatePickerAndroid.open({ date: selectedDate instanceof Date ? selectedDate : new Date() });
+        if (action !== DatePickerAndroid.dismissedAction) setSelectedDate(new Date(year, month, day));
       } else {
-        // For iOS, show simple date input field - user types date
-        Alert.alert('Enter Date', 'Format: YYYY-MM-DD (e.g., 2026-06-15)', [
-          { text: 'Cancel', style: 'cancel' },
-        ]);
+        Alert.alert('Enter Date', 'Format: YYYY-MM-DD', [{ text: 'Cancel', style: 'cancel' }]);
       }
-    } catch ({ code, message }) {
-      console.warn('DatePicker Error:', message);
-    }
+    } catch (e) { console.warn(e); }
   };
 
-  const handleNext = () => {
-    if (step < 4) {
-      setStep(step + 1);
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    } else {
-      submitChallenge();
-    }
-  };
+  // ── No animation needed for single page ───────────────────────────────────
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    }
-  };
-
+  // ── Submit ────────────────────────────────────────────────────────────────
   const submitChallenge = async () => {
-    if (!title || !sportType) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
+    if (!title || !sportType) { Alert.alert('Missing Info', 'Please add a challenge title.'); return; }
     setLoading(true);
     try {
-      // Format date properly
-      let dateStr;
-      if (selectedDate instanceof Date) {
-        dateStr = selectedDate.toISOString().split('T')[0];
-      } else {
-        dateStr = selectedDate || new Date().toISOString().split('T')[0];
-      }
-
-      // Lock the slot if selected (skip lock if it's prefilled, because it's already booked)
+      const dateStr = selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : (selectedDate || new Date().toISOString().split('T')[0]);
       let finalSlotId = null;
       if (selectedSlot) {
         if (!prefillSlotId) {
           const lockRes = await fetch(`${BACKEND_URL}/challenges/lock-slot`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ slotId: selectedSlot }),
           });
-          if (!lockRes.ok) {
-            throw new Error('Failed to lock the selected slot. It might have been booked already.');
-          }
+          if (!lockRes.ok) throw new Error('Slot was just taken. Pick another.');
         }
         finalSlotId = selectedSlot;
       }
-
       const payload = {
-        title,
-        description,
-        sportType,
-        type: challengeType,
+        title, sportType, type: challengeType,
         challengerTeamId: challengeType === 'TEAM' ? selectedTeam : null,
-        turfId: turfId || null,
-        slotId: finalSlotId,
-        scheduledDate: dateStr,
-        scheduledTime: selectedTime,
-        maxPlayers: parseInt(maxPlayers) || 10,
-        message,
-        isPublic: true,
+        turfId: turfId || null, slotId: finalSlotId,
+        scheduledDate: dateStr, scheduledTime: selectedTime,
+        maxPlayers: parseInt(maxPlayers) || 10, message, isPublic: true,
       };
-
-      console.log('Creating challenge with payload:', payload);
-      console.log('Backend URL:', BACKEND_URL);
-      console.log('Token:', token ? 'Present' : 'Missing');
-
-      const response = await fetch(`${BACKEND_URL}/challenges`, {
+      const res = await fetch(`${BACKEND_URL}/challenges`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
-
-      console.log('Response status:', response.status);
-
-      const data = await response.json();
-      console.log('Response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create challenge');
-      }
-
-      Alert.alert('Success!', 'Challenge created successfully!', [
-        {
-          text: 'View Challenge',
-          onPress: () => {
-            navigation.navigate('ChallengeDetail', { challengeId: data.id });
-          },
-        },
-        {
-          text: 'Go to Feed',
-          onPress: () => {
-            navigation.navigate('Main', { screen: 'Challenges' });
-          },
-        },
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create challenge');
+      Alert.alert('Challenge Posted! 🏆', 'Your challenge is live.', [
+        { text: 'View', onPress: () => navigation.navigate('ChallengeDetail', { challengeId: data.id }) },
+        { text: 'Feed', onPress: () => navigation.navigate('Main', { screen: 'Challenges' }) },
       ]);
-    } catch (error) {
-      console.error('Error creating challenge:', error);
-      Alert.alert('Error', error.message || 'Failed to create challenge. Check console for details.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Something went wrong.');
+    } finally { setLoading(false); }
   };
 
-  // Step 1: Sport & Type Selection
-  const Step1 = () => {
-    const sportConfig = {
-      CRICKET: { icon: Award, label: 'Cricket', desc: 'Bat & ball turf battle', color: '#E0A96D' },
-      FOOTBALL: { icon: Flame, label: 'Football', desc: 'Fast-paced grid match', color: '#FF7E67' },
-      TENNIS: { icon: Target, label: 'Tennis', desc: 'Intense court rallies', color: '#4E9F3D' },
-      BADMINTON: { icon: Sparkles, label: 'Badminton', desc: 'Speedy indoor shuttle', color: '#D4B499' },
-      BASKETBALL: { icon: Trophy, label: 'Basketball', desc: 'High hoop action', color: '#F0A500' }
-    };
+  // ─────────────────────────────────────────────────────────────────────────
+  // FORM CONTENT
+  // ─────────────────────────────────────────────────────────────────────────
+  const renderForm = () => (
+    <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
 
-    return (
-      <ScrollView
-        ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.stepContainer}
-      >
-        {/* Sleek Hero Banner Card */}
-        <LinearGradient
-          colors={Colors.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroCard}
-        >
-          <View style={styles.heroContent}>
-            <View style={styles.heroTextContainer}>
-              <Text style={styles.heroTitle}>Turf Matchmaker</Text>
-              <Text style={styles.heroSubtitle}>Host a challenge, invite squads, and claim your victory.</Text>
-            </View>
-            <Trophy size={48} color="rgba(255,255,255,0.25)" style={styles.heroIcon} />
-          </View>
-        </LinearGradient>
+      {/* Hero */}
+      <LinearGradient colors={Colors.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.heroBand}>
+        <View>
+          <Text style={s.heroEyebrow}>NEW CHALLENGE</Text>
+          <Text style={s.heroHeadline}>Who dares{'\n'}challenge you?</Text>
+        </View>
+        <View style={s.heroBadge}>
+          <Zap size={28} color="#fff" />
+        </View>
+      </LinearGradient>
 
-        <Text style={styles.label}>Select Sport *</Text>
-        <View style={styles.sportsContainer}>
-          {sports.map((sport) => {
-            const config = sportConfig[sport] || { icon: Trophy, label: sport, desc: '', color: Colors.primary };
-            const SportIcon = config.icon;
-            const isSelected = sportType === sport;
+      {/* Sport Selector */}
+      <View style={s.card}>
+        <SectionLabel>Pick your sport</SectionLabel>
+        <View style={s.sportGrid}>
+          {Object.entries(SPORT_CONFIG).map(([sport, cfg]) => {
+            const Icon = cfg.icon;
+            const active = sportType === sport;
             return (
               <TouchableOpacity
                 key={sport}
-                activeOpacity={0.85}
-                style={[
-                  styles.sportCard,
-                  isSelected && styles.sportCardActive
-                ]}
+                activeOpacity={0.8}
+                style={[s.sportTile, active && { borderColor: cfg.color, backgroundColor: cfg.bg }]}
                 onPress={() => setSportType(sport)}
               >
-                <View style={[styles.sportIconCircle, { backgroundColor: isSelected ? 'rgba(75, 122, 47, 0.12)' : Colors.surfaceContainer }]}>
-                  <SportIcon size={22} color={isSelected ? Colors.primary : Colors.onSurfaceVariant} />
+                <View style={[s.sportIconRing, { backgroundColor: active ? cfg.color : Colors.surface }]}>
+                  <Icon size={18} color={active ? '#fff' : cfg.color} />
                 </View>
-                <View style={styles.sportInfo}>
-                  <Text style={[styles.sportName, isSelected && styles.sportNameActive]}>{config.label}</Text>
-                  <Text style={styles.sportDesc}>{config.desc}</Text>
-                </View>
-                {isSelected && (
-                  <View style={styles.checkBadge}>
-                    <Check size={12} color="#fff" style={{ fontWeight: 'bold' }} />
-                  </View>
-                )}
+                <Text style={[s.sportLabel, active && { color: cfg.color, fontWeight: '800' }]}>{cfg.label}</Text>
+                {active && <View style={[s.sportDot, { backgroundColor: cfg.color }]} />}
               </TouchableOpacity>
             );
           })}
         </View>
+      </View>
 
-        <Text style={[styles.label, { marginTop: 24 }]}>Select Format *</Text>
-        <View style={styles.formatContainer}>
-          {types.map((type) => {
-            const isSelected = challengeType === type;
-            const FormatIcon = type === 'INDIVIDUAL' ? User : Users;
-            const titleText = type === 'INDIVIDUAL' ? '1v1 Match' : 'Squad Match';
-            const descText = type === 'INDIVIDUAL'
-              ? 'Face another player.'
-              : 'Squad vs Squad battle.';
-
+      {/* Format */}
+      <View style={s.card}>
+        <SectionLabel>Match format</SectionLabel>
+        <View style={s.formatRow}>
+          {[
+            { key: 'INDIVIDUAL', label: '1v1 Match', sub: 'Solo face-off', Icon: User },
+            { key: 'TEAM', label: 'Squad Match', sub: 'Team vs Team', Icon: Users },
+          ].map(({ key, label, sub, Icon }) => {
+            const active = challengeType === key;
             return (
               <TouchableOpacity
-                key={type}
-                activeOpacity={0.85}
-                style={[
-                  styles.formatCard,
-                  isSelected && styles.formatCardActive
-                ]}
-                onPress={() => setChallengeType(type)}
+                key={key}
+                activeOpacity={0.8}
+                style={[s.formatCard, active && s.formatCardActive]}
+                onPress={() => setChallengeType(key)}
               >
-                <View style={styles.formatRow}>
-                  <View style={[styles.formatIconCircle, { backgroundColor: isSelected ? 'rgba(75, 122, 47, 0.12)' : Colors.surfaceContainer }]}>
-                    <FormatIcon size={20} color={isSelected ? Colors.primary : Colors.onSurfaceVariant} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={[styles.formatTitle, isSelected && styles.formatTitleActive]}>
-                      {titleText}
-                    </Text>
-                    <Text style={styles.formatDesc}>{descText}</Text>
-                  </View>
+                <View style={[s.formatIconBox, active && { backgroundColor: Colors.primary }]}>
+                  <Icon size={20} color={active ? '#fff' : Colors.onSurfaceVariant} />
                 </View>
-                {isSelected && (
-                  <View style={styles.formatCheck}>
-                    <CheckCircle2 size={16} color={Colors.primary} />
+                <Text style={[s.formatLabel, active && { color: Colors.primary }]}>{label}</Text>
+                <Text style={s.formatSub}>{sub}</Text>
+                {active && (
+                  <View style={s.formatCheck}>
+                    <CheckCircle2 size={14} color={Colors.primary} />
                   </View>
                 )}
               </TouchableOpacity>
             );
           })}
         </View>
-      </ScrollView>
-    );
-  };
 
-  // Step 2: Title & Description
-  const Step2 = () => (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>Step 2: Challenge Details</Text>
-        <Text style={styles.stepSubtitle}>Give your challenge a catchy name!</Text>
-      </View>
-
-      <Text style={styles.label}>Challenge Title *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g., Ultimate Cricket Showdown"
-        placeholderTextColor={Colors.onSurfaceVariant}
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <Text style={[styles.label, { marginTop: 16 }]}>Description</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="Add details about the challenge..."
-        placeholderTextColor={Colors.onSurfaceVariant}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-        numberOfLines={3}
-      />
-
-      <Text style={[styles.label, { marginTop: 16 }]}>Max Players</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g., 11"
-        placeholderTextColor={Colors.onSurfaceVariant}
-        value={maxPlayers}
-        onChangeText={setMaxPlayers}
-        keyboardType="number-pad"
-      />
-    </ScrollView>
-  );
-
-  // Step 3: Turf & Date/Time
-  const Step3 = () => (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>Step 3: Select Turf & Schedule</Text>
-        <Text style={styles.stepSubtitle}>Where and when will the challenge happen?</Text>
-      </View>
-
-      <Text style={styles.label}>Turf (Optional)</Text>
-      {turfs.length > 0 ? (
-        <View>
-          {turfs.map((turf) => (
-            <TouchableOpacity
-              key={turf.id}
-              style={[
-                styles.turfCard,
-                turfId === turf.id && styles.turfCardActive
-              ]}
-              onPress={() => setTurfId(turf.id)}
-            >
-              <View style={styles.turfCardContent}>
-                <MapPin size={20} color={turfId === turf.id ? Colors.primary : Colors.onSurfaceVariant} />
-                <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Text style={styles.turfName}>{turf.name}</Text>
-                  <Text style={styles.turfLocation}>{turf.city || 'Location'}</Text>
-                </View>
-              </View>
-              {turfId === turf.id && <CheckCircle2 size={20} color={Colors.primary} />}
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.emptyText}>No turfs available</Text>
-      )}
-
-      <Text style={[styles.label, { marginTop: 24 }]}>Date</Text>
-      <TouchableOpacity
-        style={[styles.input, { flexDirection: 'row', alignItems: 'center' }]}
-        onPress={openDatePicker}
-      >
-        <Calendar size={18} color={Colors.primary} />
-        <Text style={[styles.inputText, { marginLeft: 8, flex: 1 }]}>
-          {selectedDate instanceof Date ? selectedDate.toDateString() : selectedDate || 'Tap to select date'}
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={[styles.label, { marginTop: 16 }]}>Select Slot</Text>
-      {loadingSlots ? (
-        <ActivityIndicator size="small" color={Colors.primary} />
-      ) : turfSlots.length > 0 ? (
-        <View style={styles.optionsGrid}>
-          {turfSlots.map(slot => (
-            <TouchableOpacity
-              key={slot.id}
-              style={[
-                styles.optionCard,
-                selectedSlot === slot.id && styles.optionCardActive,
-                { paddingVertical: 10 }
-              ]}
-              onPress={() => {
-                setSelectedSlot(slot.id);
-                setSelectedTime(slot.startTime);
-              }}
-            >
-              <Text style={[
-                styles.optionText,
-                selectedSlot === slot.id && styles.optionTextActive,
-                { marginTop: 0, fontSize: 14 }
-              ]}>
-                {slot.startTime} - {slot.endTime}
-              </Text>
-              <Text style={{ fontSize: 10, color: Colors.onSurfaceVariant, marginTop: 4 }}>
-                ₹{slot.price}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.emptyText}>{turfId ? 'No slots available for this date' : 'Select a turf first'}</Text>
-      )}
-
-      {/* Show other users' bookings & quick challenge options */}
-      {turfId && selectedDate && (
-        <OtherUsersBookings
-          otherBookings={otherBookings}
-          loading={loadingOtherBookings}
-          onSendChallenge={(otherUser) => {
-            // This will be implemented when user sends quick challenge
-            console.log('Sending challenge to:', otherUser);
-            // Could pre-fill and navigate to challenge confirmation
-          }}
-          currentUserName={user?.name || 'You'}
-          turfName={turfs.find(t => t.id === turfId)?.name || 'this turf'}
-          bookingDate={selectedDate instanceof Date ? selectedDate.toDateString() : selectedDate}
-        />
-      )}
-
-      {/* Show if user already booked this slot */}
-      {matchingBooking && (
-        <View style={styles.alreadyBookedBanner}>
-          <CheckCircle2 size={20} color={Colors.success} />
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.alreadyBookedTitle}>You're already booked here!</Text>
-            <Text style={styles.alreadyBookedText}>
-              We've pre-filled your details. Just add challenge details!
-            </Text>
+        {/* Squad Selector */}
+        {challengeType === 'TEAM' && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={s.inputLabel}>Select Your Squad</Text>
+            {teams.length === 0 ? (
+              <Text style={s.emptyHint}>You don't have any squads yet.</Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                {teams.map(team => {
+                  const isSelected = selectedTeam === team.id;
+                  return (
+                    <TouchableOpacity
+                      key={team.id}
+                      style={[s.venueChip, isSelected && s.venueChipActive]}
+                      onPress={() => setSelectedTeam(team.id)}
+                      activeOpacity={0.8}
+                    >
+                      <Users size={14} color={isSelected ? '#fff' : Colors.primary} />
+                      <Text style={[s.venueChipText, isSelected && { color: '#fff' }]}>{team.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
           </View>
-        </View>
-      )}
-    </ScrollView>
-  );
-
-  // Step 4: Trash Talk Message
-  const Step4 = () => (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.stepContainer}>
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>Step 4: Add Trash Talk</Text>
-        <Text style={styles.stepSubtitle}>Make it exciting with a bold message!</Text>
+        )}
       </View>
 
-      <Text style={styles.label}>Challenge Message (Optional)</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        placeholder="e.g., 'We're unbeatable! Who dares to challenge us?'"
-        placeholderTextColor={Colors.onSurfaceVariant}
-        value={message}
-        onChangeText={setMessage}
-        multiline
-        numberOfLines={4}
-      />
-
-      <View style={styles.previewBox}>
-        <Text style={styles.previewLabel}>Message Preview:</Text>
-        <View style={styles.previewContent}>
-          <Text style={styles.previewText}>{message || 'Your message will appear here...'}</Text>
+      {/* Title + Max Players */}
+      <View style={s.card}>
+        <SectionLabel>Challenge details</SectionLabel>
+        <View style={s.inputGroup}>
+          <Text style={s.inputLabel}>Title</Text>
+          <TextInput
+            style={s.textInput}
+            placeholder="e.g., Ultimate Cricket Showdown"
+            placeholderTextColor={Colors.onSurfaceVariant}
+            value={title}
+            onChangeText={setTitle}
+          />
+        </View>
+        <View style={s.inputGroup}>
+          <Text style={s.inputLabel}>Max Players</Text>
+          <TextInput
+            style={[s.textInput, { width: 100 }]}
+            placeholder="11"
+            placeholderTextColor={Colors.onSurfaceVariant}
+            value={maxPlayers}
+            onChangeText={setMaxPlayers}
+            keyboardType="number-pad"
+          />
         </View>
       </View>
 
-      <View style={styles.summaryBox}>
-        <Text style={styles.summaryTitle}>Challenge Summary</Text>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Sport:</Text>
-          <Text style={styles.summaryValue}>{sportType}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Type:</Text>
-          <Text style={styles.summaryValue}>{challengeType}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Title:</Text>
-          <Text style={styles.summaryValue}>{title || 'Not set'}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Date:</Text>
-          <Text style={styles.summaryValue}>
-            {selectedDate instanceof Date ? selectedDate.toDateString() : (selectedDate || 'Not set')}
+      {/* Venue */}
+      <View style={s.card}>
+        <SectionLabel>Choose venue</SectionLabel>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+          {turfs.map((turf) => {
+            const active = turfId === turf.id;
+            return (
+              <TouchableOpacity
+                key={turf.id}
+                style={[s.venueChip, active && s.venueChipActive]}
+                onPress={() => setTurfId(turf.id)}
+                activeOpacity={0.8}
+              >
+                <MapPin size={14} color={active ? '#fff' : Colors.primary} />
+                <Text style={[s.venueChipText, active && { color: '#fff' }]}>{turf.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {matchingBooking && (
+          <View style={s.bookingBanner}>
+            <CheckCircle2 size={15} color={Colors.primary} />
+            <Text style={s.bookingBannerText}>Pre-filled from your booking</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Date */}
+      <View style={s.card}>
+        <SectionLabel>Date & time slot</SectionLabel>
+        <TouchableOpacity style={s.datePicker} onPress={openDatePicker} activeOpacity={0.8}>
+          <Calendar size={18} color={Colors.primary} />
+          <Text style={s.datePickerText}>
+            {selectedDate instanceof Date ? selectedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : selectedDate}
           </Text>
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <Step1 />;
-      case 2:
-        return <Step2 />;
-      case 3:
-        return <Step3 />;
-      case 4:
-        return <Step4 />;
-      default:
-        return <Step1 />;
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${(step / 4) * 100}%` }]} />
-        </View>
-        <Text style={styles.progressText}>Step {step} of 4</Text>
-      </View>
-
-      {/* Content */}
-      {renderStep()}
-
-      {/* Navigation Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, !step || step === 1 ? styles.buttonDisabled : {}]}
-          onPress={handleBack}
-          disabled={step === 1}
-        >
-          <ChevronLeft size={20} color={step === 1 ? Colors.onSurfaceVariant : Colors.onBackground} />
-          <Text style={[styles.buttonText, step === 1 && styles.buttonDisabledText]}>Back</Text>
+          <ChevronRight size={16} color={Colors.onSurfaceVariant} />
         </TouchableOpacity>
 
+        {/* Slot grid */}
+        {loadingSlots ? (
+          <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 16 }} />
+        ) : turfSlots.length > 0 ? (
+          <View style={s.slotGrid}>
+            {turfSlots.map(slot => {
+              const active = selectedSlot === slot.id;
+              return (
+                <TouchableOpacity
+                  key={slot.id}
+                  style={[s.slotChip, active && s.slotChipActive]}
+                  onPress={() => { setSelectedSlot(slot.id); setSelectedTime(slot.startTime); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.slotChipText, active && s.slotChipTextActive]}>{slot.startTime}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <Text style={s.emptyHint}>{turfId ? 'No slots available for this date.' : 'Select a venue first.'}</Text>
+        )}
+      </View>
+
+      {/* Trash Talk */}
+      <View style={s.card}>
+        <SectionLabel>Trash talk <Text style={{ color: Colors.onSurfaceVariant, textTransform: 'none', fontWeight: '600' }}>(optional)</Text></SectionLabel>
+        <TextInput
+          style={[s.textInput, s.textArea]}
+          placeholder={`"Who dares challenge us?"`}
+          placeholderTextColor={Colors.onSurfaceVariant}
+          value={message}
+          onChangeText={setMessage}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
+
+    </ScrollView>
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={s.root} edges={['top']}>
+
+      {/* Header */}
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <ChevronLeft size={24} color={Colors.onBackground} />
+        </TouchableOpacity>
+        <Text style={s.headerTitle}>Create Challenge</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      {/* Main Content */}
+      <View style={{ flex: 1 }}>
+        {renderForm()}
+      </View>
+
+      {/* Footer nav */}
+      <View style={s.footer}>
         <TouchableOpacity
-          style={styles.bookBtn}
-          onPress={handleNext}
+          style={s.nextBtn}
+          onPress={submitChallenge}
           disabled={loading}
           activeOpacity={0.85}
         >
-          {loading ? (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={s.nextBtnGrad}>
+            {loading ? (
               <ActivityIndicator size="small" color="#fff" />
-            </View>
-          ) : (
-            <>
-              <Text style={styles.bookBtnText}>
-                {step === 4 ? 'Publish' : 'Next'}
-              </Text>
-              <View style={styles.bookBtnArrow}>
-                <ChevronRight size={20} color={Colors.primary} />
-              </View>
-            </>
-          )}
+            ) : (
+              <>
+                <Text style={s.nextBtnText}>Publish Challenge</Text>
+                <View style={s.nextBtnArrow}>
+                  <ChevronRight size={18} color="#fff" />
+                </View>
+              </>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
+
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  progressContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: Colors.surface,
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-  },
-  progressText: {
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-    fontWeight: '600',
-  },
-  stepContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    flexGrow: 1,
-  },
-  heroCard: {
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 20,
-  },
-  heroContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  heroTextContainer: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  heroTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  heroSubtitle: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 4,
-    lineHeight: 15,
-  },
-  heroIcon: {
-    opacity: 0.75,
-  },
-  sportsContainer: {
-    flexDirection: 'column',
-    gap: 10,
-    marginBottom: 16,
-  },
-  sportCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.outlineLight,
-    borderRadius: 14,
-    padding: 12,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  sportCardActive: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(75, 122, 47, 0.04)',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sportIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sportInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  sportName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.onBackground,
-  },
-  sportNameActive: {
-    color: Colors.primary,
-  },
-  sportDesc: {
-    fontSize: 11,
-    color: Colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  checkBadge: {
-    position: 'absolute',
-    right: 12,
-    backgroundColor: Colors.primary,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  formatContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
-  },
-  formatCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.outlineLight,
-    borderRadius: 14,
-    padding: 12,
-    position: 'relative',
-  },
-  formatCardActive: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(75, 122, 47, 0.04)',
-  },
-  formatRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  formatIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  formatTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.onBackground,
-  },
-  formatTitleActive: {
-    color: Colors.primary,
-  },
-  formatDesc: {
-    fontSize: 9,
-    color: Colors.onSurfaceVariant,
-    marginTop: 2,
-    lineHeight: 12,
-  },
-  formatCheck: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-  },
-  stepHeader: {
-    marginBottom: 24,
-  },
-  stepTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.onBackground,
-    marginBottom: 8,
-  },
-  stepSubtitle: {
-    fontSize: 14,
-    color: Colors.onSurfaceVariant,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onBackground,
-    marginBottom: 12,
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
-  },
-  optionCard: {
-    flex: 1,
-    minWidth: '30%',
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  optionCardActive: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(75, 122, 47, 0.1)',
-  },
-  optionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.onSurfaceVariant,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  optionTextActive: {
-    color: Colors.primary,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: Colors.onBackground,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputText: {
-    color: Colors.onBackground,
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  textArea: {
-    minHeight: 90,
-    textAlignVertical: 'top',
-    paddingTop: 12,
-  },
-  turfCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  turfCardActive: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(75, 122, 47, 0.1)',
-  },
-  turfCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  turfName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onBackground,
-  },
-  turfLocation: {
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-    marginTop: 4,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: Colors.onSurfaceVariant,
-    fontStyle: 'italic',
-  },
-  previewBox: {
-    backgroundColor: 'rgba(75, 122, 47, 0.1)',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 20,
-    marginBottom: 16,
-  },
-  previewLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.onSurfaceVariant,
-    marginBottom: 8,
-  },
-  previewContent: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 8,
-    padding: 10,
-  },
-  previewText: {
-    fontSize: 13,
-    color: Colors.onBackground,
-    fontStyle: 'italic',
-  },
-  summaryBox: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-  },
-  summaryTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.onBackground,
-    marginBottom: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-    fontWeight: '600',
-  },
-  summaryValue: {
-    fontSize: 12,
-    color: Colors.onBackground,
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(75, 122, 47, 0.1)',
-  },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    gap: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onBackground,
-  },
-  buttonDisabledText: {
-    color: Colors.onSurfaceVariant,
-  },
-  bookBtn: {
-    flex: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.headerDark,
-    paddingLeft: 24,
-    paddingRight: 6,
-    paddingVertical: 6,
-    borderRadius: 30,
-    gap: 12,
-  },
-  bookBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  bookBtnArrow: {
-    width: 40, height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  alreadyBookedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.success + '15',
-    borderRadius: 12,
-    padding: 14,
-    marginVertical: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.success,
-  },
-  alreadyBookedTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.success,
-    marginBottom: 2,
-  },
-  alreadyBookedText: {
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.background },
+
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.onBackground },
+
+  // Scroll
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 24, gap: 12 },
+
+  // Hero band
+  heroBand: { borderRadius: 20, padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  heroEyebrow: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)', letterSpacing: 2, marginBottom: 6 },
+  heroHeadline: { fontSize: 26, fontWeight: '900', color: '#fff', lineHeight: 30 },
+  heroBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+
+  // Card
+  card: { backgroundColor: Colors.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: Colors.outlineLight },
+
+  // Sport grid
+  sportGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  sportTile: { width: (SCREEN_WIDTH - 32 - 32 - 40) / 3, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.outlineLight, padding: 12, alignItems: 'center', gap: 8, position: 'relative', overflow: 'hidden' },
+  sportIconRing: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  sportLabel: { fontSize: 11, fontWeight: '700', color: Colors.onSurfaceVariant },
+  sportDot: { position: 'absolute', bottom: 6, right: 6, width: 6, height: 6, borderRadius: 3 },
+
+  // Format
+  formatRow: { flexDirection: 'row', gap: 12 },
+  formatCard: { flex: 1, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.outlineLight, padding: 14, gap: 6, position: 'relative', overflow: 'hidden' },
+  formatCardActive: { borderColor: Colors.primary, backgroundColor: 'rgba(75,122,47,0.06)' },
+  formatIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
+  formatLabel: { fontSize: 13, fontWeight: '700', color: Colors.onBackground, marginTop: 4 },
+  formatSub: { fontSize: 11, color: Colors.onSurfaceVariant },
+  formatCheck: { position: 'absolute', top: 10, right: 10 },
+
+  // Input
+  inputGroup: { marginBottom: 12 },
+  inputLabel: { fontSize: 12, fontWeight: '600', color: Colors.onSurfaceVariant, marginBottom: 6 },
+  textInput: { backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14, color: Colors.onBackground, borderWidth: 1, borderColor: Colors.outlineLight },
+  textArea: { minHeight: 80, textAlignVertical: 'top', paddingTop: 12 },
+
+  // Venue chips
+  venueChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24, borderWidth: 1.5, borderColor: Colors.outlineLight, backgroundColor: Colors.background },
+  venueChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  venueChipText: { fontSize: 13, fontWeight: '600', color: Colors.onBackground },
+
+  // Booking banner
+  bookingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: 'rgba(75,122,47,0.08)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
+  bookingBannerText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+
+  // Date picker
+  datePicker: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1, borderColor: Colors.outlineLight },
+  datePickerText: { flex: 1, fontSize: 14, color: Colors.onBackground, fontWeight: '500' },
+
+  // Slot grid
+  slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14 },
+  slotChip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.outlineLight, backgroundColor: Colors.background },
+  slotChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  slotChipText: { fontSize: 13, fontWeight: '600', color: Colors.onSurfaceVariant },
+  slotChipTextActive: { color: '#fff' },
+
+  emptyHint: { fontSize: 13, color: Colors.onSurfaceVariant, fontStyle: 'italic', marginTop: 12 },
+
+  // Summary preview
+  summary: { borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(75,122,47,0.15)' },
+  summaryTitle: { fontSize: 16, fontWeight: '800', color: Colors.onBackground, marginBottom: 10 },
+  summaryMeta: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  summaryPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, backgroundColor: 'rgba(75,122,47,0.12)' },
+  summaryPillText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+
+  // Footer
+  footer: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderTopColor: Colors.outlineLight, backgroundColor: Colors.background },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, backgroundColor: Colors.surface },
+  backBtnText: { fontSize: 14, fontWeight: '600', color: Colors.onBackground },
+  nextBtn: { flex: 1, borderRadius: 16, overflow: 'hidden' },
+  nextBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 24, paddingRight: 6, paddingVertical: 6, backgroundColor: '#1A1A1A' },
+  nextBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  nextBtnArrow: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default CreateChallengeScreen;
-

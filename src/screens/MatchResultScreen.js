@@ -9,7 +9,7 @@ import { Trophy, ArrowLeft } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 const MatchResultScreen = ({ route, navigation }) => {
   const { challengeId } = route.params;
@@ -95,14 +95,19 @@ const MatchResultScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} disabled={submitting}>
-          <LinearGradient colors={[Colors.primary, Colors.accent]} style={styles.buttonGradient}>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} disabled={submitting} activeOpacity={0.8}>
+          <View style={styles.buttonGradient}>
             {submitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.primaryButtonText}>Submit Result</Text>
+              <>
+                <Text style={styles.primaryButtonText}>Submit Result</Text>
+                <View style={styles.primaryButtonArrow}>
+                  <Trophy size={18} color="#fff" />
+                </View>
+              </>
             )}
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -121,7 +126,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(138, 43, 226, 0.1)',
+    borderBottomColor: 'rgba(75, 122, 47, 0.1)',
   },
   headerTitle: {
     fontSize: 16,
@@ -167,7 +172,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.surface,
     width: 80,
     height: 80,
     borderRadius: 16,
@@ -176,7 +181,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textAlign: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.2)',
+    borderColor: Colors.outlineLight,
   },
   vsText: {
     fontSize: 20,
@@ -187,17 +192,30 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
+    backgroundColor: '#1A1A1A',
   },
   buttonGradient: {
-    paddingVertical: 16,
+    paddingVertical: 8,
+    paddingLeft: 24,
+    paddingRight: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   primaryButtonText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 16,
+  },
+  primaryButtonArrow: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

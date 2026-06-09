@@ -15,7 +15,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Challenge Card ──────────────────────────────────────────
@@ -213,8 +213,16 @@ const PersonalInfoSection = memo(({ user, onSave, saving }) => {
               <X size={16} color={Colors.error} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
-              {saving ? <ActivityIndicator size={14} color="#fff" /> : <Save size={14} color="#fff" />}
-              <Text style={styles.saveBtnText}>{saving ? 'Saving...' : 'Save'}</Text>
+              {saving ? (
+                <ActivityIndicator size={14} color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.saveBtnText}>Save</Text>
+                  <View style={styles.saveBtnIcon}>
+                    <Save size={12} color="#fff" />
+                  </View>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -788,16 +796,25 @@ const styles = StyleSheet.create({
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: '#1A1A1A',
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+    borderRadius: 16,
     gap: 6,
   },
   saveBtnText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  saveBtnIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoCard: {
     backgroundColor: Colors.surface,

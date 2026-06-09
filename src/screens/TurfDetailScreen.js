@@ -11,7 +11,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 // ─── Amenity Icon Mapper ────────────────────────────────────
 const AMENITY_DATA = {
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   bookBtnArrow: {
     width: 40, height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primaryContainer,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

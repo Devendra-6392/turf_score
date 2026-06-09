@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Constants from 'expo-constants';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 /**
  * Hook to fetch user's existing bookings

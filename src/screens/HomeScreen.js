@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Search, MapPin, Star, QrCode, ChevronRight, Wallet, Bell,
-  Trophy, CheckCircle2, Calendar, AlertCircle, ArrowLeft, X
+  Trophy, CheckCircle2, Calendar, AlertCircle, ArrowLeft, X, Compass
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,7 @@ import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 const BANNER_WIDTH = SCREEN_WIDTH - 40;
 const AUTO_SCROLL_INTERVAL = 5000;
 const HEADER_MAX_HEIGHT = 145;
@@ -437,10 +437,12 @@ const HomeScreen = ({ navigation }) => {
               />
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyIcon}>🏟️</Text>
-                <Text style={styles.emptyText}>No turfs available</Text>
+                <View style={styles.emptyIconContainer}>
+                  <MapPin size={28} color={Colors.primary} strokeWidth={2.5} />
+                </View>
+                <Text style={styles.emptyText}>No turfs found</Text>
                 <Text style={styles.emptySubtext}>
-                  {selectedCategory ? `No ${selectedCategory.toLowerCase()} turfs found` : 'Check back later for new venues'}
+                  {selectedCategory ? `We couldn't find any ${selectedCategory.toLowerCase()} arenas. Try another sport!` : 'We are expanding! Check back later for new venues.'}
                 </Text>
               </View>
             )}
@@ -460,8 +462,11 @@ const HomeScreen = ({ navigation }) => {
               ))
             ) : !loadingTurfs ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyIcon}>📍</Text>
-                <Text style={styles.emptyText}>No nearby turfs</Text>
+                <View style={styles.emptyIconContainer}>
+                  <Compass size={28} color={Colors.primary} strokeWidth={2.5} />
+                </View>
+                <Text style={styles.emptyText}>Out of bounds</Text>
+                <Text style={styles.emptySubtext}>There are no turfs located in your immediate vicinity right now.</Text>
               </View>
             ) : null}
           </View>
@@ -1044,24 +1049,37 @@ const styles = StyleSheet.create({
   // ── Empty State ──
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 36,
     paddingHorizontal: 24,
+    marginHorizontal: 16,
+    backgroundColor: '#FAFAFC',
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#E8E8EC',
+    borderStyle: 'dashed',
+    marginTop: 8,
   },
-  emptyIcon: {
-    fontSize: 48,
+  emptyIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(75, 122, 47, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: '#1A1A2E',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#8E8E93',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
 
   // ── Loader ──

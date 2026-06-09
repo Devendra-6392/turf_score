@@ -344,6 +344,43 @@ exports.getUserBookings = async (req, res) => {
   }
 };
 
+// Get current user's bookings
+exports.getMyBookings = async (req, res) => {
+  try {
+    const userId = req.userId || req.user?.id; // From authMiddleware
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const bookings = await prisma.booking.findMany({
+      where: { userId },
+      include: { 
+        turf: {
+            select: {
+                id: true,
+                name: true,
+                location: true,
+                images: true
+            }
+        }, 
+        slot: true,
+        team: { include: { members: { include: { user: { select: { name: true, email: true } } } } } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Map backward for frontend expectations
+    const mapped = bookings.map(b => ({
+      ...b,
+      bookingDate: b.slot ? b.slot.date : b.createdAt,
+      timeSlot: b.slot ? b.slot.startTime : 'N/A'
+    }));
+
+    res.json(mapped);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user bookings' });
+  }
+};
+
 // Get all bookings (Admin) with filters
 exports.getAllBookings = async (req, res) => {
   try {
@@ -382,7 +419,7 @@ exports.getAllBookings = async (req, res) => {
 exports.getOtherUsersBookingsForTurfDate = async (req, res) => {
   try {
     const { turfId, date } = req.params;
-    const currentUserId = req.user?.id || req.body.userId; // Get from auth or request
+    const currentUserId = req.userId || req.user?.id || req.body?.userId || req.query?.userId; // Get from auth or request
     
     if (!turfId || !date) {
       return res.status(400).json({ error: 'Turf ID and date are required' });

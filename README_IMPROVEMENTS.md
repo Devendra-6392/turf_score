@@ -161,7 +161,7 @@ root/
 npm start
 
 # Test endpoint
-curl http://192.168.18.23:5000/api/coupons/active
+curl http://10.65.234.203:5000/api/coupons/active
 ```
 
 ### 2. Test Challenge Flow (Immediate)

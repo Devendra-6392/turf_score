@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 
@@ -143,7 +143,12 @@ const LoginScreen = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.loginBtnText}>Login</Text>
+                <>
+                  <Text style={styles.loginBtnText}>Login</Text>
+                  <View style={styles.loginBtnArrow}>
+                    <ChevronRight size={18} color="#fff" />
+                  </View>
+                </>
               )}
             </TouchableOpacity>
 
@@ -266,21 +271,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   loginBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#1A1A1A',
     borderRadius: 16,
     height: 56,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
+    justifyContent: 'space-between',
+    paddingLeft: 24,
+    paddingRight: 8,
   },
   loginBtnText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '800',
+  },
+  loginBtnArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
     flexDirection: 'row',

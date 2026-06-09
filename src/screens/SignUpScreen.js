@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { User, Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 
@@ -145,7 +145,12 @@ const SignUpScreen = ({ navigation }) => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.signUpBtnText}>Create Account</Text>
+                <>
+                  <Text style={styles.signUpBtnText}>Create Account</Text>
+                  <View style={styles.signUpBtnArrow}>
+                    <ChevronRight size={18} color="#fff" />
+                  </View>
+                </>
               )}
             </TouchableOpacity>
 
@@ -227,22 +232,28 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   signUpBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#1A1A1A',
     borderRadius: 16,
     height: 56,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 24,
+    paddingRight: 8,
     marginTop: 10,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
   },
   signUpBtnText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '800',
+  },
+  signUpBtnArrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
     flexDirection: 'row',

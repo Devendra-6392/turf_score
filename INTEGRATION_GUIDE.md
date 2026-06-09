@@ -19,14 +19,14 @@ All backend endpoints and frontend components are now complete:
 ### 1. Test Coupon Endpoint
 ```bash
 # Test the fixed coupon endpoint
-curl "http://192.168.18.23:5000/api/coupons/active"
+curl "http://10.65.234.203:5000/api/coupons/active"
 ```
 Expected: Returns coupons with turf data properly enriched
 
 ### 2. Test Other Bookings Endpoint  
 ```bash
 # Test the new endpoint
-curl "http://192.168.18.23:5000/api/bookings/turf/{turfId}/date/2026-06-01/users" \
+curl "http://10.65.234.203:5000/api/bookings/turf/{turfId}/date/2026-06-01/users" \
   -H "Authorization: Bearer {token}"
 ```
 Expected: Returns array of users with bookings at that turf/date

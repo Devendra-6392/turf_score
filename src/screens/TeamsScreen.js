@@ -22,7 +22,7 @@ import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];
 
 const SPORT_POSITIONS = {
@@ -135,7 +135,9 @@ export default function TeamsScreen({ navigation }) {
         </View>
 
         <TouchableOpacity style={styles.createButton} onPress={() => { resetForm(); setOpen(true); }} activeOpacity={0.88}>
-          <Plus size={17} color="#fff" />
+          <View style={styles.createButtonArrow}>
+            <Plus size={14} color="#fff" />
+          </View>
           <Text style={styles.createButtonText}>Create Team</Text>
         </TouchableOpacity>
 
@@ -391,13 +393,12 @@ export default function TeamsScreen({ navigation }) {
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.saveBtn, !name.trim() && styles.saveBtnDisabled]} onPress={saveTeam} disabled={!name.trim()} activeOpacity={0.8}>
-                {name.trim() ? (
-                  <LinearGradient colors={Colors.gradient} style={styles.saveGradient}>
-                    <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
-                  </LinearGradient>
-                ) : (
+                <View style={styles.saveGradient}>
                   <Text style={styles.saveText}>{editingTeam ? 'Update Team' : 'Create Team'}</Text>
-                )}
+                  <View style={styles.saveArrow}>
+                    <CheckCircle2 size={16} color="#fff" />
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -433,17 +434,26 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    backgroundColor: Colors.primary,
+    gap: 8,
+    backgroundColor: '#1A1A1A',
     borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingLeft: 8,
+    paddingRight: 16,
     marginHorizontal: 20,
-    shadowColor: Colors.primary,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.14,
     shadowRadius: 7,
     elevation: 3
+  },
+  createButtonArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createButtonText: { color: '#fff', fontWeight: '800', fontSize: 13 },
   list: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120 },
@@ -787,28 +797,25 @@ const styles = StyleSheet.create({
   cancelText: { color: Colors.onSurfaceVariant, fontWeight: '800', fontSize: 15 },
   saveBtn: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#1A1A1A',
     overflow: 'hidden',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4
-  },
-  saveBtnDisabled: {
-    padding: 16,
-    backgroundColor: Colors.outline,
-    shadowOpacity: 0,
-    elevation: 0
   },
   saveGradient: {
-    width: '100%',
-    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingLeft: 20,
+    paddingRight: 8,
   },
-  saveText: { color: '#fff', fontWeight: '800', fontSize: 15 }
+  saveText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  saveArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  saveBtnDisabled: { opacity: 0.5 },
 });

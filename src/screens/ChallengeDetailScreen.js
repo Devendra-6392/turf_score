@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import ChallengeNotificationModal from '../components/ChallengeNotificationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 const ChallengeDetailScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();
@@ -424,12 +424,12 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
               onPress={handleShareWhatsApp}
             >
               <LinearGradient
-                colors={Colors.gradient}
+                colors={['#1A1A1A', '#000']}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Share2 size={20} color="#fff" />
+                <Share2 size={20} color={Colors.primary} />
                 <Text style={styles.primaryButtonText}>Share to WhatsApp</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -442,7 +442,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
               disabled={accepting}
             >
               <LinearGradient
-                colors={Colors.gradient}
+                colors={['#1A1A1A', '#000']}
                 style={styles.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -460,7 +460,7 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <>
-                    <CheckCircle2 size={20} color="#fff" />
+                    <CheckCircle2 size={20} color={Colors.primary} />
                     <Text style={styles.primaryButtonText}>Accept Challenge</Text>
                   </>
                 )}
@@ -507,8 +507,8 @@ const ChallengeDetailScreen = ({ route, navigation }) => {
           {/* Submit Result Button */}
           {isAccepted && challenge.creatorPaid && challenge.opponentPaid && (
             <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('MatchResult', { challengeId: challenge.id })}>
-              <LinearGradient colors={Colors.gradient} style={styles.buttonGradient}>
-                <Trophy size={20} color="#fff" />
+              <LinearGradient colors={['#1A1A1A', '#000']} style={styles.buttonGradient}>
+                <Trophy size={20} color={Colors.primary} />
                 <Text style={styles.primaryButtonText}>Submit Match Result</Text>
               </LinearGradient>
             </TouchableOpacity>

@@ -202,7 +202,7 @@ export default function SlotManagement() {
                       <TableCell>{slot.startTime} - {slot.endTime}</TableCell>
                       <TableCell>₹{slot.price}</TableCell>
                       <TableCell>
-                        <Chip label={slot.status} color={slot.status === 'AVAILABLE' ? 'success' : 'warning'} size="small" />
+                        <Chip label={slot.status} color={slot.status === 'AVAILABLE' ? 'success' : slot.status === 'BOOKED' ? 'error' : 'warning'} size="small" />
                       </TableCell>
                       <TableCell align="right">
                         <Stack direction="row" spacing={1} justifyContent="flex-end">

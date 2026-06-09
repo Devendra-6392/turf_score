@@ -60,7 +60,7 @@ module.exports = {
         projectId: '5b260de2-b539-4f92-a9f3-18e3e62bf2c1',
       },
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sx2Yhd3xvB6nWM',
-      API_URL: process.env.API_URL || 'http://192.168.18.23:5000/api',
+      API_URL: process.env.API_URL || 'http://10.65.234.203:5000/api',
     },
   },
 };

@@ -10,9 +10,10 @@ import Constants from 'expo-constants';
 import { Plus, MapPin, Users, Clock, Zap, Trophy } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { ChevronRight } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 const CARD_WIDTH = SCREEN_WIDTH - 32;
 
 const ChallengesScreen = ({ navigation }) => {
@@ -66,14 +67,10 @@ const ChallengesScreen = ({ navigation }) => {
   const ChallengeCard = ({ challenge }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('ChallengeDetail', { challengeId: challenge.id })}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
+      style={styles.challengeCardWrap}
     >
-      <LinearGradient
-        colors={['rgba(75, 122, 47, 0.1)', 'rgba(107, 142, 35, 0.1)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.challengeCard}
-      >
+      <View style={styles.challengeCard}>
         {/* Header with Creator */}
         <View style={styles.cardHeader}>
           <View style={styles.creatorInfo}>
@@ -92,25 +89,25 @@ const ChallengesScreen = ({ navigation }) => {
 
         {/* Challenge Title */}
         <Text style={styles.title}>{challenge.title}</Text>
-        {challenge.description && (
+        {challenge.description ? (
           <Text style={styles.description} numberOfLines={2}>{challenge.description}</Text>
-        )}
+        ) : <View style={{height: 8}} />}
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Trophy size={16} color={Colors.primary} />
+            <Trophy size={14} color={Colors.primary} />
             <Text style={styles.statText}>{challenge.sportType}</Text>
           </View>
           {challenge.turf && (
             <View style={styles.stat}>
-              <MapPin size={16} color={Colors.primary} />
+              <MapPin size={14} color={Colors.primary} />
               <Text style={styles.statText} numberOfLines={1}>{challenge.turf.name}</Text>
             </View>
           )}
           {challenge.maxPlayers && (
             <View style={styles.stat}>
-              <Users size={16} color={Colors.primary} />
+              <Users size={14} color={Colors.primary} />
               <Text style={styles.statText}>{challenge.maxPlayers} players</Text>
             </View>
           )}
@@ -127,16 +124,16 @@ const ChallengesScreen = ({ navigation }) => {
         {/* Footer */}
         <View style={styles.cardFooter}>
           <Text style={styles.timeText}>
-            {new Date(challenge.createdAt).toLocaleDateString()}
+            {new Date(challenge.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
           </Text>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => navigation.navigate('ChallengeDetail', { challengeId: challenge.id })}
-          >
-            <Text style={styles.acceptButtonText}>View Challenge →</Text>
-          </TouchableOpacity>
+          <View style={styles.acceptButton}>
+            <Text style={styles.acceptButtonText}>View Challenge</Text>
+            <View style={styles.acceptButtonArrow}>
+              <ChevronRight size={12} color="#FFF" />
+            </View>
+          </View>
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 
@@ -170,12 +167,12 @@ const ChallengesScreen = ({ navigation }) => {
           onPress={() => navigation.navigate('CreateChallenge')}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.accent]}
+            colors={['#1A1A1A', '#000']}
             style={styles.createButtonGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Plus size={24} color="#fff" />
+            <Plus size={24} color={Colors.primary} />
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -230,10 +227,13 @@ const ChallengesScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('CreateChallenge')}
           >
             <LinearGradient
-              colors={[Colors.primary, Colors.accent]}
+              colors={['#1A1A1A', '#000']}
               style={styles.createFirstButtonGradient}
             >
               <Text style={styles.createFirstButtonText}>Create Challenge</Text>
+              <View style={styles.createFirstButtonArrow}>
+                <ChevronRight size={14} color="#FFF" />
+              </View>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -322,64 +322,76 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: '#fff',
   },
-  challengeCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+  challengeCardWrap: {
     marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  challengeCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(75, 122, 47, 0.2)',
+    borderColor: Colors.outlineLight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   creatorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
   },
   avatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '800',
+    fontSize: 15,
   },
   creatorName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.onBackground,
   },
   rating: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.onSurfaceVariant,
     marginTop: 2,
+    fontWeight: '600',
   },
   typeBadge: {
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.headerDark,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   typeBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
     color: '#fff',
+    letterSpacing: 0.5,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: Colors.onBackground,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   description: {
     fontSize: 13,
@@ -389,58 +401,79 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 14,
     gap: 8,
+    flexWrap: 'wrap',
   },
   stat: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(75, 122, 47, 0.08)',
+    backgroundColor: Colors.surfaceContainerLow,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
-    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.outlineLight,
   },
   statText: {
-    fontSize: 12,
-    color: Colors.primary,
-    marginLeft: 4,
-    fontWeight: '600',
+    fontSize: 11,
+    color: Colors.onBackground,
+    marginLeft: 6,
+    fontWeight: '700',
   },
   messageBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(107, 142, 35, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: Colors.primary + '10',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: Colors.primary + '20',
   },
   messageText: {
     fontSize: 12,
-    color: Colors.accent,
-    marginLeft: 6,
+    color: Colors.primary,
+    marginLeft: 8,
     flex: 1,
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(75, 122, 47, 0.1)',
+    borderTopColor: Colors.outlineLight,
   },
   timeText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.onSurfaceVariant,
+    fontWeight: '600',
   },
   acceptButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   acceptButtonText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primary,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  acceptButtonArrow: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContent: {
     paddingBottom: 20,
@@ -467,13 +500,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   createFirstButtonGradient: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 20,
+    paddingRight: 6,
+    paddingVertical: 6,
+    gap: 12,
   },
   createFirstButtonText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 14,
+  },
+  createFirstButtonArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

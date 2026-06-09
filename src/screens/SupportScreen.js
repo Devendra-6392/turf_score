@@ -7,7 +7,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Constants from 'expo-constants';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.18.23:5000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
 
 export default function SupportScreen({ navigation }) {
   const [tickets, setTickets] = useState([]);
@@ -160,11 +160,17 @@ export default function SupportScreen({ navigation }) {
               style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
               onPress={handleSubmit}
               disabled={submitting}
+              activeOpacity={0.8}
             >
               {submitting ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitBtnText}>Submit Ticket</Text>
+                <>
+                  <Text style={styles.submitBtnText}>Submit Ticket</Text>
+                  <View style={styles.submitBtnArrow}>
+                    <Plus size={18} color="#fff" />
+                  </View>
+                </>
               )}
             </TouchableOpacity>
           </View>
@@ -320,15 +326,27 @@ const styles = StyleSheet.create({
     height: 120,
   },
   submitBtn: {
-    backgroundColor: Colors.primary,
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 24,
+    paddingRight: 8,
+    paddingVertical: 8,
     marginTop: 10,
   },
   submitBtnText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+  },
+  submitBtnArrow: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
