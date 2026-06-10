@@ -11,6 +11,8 @@ import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
+import LFPScreen from './src/screens/LFPScreen';
+import CreateLFPScreen from './src/screens/CreateLFPScreen';
 import TurfDetailScreen from './src/screens/TurfDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BookingSuccessScreen from './src/screens/BookingSuccessScreen';
@@ -45,8 +47,8 @@ const TabNavigator = () => (
     <Tab.Screen name="Home">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><HomeScreen {...props} /></AnimatedScreenWrapper>}
     </Tab.Screen>
-    <Tab.Screen name="Search">
-      {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><SearchScreen {...props} /></AnimatedScreenWrapper>}
+    <Tab.Screen name="LFP">
+      {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><LFPScreen {...props} /></AnimatedScreenWrapper>}
     </Tab.Screen>
     <Tab.Screen name="Scanner">
       {(props) => <AnimatedScreenWrapper focused={props.navigation.isFocused()}><QRScannerScreen {...props} /></AnimatedScreenWrapper>}
@@ -93,6 +95,7 @@ export default function App() {
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
           <Stack.Screen name="Coupons" component={CouponsScreen} />
           <Stack.Screen name="Support" component={SupportScreen} />
+          <Stack.Screen name="CreateLFP" component={CreateLFPScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} position="top" topOffset={50} />

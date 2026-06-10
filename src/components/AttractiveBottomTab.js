@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform, Animated, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Trophy, Search, Users, User, Home, Target, Scan, Menu } from 'lucide-react-native';
+import { Trophy, Users, User, Home, Target, Scan, Menu, Megaphone } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -41,7 +41,7 @@ const TabItem = ({ route, index, isFocused, onPress }) => {
     const props = { size: 22, color: isFocused ? '#ffffff' : '#888888' };
     switch (route.name) {
       case 'Home': return <Home {...props} />;
-      case 'Search': return <Search {...props} />;
+      case 'LFP': return <Megaphone {...props} />;
       case 'Scanner': return <Scan {...props} />;
       case 'Challenges': return <Target {...props} />;
       case 'Teams': return <Users {...props} />;

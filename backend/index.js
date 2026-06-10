@@ -14,6 +14,7 @@ const challengeRoutes = require('./src/routes/challengeRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const couponRoutes = require('./src/routes/couponRoutes');
 const supportTicketRoutes = require('./src/routes/supportTicketRoutes');
+const lfpRoutes = require('./src/routes/lfpRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/support-tickets', supportTicketRoutes);
+app.use('/api/lfp', lfpRoutes);
 
 // Database check and Start
 const prisma = require('./src/config/db');

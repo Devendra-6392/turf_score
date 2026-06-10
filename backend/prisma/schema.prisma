@@ -179,6 +179,8 @@ model User {
   teamMemberships      TeamMember[]
   createdChallenges    Challenge[]           @relation("CreatedChallenges")
   acceptedChallenges   Challenge[]           @relation("AcceptedChallenges")
+  playerRequests       PlayerRequest[]       @relation("LfpCreator")
+  joinedPlayerRequests PlayerRequestJoin[]
 
   // Expert additions:
   gender         String?    @db.VarChar(20)
@@ -721,4 +723,40 @@ model Challenge {
   @@index([status])
   @@index([sportType])
   @@index([shareCode])
+}
+
+// ============================================
+// LOOKING FOR PLAYERS (LFP)
+// ============================================
+
+model PlayerRequest {
+  id            String               @id @default(uuid()) @db.VarChar(36)
+  creatorId     String               @db.VarChar(36)
+  creator       User                 @relation("LfpCreator", fields: [creatorId], references: [id])
+  sport         SportType
+  playersNeeded Int
+  date          DateTime
+  location      String               @db.VarChar(255)
+  description   String?              @db.Text
+  status        LfpStatus            @default(OPEN)
+  joinedPlayers PlayerRequestJoin[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model PlayerRequestJoin {
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  playerRequestId String        @db.VarChar(36)
+  playerRequest   PlayerRequest @relation(fields: [playerRequestId], references: [id], onDelete: Cascade)
+  userId          String        @db.VarChar(36)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt        DateTime      @default(now())
+
+  @@unique([playerRequestId, userId])
+}
+
+enum LfpStatus {
+  OPEN
+  FULL
+  CANCELLED
 }
