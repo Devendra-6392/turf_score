@@ -1,13 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const isExpoGo = Constants?.appOwnership === 'expo';
-
 function getNotifications() {
-  if (isExpoGo) {
-    return null;
-  }
-
   return require('expo-notifications');
 }
 
@@ -51,16 +45,27 @@ export async function registerForPushNotificationsAsync() {
 
   if (finalStatus !== 'granted') {
     console.log('Notification permission denied');
+    alert('Notification permission denied! Please enable it in your phone settings.');
     return null;
   }
 
   try {
     const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    console.log("Expo Push Token:", token);
-    return token;
+    const expoPushToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    console.log("Expo Push Token:", expoPushToken);
+    
+    let fcmToken = null;
+    try {
+      fcmToken = (await Notifications.getDevicePushTokenAsync()).data;
+      console.log("Native Device Push Token:", fcmToken);
+    } catch (e) {
+      console.log("Could not fetch native device token (normal in Expo Go/Simulators)");
+    }
+
+    return { expoPushToken, fcmToken };
   } catch (error) {
-    console.error("Error getting push token:", error);
+    console.error("Error getting push tokens:", error);
+    alert(`Error getting push tokens: ${error.message}`);
     return null;
   }
 }
@@ -82,4 +87,19 @@ export async function scheduleLocalNotification(title, body, seconds = 2) {
       seconds: seconds,
     },
   });
+}
+
+export async function requestNotificationPermission() {
+  const Notifications = getNotifications();
+  if (!Notifications) return false;
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+
+  return finalStatus === 'granted';
 }

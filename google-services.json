@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "71526329086",
+    "project_id": "comturfscoreapp",
+    "storage_bucket": "comturfscoreapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71526329086:android:93ee54c2b6e83f5d1a93af",
+        "android_client_info": {
+          "package_name": "com.turfscore.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAg0OPs0ggIHm8KKN-KcKOX3pqfWwbiHVU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

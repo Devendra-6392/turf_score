@@ -16,7 +16,7 @@ import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 const BANNER_WIDTH = SCREEN_WIDTH - 40;
 const AUTO_SCROLL_INTERVAL = 5000;
 const HEADER_MAX_HEIGHT = 145;

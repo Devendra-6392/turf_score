@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { registerForPushNotificationsAsync } from '../utils/notifications';
 
-const API_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL } from '../config/api';
 const BACKEND_URL = `${API_URL}/auth`;
 const AuthContext = createContext({});
 
@@ -23,11 +23,34 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        // Silently sync push tokens in background
+        syncPushTokens(storedToken);
       }
     } catch (e) {
       console.log('Failed to load user', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const syncPushTokens = async (authToken) => {
+    try {
+      const pushTokens = await registerForPushNotificationsAsync();
+      if (pushTokens) {
+        await fetch(`${BACKEND_URL}/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            expoPushToken: pushTokens.expoPushToken,
+            fcmToken: pushTokens.fcmToken
+          })
+        });
+      }
+    } catch (e) {
+      console.log('Push token registration failed', e);
     }
   };
 
@@ -38,21 +61,7 @@ export const AuthProvider = ({ children }) => {
     await SecureStore.setItemAsync('userData', JSON.stringify(data.user));
 
     // Register push token and sync with backend
-    try {
-      const pushToken = await registerForPushNotificationsAsync();
-      if (pushToken) {
-        await fetch(`${BACKEND_URL}/profile`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${data.token}`
-          },
-          body: JSON.stringify({ fcmToken: pushToken })
-        });
-      }
-    } catch (e) {
-      console.log('Push token registration failed', e);
-    }
+    syncPushTokens(data.token);
   }, []);
 
   const login = useCallback(async (email, password) => {

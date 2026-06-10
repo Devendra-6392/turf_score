@@ -15,7 +15,7 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Challenge Card ──────────────────────────────────────────

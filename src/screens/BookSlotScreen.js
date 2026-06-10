@@ -12,7 +12,7 @@ import Constants from 'expo-constants';
 import RazorpayModal from '../components/RazorpayModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -371,11 +371,11 @@ const BookSlotScreen = ({ route, navigation }) => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to save booking');
-      
+
       if (paymentMethod === 'wallet' && refreshUser) {
         await refreshUser();
       }
-      
+
       navigation.navigate('BookingSuccess', { booking: result });
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Booking Error', text2: error.message });
@@ -544,7 +544,7 @@ const BookSlotScreen = ({ route, navigation }) => {
 
               <TouchableOpacity
                 style={[
-                  styles.paymentMethodCard, 
+                  styles.paymentMethodCard,
                   paymentMethod === 'wallet' && styles.paymentMethodCardSelected,
                   (user?.wallet?.balance || 0) < (selectedSlot.price || turf?.pricePerHour || 3500) && styles.paymentMethodCardDisabled
                 ]}

@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { ChevronRight } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 const CARD_WIDTH = SCREEN_WIDTH - 32;
 
 const ChallengesScreen = ({ navigation }) => {
@@ -91,7 +91,7 @@ const ChallengesScreen = ({ navigation }) => {
         <Text style={styles.title}>{challenge.title}</Text>
         {challenge.description ? (
           <Text style={styles.description} numberOfLines={2}>{challenge.description}</Text>
-        ) : <View style={{height: 8}} />}
+        ) : <View style={{ height: 8 }} />}
 
         {/* Stats Row */}
         <View style={styles.statsRow}>

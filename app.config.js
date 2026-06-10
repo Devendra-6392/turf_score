@@ -3,7 +3,7 @@ require('dotenv').config();
 module.exports = {
   expo: {
     name: 'Turf Score',
-    slug: 'turf-score',
+    slug: 'turfscore',
     scheme: 'turfscore',
     version: '1.0.0',
     orientation: 'portrait',
@@ -11,7 +11,7 @@ module.exports = {
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     updates: {
-      url: 'https://u.expo.dev/5b260de2-b539-4f92-a9f3-18e3e62bf2c1',
+      url: 'https://u.expo.dev/977cef8f-c2b8-432a-a0b5-8d22b352e0b5',
     },
     runtimeVersion: {
       policy: 'appVersion',
@@ -31,6 +31,7 @@ module.exports = {
         backgroundColor: '#ffffff',
       },
       package: 'com.turfscore.app',
+      googleServicesFile: './google-services.json',
       edgeToEdgeEnabled: true,
     },
     web: {
@@ -57,10 +58,10 @@ module.exports = {
     ],
     extra: {
       eas: {
-        projectId: '5b260de2-b539-4f92-a9f3-18e3e62bf2c1',
+        projectId: '977cef8f-c2b8-432a-a0b5-8d22b352e0b5',
       },
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sx2Yhd3xvB6nWM',
-      API_URL: process.env.API_URL || 'http://10.65.234.203:5000/api',
+      API_URL: process.env.API_URL || 'http://10.147.107.203:5000/api',
     },
   },
 };

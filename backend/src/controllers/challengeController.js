@@ -242,10 +242,10 @@ const acceptChallenge = async (req, res) => {
       }
     });
 
-    // Send push notification to creator
-    if (challenge.creator && challenge.creator.fcmToken) {
+    // Send Push Notification to Creator
+    if (challenge.creator && challenge.creator.expoPushToken) {
       sendPushNotification(
-        challenge.creator.fcmToken,
+        challenge.creator.expoPushToken,
         'Challenge Accepted! 🔥',
         `Someone accepted your challenge "${challenge.title}". Pay your advance to confirm the match!`,
         { challengeId: challenge.id, type: 'CHALLENGE_ACCEPTED' }

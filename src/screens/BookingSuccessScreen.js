@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
 
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 const { width } = Dimensions.get('window');
 
 const BookingSuccessScreen = ({ route, navigation }) => {
@@ -107,7 +107,7 @@ const BookingSuccessScreen = ({ route, navigation }) => {
       />
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* Compact Header */}
         <View style={s.headerBox}>
           <View style={s.iconRing}>
@@ -214,7 +214,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   bgAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 250, backgroundColor: Colors.surface, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 },
   content: { flexGrow: 1, padding: 20, paddingBottom: 100 },
-  
+
   headerBox: { alignItems: 'center', marginTop: 10, marginBottom: 24 },
   iconRing: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary + '15', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   trophyMini: { position: 'absolute', top: -4, right: -4, backgroundColor: '#FFD700', padding: 6, borderRadius: 12, borderWidth: 2, borderColor: Colors.surface },
@@ -260,7 +260,7 @@ const s = StyleSheet.create({
   primaryAction: { width: '100%', marginBottom: 10, borderRadius: 16, overflow: 'hidden' },
   primaryActionGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   primaryActionText: { fontSize: 15, fontWeight: '800', color: '#fff' },
-  
+
   secondaryActions: { flexDirection: 'row', gap: 10 },
   outlineBtn: { flex: 1.5, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 16, borderWidth: 2, borderColor: Colors.primary },
   outlineBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primary },

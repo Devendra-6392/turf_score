@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import ChallengeNotificationModal from '../components/ChallengeNotificationModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = Constants.expoConfig?.extra?.API_URL || 'http://10.65.234.203:5000/api';
+import { API_URL as BACKEND_URL } from '../config/api';
 
 const ChallengeDetailScreen = ({ route, navigation }) => {
   const { user, token } = useAuth();

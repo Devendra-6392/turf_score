@@ -140,13 +140,14 @@ exports.getProfile = async (req, res) => {
 // Update user profile (protected route)
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, avatar, fcmToken } = req.body;
+    const { name, phone, avatar, expoPushToken, fcmToken } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (fcmToken !== undefined) updateData.fcmToken = fcmToken;
+    if (expoPushToken !== undefined) updateData.expoPushToken = expoPushToken;
 
     const user = await prisma.user.update({
       where: { id: req.userId },

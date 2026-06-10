@@ -212,12 +212,12 @@ exports.createBooking = async (req, res) => {
     }
 
     // Send Push Notification
-    if (userExists.fcmToken) {
+    if (userExists.expoPushToken) {
       const formattedDate = parsedDate.toLocaleDateString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric'
       });
       sendPushNotification(
-        userExists.fcmToken,
+        userExists.expoPushToken,
         'Booking Confirmed! 🎉',
         `Your turf at ${booking.turf.name} is booked for ${formattedDate} at ${timeSlot}.`,
         { bookingId: booking.id, type: 'BOOKING_CONFIRMATION' }

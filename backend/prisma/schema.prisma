@@ -160,6 +160,7 @@ model User {
   name                 String?               @db.VarChar(255)
   avatar               String?               @db.Text
   phone                String?               @db.VarChar(20)
+  expoPushToken        String?               @db.Text
   fcmToken             String?               @db.Text
   matchesPlayed        Int                   @default(0)
   rating               Float                 @default(5.0)
