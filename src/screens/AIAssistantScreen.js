@@ -17,12 +17,17 @@ export default function AIAssistantScreen({ navigation }) {
   const flatListRef = useRef(null);
   const { token } = useAuth();
 
-  const sendMessage = async () => {
-    if (!inputText.trim()) return;
+  const presetOptions = [
+    "How do I book a turf?",
+    "Show my stats",
+    "How to find players?",
+    "What offers are available?"
+  ];
 
-    const userText = inputText.trim();
-    setInputText('');
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: userText }]);
+  const sendMessage = async (textToSend) => {
+    if (!textToSend) return;
+
+    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: textToSend }]);
     setLoading(true);
 
     try {
@@ -33,7 +38,7 @@ export default function AIAssistantScreen({ navigation }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          message: userText,
+          message: textToSend,
           history: chatHistory
         })
       });
@@ -80,21 +85,22 @@ export default function AIAssistantScreen({ navigation }) {
         )}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : null}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type your message..."
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          
-          <TouchableOpacity style={styles.sendBtn} onPress={sendMessage} disabled={loading || !inputText.trim()}>
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Send size={20} color="#fff" />}
-          </TouchableOpacity>
+      <View style={styles.optionsContainer}>
+        <Text style={styles.optionsTitle}>Choose an option:</Text>
+        <View style={styles.optionsGrid}>
+          {presetOptions.map((option, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.optionBtn} 
+              onPress={() => sendMessage(option)}
+              disabled={loading}
+            >
+              <Text style={styles.optionText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </KeyboardAvoidingView>
+        {loading && <ActivityIndicator color={Colors.primary} size="small" style={{marginTop: 10}} />}
+      </View>
     </SafeAreaView>
   );
 }
@@ -112,7 +118,9 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 16, lineHeight: 22 },
   userText: { color: '#fff' },
   aiText: { color: '#1a1a1a' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 15, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee', gap: 10 },
-  input: { flex: 1, backgroundColor: '#f8f9fa', borderRadius: 22, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, fontSize: 16, maxHeight: 100 },
-  sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', opacity: 0.9 }
+  optionsContainer: { padding: 15, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee' },
+  optionsTitle: { fontSize: 14, color: '#666', marginBottom: 10, fontWeight: '500' },
+  optionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  optionBtn: { backgroundColor: '#f8f9fa', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: '#eee' },
+  optionText: { color: Colors.primary, fontSize: 14, fontWeight: '500' }
 });
