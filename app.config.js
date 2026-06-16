@@ -61,7 +61,7 @@ module.exports = {
         projectId: '977cef8f-c2b8-432a-a0b5-8d22b352e0b5',
       },
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sx2Yhd3xvB6nWM',
-      API_URL: process.env.API_URL || 'http://10.147.107.203:5000/api',
+      API_URL: process.env.API_URL || 'http://10.170.173.203:5000/api',
     },
   },
 };

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +14,25 @@ export default function QRScannerScreen({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [result, setResult] = useState(null);
+  
+  const lineAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(lineAnim, {
+          toValue: 245,
+          duration: 1500,
+          useNativeDriver: true
+        }),
+        Animated.timing(lineAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true
+        })
+      ])
+    ).start();
+  }, []);
 
   const handleBarcode = async ({ data }) => {
     if (!scanning) return;
@@ -51,7 +70,9 @@ export default function QRScannerScreen({ navigation }) {
         <View style={styles.guide}>
           <Text style={styles.scanTitle}>Scan Turf Entry QR</Text>
           <Text style={styles.scanSubtitle}>Only one booked team player needs to scan</Text>
-          <View style={styles.frame} />
+          <View style={styles.frame}>
+            <Animated.View style={[styles.laser, { transform: [{ translateY: lineAnim }] }]} />
+          </View>
         </View>
         {result && (
           <View style={styles.result}>
@@ -85,7 +106,8 @@ const styles = StyleSheet.create({
   guide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scanTitle: { color: '#fff', fontSize: 26, fontWeight: '800' },
   scanSubtitle: { color: '#fff', marginTop: 6 },
-  frame: { height: 255, width: 255, borderWidth: 3, borderColor: Colors.primaryContainer, borderRadius: 28, marginTop: 28 },
+  frame: { height: 255, width: 255, borderWidth: 3, borderColor: Colors.primaryContainer, borderRadius: 28, marginTop: 28, overflow: 'hidden' },
+  laser: { width: '100%', height: 3, backgroundColor: Colors.primary, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 10, elevation: 5 },
   result: { backgroundColor: '#fff', borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 20 },
   resultText: { color: Colors.onBackground, fontWeight: '700', textAlign: 'center', marginTop: 10 }
 });

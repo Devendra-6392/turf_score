@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-let BASE_API_URL = 'http://10.147.107.203:5000/api'; // Fallback
+let BASE_API_URL = 'http://10.170.173.203:5000/api'; // Fallback
 
 // Dynamically grab the IP address of the machine running the Expo Metro bundler!
 // This ensures that even if your Wi-Fi IP changes, the app always connects to the right backend.

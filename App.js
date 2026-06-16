@@ -13,6 +13,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import LFPScreen from './src/screens/LFPScreen';
 import CreateLFPScreen from './src/screens/CreateLFPScreen';
+import AIAssistantScreen from './src/screens/AIAssistantScreen';
 import TurfDetailScreen from './src/screens/TurfDetailScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BookingSuccessScreen from './src/screens/BookingSuccessScreen';
@@ -96,6 +97,7 @@ export default function App() {
           <Stack.Screen name="Coupons" component={CouponsScreen} />
           <Stack.Screen name="Support" component={SupportScreen} />
           <Stack.Screen name="CreateLFP" component={CreateLFPScreen} />
+          <Stack.Screen name="AIAssistant" component={AIAssistantScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast config={toastConfig} position="top" topOffset={50} />

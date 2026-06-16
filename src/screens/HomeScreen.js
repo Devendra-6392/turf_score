@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Search, MapPin, Star, QrCode, ChevronRight, Wallet, Bell,
-  Trophy, CheckCircle2, Calendar, AlertCircle, ArrowLeft, X, Compass
+  Trophy, CheckCircle2, Calendar, AlertCircle, ArrowLeft, X, Compass, Sparkles
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
@@ -590,6 +590,15 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Floating AI Assistant Button */}
+      <TouchableOpacity 
+        style={styles.aiFab} 
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('AIAssistant')}
+      >
+        <Sparkles size={24} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -1175,6 +1184,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.onSurfaceVariant,
     marginLeft: 10,
   },
+  aiFab: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 110 : 100, // Above the bottom tab
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#6D28D9', // A distinct purple color for AI
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#6D28D9',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  }
 });
 
 export default memo(HomeScreen);
