@@ -19,7 +19,7 @@ module.exports = {
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#050A02',
     },
     ios: {
       supportsTablet: true,
@@ -28,7 +28,7 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#1A2F0E',
       },
       package: 'com.turfscore.app',
       googleServicesFile: './google-services.json',
