@@ -22,6 +22,7 @@ const WalletManagement = Loadable(lazy(() => import('pages/management/WalletMana
 const UsersManagement = Loadable(lazy(() => import('pages/management/UsersManagement')));
 const CouponsManagement = Loadable(lazy(() => import('pages/management/CouponsManagement')));
 const SupportTicketsManagement = Loadable(lazy(() => import('pages/management/SupportTicketsManagement')));
+const NotificationManagement = Loadable(lazy(() => import('pages/management/NotificationManagement')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -88,6 +89,10 @@ const MainRoutes = {
         {
           path: 'support',
           element: <SupportTicketsManagement />
+        },
+        {
+          path: 'notifications',
+          element: <NotificationManagement />
         }
       ]
     },

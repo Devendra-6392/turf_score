@@ -221,17 +221,32 @@ const calStyles = StyleSheet.create({
 });
 
 // ─── Time Slot Chip ─────────────────────────────────────────
-const TimeSlotChip = memo(({ slot, isSelected, onPress }) => (
-  <TouchableOpacity
-    style={[styles.timeChip, isSelected && styles.timeChipSelected]}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <Text style={[styles.timeChipText, isSelected && styles.timeChipTextSelected]}>
-      {slot.startTime}-{slot.endTime}
-    </Text>
-  </TouchableOpacity>
-));
+const TimeSlotChip = memo(({ slot, isSelected, onPress }) => {
+  const isBooked = slot.status === 'BOOKED';
+  return (
+    <TouchableOpacity
+      style={[
+        styles.timeChip,
+        isSelected && styles.timeChipSelected,
+        isBooked && styles.timeChipBooked,
+      ]}
+      onPress={isBooked ? undefined : onPress}
+      disabled={isBooked}
+      activeOpacity={isBooked ? 1 : 0.8}
+    >
+      <Text style={[
+        styles.timeChipText,
+        isSelected && styles.timeChipTextSelected,
+        isBooked && styles.timeChipTextBooked,
+      ]}>
+        {slot.startTime}-{slot.endTime}
+      </Text>
+      {isBooked && (
+        <Text style={styles.bookedLabel}>BOOKED</Text>
+      )}
+    </TouchableOpacity>
+  );
+});
 
 // ─── People Count Chip ──────────────────────────────────────
 const PeopleChip = memo(({ count, isSelected, onPress }) => (
@@ -296,37 +311,55 @@ const BookSlotScreen = ({ route, navigation }) => {
   });
 
   // ── Fetch slots ──
-  useEffect(() => {
-    const fetchSlots = async () => {
-      if (!turf?.id) return;
-      try {
-        setLoadingSlots(true);
-        const res = await fetch(`${BACKEND_URL}/turfs/${turf.id}/slots?date=${dateStr}`);
-        const data = await res.json();
+  const fetchSlots = useCallback(async (isPolling = false) => {
+    if (!turf?.id) return;
+    try {
+      if (!isPolling) setLoadingSlots(true);
+      const res = await fetch(`${BACKEND_URL}/turfs/${turf.id}/slots?date=${dateStr}`);
+      const data = await res.json();
 
+      // Filter out past slots for today
+      const now = new Date();
+      const isToday = new Date(dateStr).toDateString() === now.toDateString();
+
+      const filteredData = data.filter(slot => {
+        // Only show AVAILABLE slots (filter out BOOKED, BLOCKED, etc.)
+        if (slot.status !== 'AVAILABLE') return false;
+        if (!isToday) return true;
         // Filter out past slots for today
-        const now = new Date();
-        const isToday = new Date(dateStr).toDateString() === now.toDateString();
+        const [hours, minutes] = slot.startTime.split(':').map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hours, minutes, 0, 0);
+        return slotTime > now;
+      });
 
-        const filteredData = data.filter(slot => {
-          if (!isToday) return true;
-          // Format slot start time
-          const [hours, minutes] = slot.startTime.split(':').map(Number);
-          const slotTime = new Date();
-          slotTime.setHours(hours, minutes, 0, 0);
-          return slotTime > now;
-        });
-
-        setAvailableSlots(filteredData);
+      setAvailableSlots(filteredData);
+      // If the currently selected slot got booked, deselect it
+      if (selectedSlot && !filteredData.find(s => s.id === selectedSlot.id)) {
         setSelectedSlot(null);
-      } catch (e) {
-        console.log('Error fetching slots', e);
-      } finally {
-        setLoadingSlots(false);
+        if (isPolling) {
+          Toast.show({ type: 'info', text1: 'Slot Unavailable', text2: 'Your selected slot was just booked. Please pick another.' });
+        }
       }
-    };
+      if (!isPolling) setSelectedSlot(null);
+    } catch (e) {
+      console.log('Error fetching slots', e);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, [turf?.id, dateStr, selectedSlot]);
+
+  useEffect(() => {
     fetchSlots();
   }, [turf?.id, dateStr]);
+
+  // Auto-refresh slots every 10 seconds to keep availability in sync
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchSlots(true);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [fetchSlots]);
 
   // ── Fetch teams ──
   useEffect(() => {
@@ -722,6 +755,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.headerDark,
     borderColor: Colors.headerDark,
   },
+  timeChipBooked: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+    opacity: 0.6,
+  },
   timeChipText: {
     fontSize: 12,
     fontWeight: '700',
@@ -729,6 +767,17 @@ const styles = StyleSheet.create({
   },
   timeChipTextSelected: {
     color: '#fff',
+  },
+  timeChipTextBooked: {
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  bookedLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: Colors.error,
+    marginTop: 2,
+    letterSpacing: 1,
   },
 
   // ── No Slots ──

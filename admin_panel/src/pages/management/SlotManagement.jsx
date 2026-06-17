@@ -34,7 +34,7 @@ import { PlusOutlined, DeleteOutlined, EditOutlined, ArrowLeftOutlined } from '@
 // project imports
 import MainCard from 'components/MainCard';
 import { useAdminAuth } from 'contexts/AdminAuthContext';
-import { authHeaders, hasPermission } from 'utils/admin-access';
+import { authHeaders, authFetcher, hasPermission } from 'utils/admin-access';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
@@ -47,7 +47,9 @@ export default function SlotManagement() {
   const canEdit = hasPermission(admin, 'slots', 'edit');
   const canDelete = hasPermission(admin, 'slots', 'delete');
   const { data: turf } = useSWR(`${import.meta.env.VITE_APP_API_URL}/turfs/${id}`, fetcher);
-  const { data: slots, isLoading } = useSWR(`${import.meta.env.VITE_APP_API_URL}/turfs/${id}/slots`, fetcher);
+  const { data: slots, isLoading } = useSWR(`${import.meta.env.VITE_APP_API_URL}/turfs/${id}/slots`, fetcher, {
+    refreshInterval: 5000 // Auto-refresh every 5 seconds for real-time sync
+  });
 
   const [open, setOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
@@ -172,6 +174,23 @@ export default function SlotManagement() {
             Back to Turfs
           </Button>
           <Typography variant="h4">Manage Slots: {turf?.name}</Typography>
+          <Chip 
+            label="● LIVE" 
+            size="small" 
+            sx={{ 
+              ml: 2, 
+              bgcolor: '#E8F5E9', 
+              color: '#2E7D32', 
+              fontWeight: 700, 
+              fontSize: 11,
+              animation: 'pulse 2s infinite',
+              '@keyframes pulse': {
+                '0%': { opacity: 1 },
+                '50%': { opacity: 0.5 },
+                '100%': { opacity: 1 }
+              }
+            }} 
+          />
         </Stack>
         <MainCard
           title="Availability Slots"

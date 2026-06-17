@@ -1,5 +1,5 @@
 // assets
-import { AppstoreAddOutlined, CalendarOutlined, UsergroupAddOutlined, PictureOutlined, WalletOutlined } from '@ant-design/icons';
+import { AppstoreAddOutlined, CalendarOutlined, UsergroupAddOutlined, PictureOutlined, WalletOutlined, BellOutlined } from '@ant-design/icons';
 
 // icons
 const icons = {
@@ -7,7 +7,8 @@ const icons = {
   CalendarOutlined,
   UsergroupAddOutlined,
   PictureOutlined,
-  WalletOutlined
+  WalletOutlined,
+  BellOutlined
 };
 
 // ==============================|| MENU ITEMS - MANAGEMENT ||============================== //
@@ -74,6 +75,13 @@ const management = {
       url: '/manage/wallets',
       icon: icons.WalletOutlined,
       roles: ['SUPER_ADMIN']
+    },
+    {
+      id: 'notification-manage',
+      title: 'Push Notifications',
+      type: 'item',
+      url: '/manage/notifications',
+      icon: icons.BellOutlined
     }
   ]
 };

@@ -114,7 +114,27 @@ export default function BookingManagement() {
 
   return (
     <MainCard 
-        title={admin?.role === 'SUPER_ADMIN' ? "All Bookings" : `Bookings for ${admin?.turfName}`}
+        title={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <span>{admin?.role === 'SUPER_ADMIN' ? "All Bookings" : `Bookings for ${admin?.turfName}`}</span>
+                <Chip 
+                    label="● LIVE" 
+                    size="small" 
+                    sx={{ 
+                        bgcolor: '#E8F5E9', 
+                        color: '#2E7D32', 
+                        fontWeight: 700, 
+                        fontSize: 11,
+                        animation: 'pulse 2s infinite',
+                        '@keyframes pulse': {
+                            '0%': { opacity: 1 },
+                            '50%': { opacity: 0.5 },
+                            '100%': { opacity: 1 }
+                        }
+                    }} 
+                />
+            </Box>
+        }
         secondary={
             <ToggleButtonGroup
                 value={filter}
