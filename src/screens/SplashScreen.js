@@ -1,684 +1,599 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Animated,
   Dimensions,
-  ImageBackground,
   Easing,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-// ─── Floating Particle Component ────────────────────────────────
-const FloatingParticle = ({ delay, startX, startY, size, color, duration }) => {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
+// ─── Elegant Orb (background ambient glow) ──────────────────────
+const AmbientOrb = ({ cx, cy, radius, color, delay, duration }) => {
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    setTimeout(() => {
       Animated.loop(
         Animated.parallel([
           Animated.sequence([
-            Animated.timing(opacity, {
-              toValue: 0.8,
-              duration: duration * 0.2,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0.2,
-              duration: duration * 0.6,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: duration * 0.2,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.timing(translateY, {
-            toValue: -height * 0.4,
-            duration,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.sequence([
-            Animated.timing(translateX, {
-              toValue: Math.random() > 0.5 ? 30 : -30,
-              duration: duration * 0.5,
-              easing: Easing.inOut(Easing.sin),
-              useNativeDriver: true,
-            }),
-            Animated.timing(translateX, {
-              toValue: Math.random() > 0.5 ? -20 : 20,
-              duration: duration * 0.5,
-              easing: Easing.inOut(Easing.sin),
-              useNativeDriver: true,
-            }),
+            Animated.timing(opacity, { toValue: 1, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0.4, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
           ]),
           Animated.sequence([
-            Animated.timing(scale, {
-              toValue: 1.2,
-              duration: duration * 0.5,
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.3,
-              duration: duration * 0.5,
-              useNativeDriver: true,
-            }),
+            Animated.timing(scale, { toValue: 1.1, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+            Animated.timing(scale, { toValue: 0.85, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
           ]),
         ])
       ).start();
     }, delay);
-    return () => clearTimeout(timeout);
   }, []);
 
   return (
     <Animated.View
-      style={[
-        styles.particle,
-        {
-          left: startX,
-          top: startY,
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          opacity,
-          transform: [{ translateY }, { translateX }, { scale }],
-        },
-      ]}
+      style={{
+        position: 'absolute',
+        left: cx - radius,
+        top: cy - radius,
+        width: radius * 2,
+        height: radius * 2,
+        borderRadius: radius,
+        backgroundColor: color,
+        opacity,
+        transform: [{ scale }],
+      }}
     />
   );
 };
 
-// ─── Pulsating Ring Component ───────────────────────────────────
-const PulsatingRing = ({ delay, maxSize, color }) => {
-  const scale = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0.6)).current;
+// ─── Expanding Ring ──────────────────────────────────────────────
+const ExpandingRing = ({ size, color, delay }) => {
+  const scale = useRef(new Animated.Value(0.1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    setTimeout(() => {
       Animated.loop(
         Animated.parallel([
-          Animated.timing(scale, {
-            toValue: 1,
-            duration: 3000,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 3000,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
+          Animated.timing(scale, { toValue: 1, duration: 2800, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.6, duration: 400, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 2400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          ]),
         ])
       ).start();
     }, delay);
-    return () => clearTimeout(timeout);
   }, []);
 
   return (
     <Animated.View
-      style={[
-        styles.ring,
-        {
-          width: maxSize,
-          height: maxSize,
-          borderRadius: maxSize / 2,
-          borderColor: color,
-          opacity,
-          transform: [{ scale }],
-        },
-      ]}
+      style={{
+        position: 'absolute',
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: 1,
+        borderColor: color,
+        opacity,
+        transform: [{ scale }],
+      }}
     />
   );
 };
 
-// ─── Main Splash Screen ─────────────────────────────────────────
+// ─── Floating Mote ───────────────────────────────────────────────
+const Mote = ({ x, y, size, delay }) => {
+  const ty = useRef(new Animated.Value(0)).current;
+  const op = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setTimeout(() => {
+      Animated.loop(
+        Animated.parallel([
+          Animated.timing(ty, { toValue: -height * 0.35, duration: 5000 + Math.random() * 3000, easing: Easing.linear, useNativeDriver: true }),
+          Animated.sequence([
+            Animated.timing(op, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+            Animated.timing(op, { toValue: 0, duration: 3000, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          ]),
+        ])
+      ).start();
+    }, delay);
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: '#A8E063',
+        opacity: op,
+        transform: [{ translateY: ty }],
+      }}
+    />
+  );
+};
+
+// ─── Main Splash Screen ──────────────────────────────────────────
 const SplashScreen = ({ navigation }) => {
   const { user, loading } = useAuth();
 
-  // Main animations
-  const bgOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0)).current;
-  const logoRotate = useRef(new Animated.Value(0)).current;
-  const logoGlow = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleTranslateY = useRef(new Animated.Value(40)).current;
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const taglineTranslateY = useRef(new Animated.Value(20)).current;
-  const lineWidth = useRef(new Animated.Value(0)).current;
-  const bottomOpacity = useRef(new Animated.Value(0)).current;
-  const spotlightOpacity = useRef(new Animated.Value(0)).current;
-  const versionOpacity = useRef(new Animated.Value(0)).current;
+  // Master timeline refs
+  const masterFade = useRef(new Animated.Value(0)).current;
+  const emblemScale = useRef(new Animated.Value(0.3)).current;
+  const emblemOpacity = useRef(new Animated.Value(0)).current;
+  const emblemRotate = useRef(new Animated.Value(0)).current;
+  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
+  const wordmarkY = useRef(new Animated.Value(24)).current;
+  const dividerWidth = useRef(new Animated.Value(0)).current;
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
+  const subtitleY = useRef(new Animated.Value(12)).current;
+  const badgeOpacity = useRef(new Animated.Value(0)).current;
+  const badgeY = useRef(new Animated.Value(16)).current;
+  const loaderOpacity = useRef(new Animated.Value(0)).current;
 
-  // Letter animations for "TURF SCORE"
-  const letters = 'TURF SCORE'.split('');
-  const letterAnims = useRef(letters.map(() => new Animated.Value(0))).current;
-  const letterYAnims = useRef(letters.map(() => new Animated.Value(20))).current;
+  // Continuous emblem glow
+  const emblemGlow = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
-    // Stage 1: Background fade-in + Spotlight
     Animated.sequence([
+      // 1. Scene fade in
+      Animated.timing(masterFade, { toValue: 1, duration: 700, useNativeDriver: true }),
+
+      // 2. Emblem burst in
       Animated.parallel([
-        Animated.timing(bgOpacity, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(spotlightOpacity, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
+        Animated.spring(emblemScale, { toValue: 1, tension: 9, friction: 4, useNativeDriver: true }),
+        Animated.timing(emblemOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(emblemRotate, { toValue: 1, duration: 900, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true }),
       ]),
 
-      // Stage 2: Logo entrance with dramatic spring
+      // 3. Short breathe
+      Animated.delay(100),
+
+      // 4. Wordmark slides up
       Animated.parallel([
-        Animated.spring(logoScale, {
-          toValue: 1,
-          tension: 8,
-          friction: 3,
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoRotate, {
-          toValue: 1,
-          duration: 1200,
-          easing: Easing.out(Easing.back(1.5)),
-          useNativeDriver: true,
-        }),
+        Animated.timing(wordmarkOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(wordmarkY, { toValue: 0, tension: 18, friction: 6, useNativeDriver: true }),
       ]),
 
-      // Stage 3: Logo glow pulse
-      Animated.timing(logoGlow, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
+      // 5. Divider draws
+      Animated.timing(dividerWidth, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
 
-      // Stage 4: Title letter-by-letter reveal
-      Animated.stagger(
-        50,
-        letters.map((_, i) =>
-          Animated.parallel([
-            Animated.timing(letterAnims[i], {
-              toValue: 1,
-              duration: 300,
-              easing: Easing.out(Easing.back(2)),
-              useNativeDriver: true,
-            }),
-            Animated.timing(letterYAnims[i], {
-              toValue: 0,
-              duration: 300,
-              easing: Easing.out(Easing.back(2)),
-              useNativeDriver: true,
-            }),
-          ])
-        )
-      ),
-
-      // Stage 5: Decorative line expand
-      Animated.spring(lineWidth, {
-        toValue: 1,
-        tension: 15,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-
-      // Stage 6: Tagline slide up
+      // 6. Subtitle
       Animated.parallel([
-        Animated.timing(taglineOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(taglineTranslateY, {
-          toValue: 0,
-          tension: 15,
-          friction: 5,
-          useNativeDriver: true,
-        }),
+        Animated.timing(subtitleOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
+        Animated.spring(subtitleY, { toValue: 0, tension: 18, friction: 7, useNativeDriver: true }),
       ]),
 
-      // Stage 7: Bottom elements
+      // 7. Badge + loader
+      Animated.delay(100),
       Animated.parallel([
-        Animated.timing(bottomOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(versionOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
+        Animated.timing(badgeOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(badgeY, { toValue: 0, tension: 16, friction: 7, useNativeDriver: true }),
+        Animated.timing(loaderOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]),
     ]).start();
 
-    // Continuous logo breathing glow
-    const glowLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(logoGlow, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoGlow, {
-          toValue: 0.5,
-          duration: 1500,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    setTimeout(() => glowLoop.start(), 3500);
+    // Continuous emblem glow breathe
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(emblemGlow, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(emblemGlow, { toValue: 0.5, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      ).start();
+    }, 2000);
   }, []);
 
-  // Navigation logic
+  // Navigation
   useEffect(() => {
     if (loading) return;
-    const timer = setTimeout(() => {
-      if (user) {
-        navigation.replace('Main');
-      } else {
-        navigation.replace('Onboarding');
-      }
-    }, 4500);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => {
+      navigation.replace(user ? 'Main' : 'Onboarding');
+    }, 4800);
+    return () => clearTimeout(t);
   }, [loading, user, navigation]);
 
-  const logoSpin = logoRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  const spin = emblemRotate.interpolate({ inputRange: [0, 1], outputRange: ['-180deg', '0deg'] });
 
-  // Generate particles
-  const particles = [];
-  const particleColors = [
-    'rgba(75, 122, 47, 0.6)',
-    'rgba(139, 195, 74, 0.5)',
-    'rgba(107, 142, 35, 0.4)',
-    'rgba(255, 215, 0, 0.3)',
-    'rgba(255, 255, 255, 0.2)',
-  ];
-  for (let i = 0; i < 20; i++) {
-    particles.push(
-      <FloatingParticle
-        key={i}
-        delay={Math.random() * 3000}
-        startX={Math.random() * width}
-        startY={height * 0.5 + Math.random() * height * 0.5}
-        size={Math.random() * 6 + 2}
-        color={particleColors[Math.floor(Math.random() * particleColors.length)]}
-        duration={3000 + Math.random() * 4000}
-      />
-    );
-  }
+  // Motes
+  const motes = Array.from({ length: 18 }).map((_, i) => (
+    <Mote
+      key={i}
+      x={Math.random() * width}
+      y={height * 0.4 + Math.random() * height * 0.5}
+      size={Math.random() * 4 + 1.5}
+      delay={Math.random() * 4000}
+    />
+  ));
 
   return (
-    <View style={styles.container}>
-      {/* Deep dark gradient background */}
+    <View style={s.root}>
+      {/* ── Background ── */}
       <LinearGradient
-        colors={['#050A02', '#0D1A06', '#0A1205', '#060D03']}
+        colors={['#040C02', '#071405', '#040C02']}
         style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0.7, y: 1 }}
       />
 
-      {/* Spotlight glow effect */}
-      <Animated.View style={[styles.spotlightContainer, { opacity: spotlightOpacity }]}>
-        <View style={styles.spotlightTop} />
-        <View style={styles.spotlightBottom} />
+      {/* ── Ambient orbs ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: masterFade }]}>
+        <AmbientOrb cx={width * 0.15} cy={height * 0.2} radius={180} color="rgba(80,140,40,0.07)" delay={0} duration={5000} />
+        <AmbientOrb cx={width * 0.85} cy={height * 0.75} radius={200} color="rgba(60,110,30,0.06)" delay={600} duration={6000} />
+        <AmbientOrb cx={width * 0.5} cy={height * 0.5} radius={260} color="rgba(100,180,50,0.04)" delay={1200} duration={7000} />
       </Animated.View>
 
-      {/* Floating particles */}
-      <Animated.View style={[styles.particleContainer, { opacity: bgOpacity }]}>
-        {particles}
+      {/* ── Motes ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: masterFade }]}>
+        {motes}
       </Animated.View>
 
-      {/* Pulsating rings behind logo */}
-      <View style={styles.ringsContainer}>
-        <PulsatingRing delay={500} maxSize={300} color="rgba(75, 122, 47, 0.15)" />
-        <PulsatingRing delay={1500} maxSize={250} color="rgba(139, 195, 74, 0.1)" />
-        <PulsatingRing delay={2500} maxSize={350} color="rgba(75, 122, 47, 0.08)" />
-      </View>
+      {/* ── Main content ── */}
+      <Animated.View style={[s.content, { opacity: masterFade }]}>
 
-      {/* Main content */}
-      <View style={styles.contentContainer}>
-        {/* Logo */}
-        <Animated.View
-          style={[
-            styles.logoOuterGlow,
-            {
-              opacity: logoGlow,
-              transform: [{ scale: logoScale }],
-            },
-          ]}
-        >
-          <View style={styles.logoGlowRing} />
-        </Animated.View>
+        {/* Expanding rings behind emblem */}
+        <View style={s.ringsWrap}>
+          <ExpandingRing size={320} color="rgba(100,180,50,0.18)" delay={1200} />
+          <ExpandingRing size={260} color="rgba(80,140,40,0.22)" delay={2000} />
+          <ExpandingRing size={200} color="rgba(120,200,60,0.15)" delay={2800} />
+        </View>
 
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              transform: [
-                { scale: logoScale },
-                { rotate: logoSpin },
-              ],
-            },
-          ]}
-        >
+        {/* Outer glow halo */}
+        <Animated.View style={[s.halo, { opacity: emblemGlow }]} />
+
+        {/* Emblem */}
+        <Animated.View style={{ transform: [{ scale: emblemScale }, { rotate: spin }], opacity: emblemOpacity }}>
           <LinearGradient
-            colors={['#5C9A36', '#4B7A2F', '#3A5F24']}
-            style={styles.logoGradient}
+            colors={['#1E3A10', '#2C5618', '#1E3A10']}
+            style={s.emblemBg}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <View style={styles.logoInner}>
-              <Text style={styles.logoT}>T</Text>
-              <Text style={styles.logoS}>S</Text>
+            {/* Inner shine top */}
+            <View style={s.emblemShine} />
+
+            {/* Hexagon-feel border */}
+            <View style={s.emblemBorder} />
+
+            {/* Icon: stylized pitch/field lines */}
+            <View style={s.fieldWrap}>
+              {/* Outer boundary */}
+              <View style={s.fieldOuter}>
+                {/* Centre circle */}
+                <View style={s.fieldCircle} />
+                {/* Halfway line */}
+                <View style={s.fieldMidLine} />
+                {/* Penalty arcs (left & right) */}
+                <View style={[s.fieldArc, s.fieldArcL]} />
+                <View style={[s.fieldArc, s.fieldArcR]} />
+              </View>
             </View>
-            {/* Corner accents */}
-            <View style={[styles.cornerAccent, styles.cornerTL]} />
-            <View style={[styles.cornerAccent, styles.cornerBR]} />
           </LinearGradient>
         </Animated.View>
 
-        {/* App Name - Letter by letter */}
-        <View style={styles.titleContainer}>
-          {letters.map((letter, index) => (
-            <Animated.Text
-              key={index}
-              style={[
-                styles.titleLetter,
-                letter === ' ' && styles.titleSpace,
-                {
-                  opacity: letterAnims[index],
-                  transform: [{ translateY: letterYAnims[index] }],
-                },
-              ]}
-            >
-              {letter}
-            </Animated.Text>
-          ))}
-        </View>
+        {/* Wordmark */}
+        <Animated.View style={{ opacity: wordmarkOpacity, transform: [{ translateY: wordmarkY }], alignItems: 'center', marginTop: 38 }}>
+          <View style={s.wordmarkRow}>
+            <Text style={s.wordmarkMain}>TURF</Text>
+            <Text style={s.wordmarkAccent}> SCORE</Text>
+          </View>
+        </Animated.View>
 
-        {/* Decorative line */}
-        <Animated.View
-          style={[
-            styles.decorativeLine,
-            {
-              transform: [{ scaleX: lineWidth }],
-            },
-          ]}
-        >
+        {/* Divider */}
+        <Animated.View style={[s.dividerWrap, { transform: [{ scaleX: dividerWidth }] }]}>
           <LinearGradient
-            colors={['transparent', '#4B7A2F', '#8BC34A', '#4B7A2F', 'transparent']}
-            style={styles.lineGradient}
+            colors={['transparent', 'rgba(130,200,60,0.7)', 'rgba(168,224,99,1)', 'rgba(130,200,60,0.7)', 'transparent']}
+            style={s.divider}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           />
-          {/* Center diamond */}
-          <View style={styles.lineDiamond} />
+          <View style={s.dividerGem} />
         </Animated.View>
 
-        {/* Tagline */}
-        <Animated.View
-          style={{
-            opacity: taglineOpacity,
-            transform: [{ translateY: taglineTranslateY }],
-          }}
-        >
-          <Text style={styles.tagline}>PREMIUM SPORTS BOOKING</Text>
-        </Animated.View>
-      </View>
-
-      {/* Bottom section */}
-      <Animated.View style={[styles.bottomSection, { opacity: bottomOpacity }]}>
-        {/* Animated loading dots */}
-        <LoadingDots />
-        <Animated.Text style={[styles.versionText, { opacity: versionOpacity }]}>
-          v1.0.0
+        {/* Subtitle */}
+        <Animated.Text style={[s.subtitle, { opacity: subtitleOpacity, transform: [{ translateY: subtitleY }] }]}>
+          PREMIUM SPORTS BOOKING
         </Animated.Text>
+
+        {/* Badge pill */}
+        <Animated.View style={[s.badge, { opacity: badgeOpacity, transform: [{ translateY: badgeY }] }]}>
+          <View style={s.badgeDot} />
+          <Text style={s.badgeText}>Book · Play · Compete</Text>
+        </Animated.View>
+      </Animated.View>
+
+      {/* ── Bottom loader ── */}
+      <Animated.View style={[s.bottom, { opacity: loaderOpacity }]}>
+        <ArcLoader />
+        <Text style={s.version}>v1.0.0</Text>
       </Animated.View>
     </View>
   );
 };
 
-// ─── Loading Dots Component ─────────────────────────────────────
-const LoadingDots = () => {
-  const dot1 = useRef(new Animated.Value(0.3)).current;
-  const dot2 = useRef(new Animated.Value(0.3)).current;
-  const dot3 = useRef(new Animated.Value(0.3)).current;
+// ─── Arc Loader ──────────────────────────────────────────────────
+const ArcLoader = () => {
+  const rotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animateDots = () => {
+    setTimeout(() => {
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(dot1, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot1, { toValue: 0.3, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot2, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot2, { toValue: 0.3, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot3, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot3, { toValue: 0.3, duration: 400, useNativeDriver: true }),
-        ])
+        Animated.timing(rotate, { toValue: 1, duration: 1400, easing: Easing.linear, useNativeDriver: true })
       ).start();
-    };
-    setTimeout(animateDots, 3500);
+    }, 3800);
   }, []);
 
+  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
   return (
-    <View style={styles.dotsContainer}>
-      <Animated.View style={[styles.dot, { opacity: dot1, backgroundColor: '#4B7A2F' }]} />
-      <Animated.View style={[styles.dot, { opacity: dot2, backgroundColor: '#6B8E23' }]} />
-      <Animated.View style={[styles.dot, { opacity: dot3, backgroundColor: '#8BC34A' }]} />
+    <View style={arc.wrap}>
+      <Animated.View style={[arc.track, { transform: [{ rotate: spin }] }]}>
+        <LinearGradient
+          colors={['transparent', 'rgba(130,200,60,0.0)', 'rgba(168,224,99,0.9)']}
+          style={arc.fill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
+      {/* Static dim track */}
+      <View style={arc.dimTrack} />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const arc = StyleSheet.create({
+  wrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  dimTrack: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  track: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    borderTopColor: '#A8E063',
+    borderRightColor: 'rgba(168,224,99,0.4)',
+  },
+  fill: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+});
+
+// ─── Styles ───────────────────────────────────────────────────────
+const EMBLEM = 140;
+
+const s = StyleSheet.create({
+  root: {
     flex: 1,
-    backgroundColor: '#050A02',
+    backgroundColor: '#040C02',
   },
-  spotlightContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spotlightTop: {
-    position: 'absolute',
-    top: -height * 0.2,
-    width: width * 1.5,
-    height: height * 0.7,
-    borderRadius: width,
-    backgroundColor: 'rgba(75, 122, 47, 0.06)',
-  },
-  spotlightBottom: {
-    position: 'absolute',
-    bottom: -height * 0.3,
-    width: width * 2,
-    height: height * 0.6,
-    borderRadius: width,
-    backgroundColor: 'rgba(75, 122, 47, 0.04)',
-  },
-  particleContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  particle: {
-    position: 'absolute',
-  },
-  ringsContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    top: -60,
-  },
-  ring: {
-    position: 'absolute',
-    borderWidth: 1.5,
-  },
-  contentContainer: {
+  content: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 40,
+    justifyContent: 'center',
+    paddingBottom: 60,
   },
-  // Logo
-  logoOuterGlow: {
+  // Rings
+  ringsWrap: {
     position: 'absolute',
-    top: height * 0.5 - 130 - 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    top: height * 0.5 - 160 - 60,
     alignSelf: 'center',
   },
-  logoGlowRing: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(75, 122, 47, 0.15)',
-    shadowColor: '#4B7A2F',
+  // Halo
+  halo: {
+    position: 'absolute',
+    width: EMBLEM + 80,
+    height: EMBLEM + 80,
+    borderRadius: (EMBLEM + 80) / 2,
+    backgroundColor: 'rgba(80,160,40,0.12)',
+    shadowColor: '#7EC83A',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 40,
-    elevation: 20,
+    shadowOpacity: 1,
+    shadowRadius: 50,
+    elevation: 0,
   },
-  logoContainer: {
-    marginBottom: 40,
-    shadowColor: '#4B7A2F',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.5,
-    shadowRadius: 30,
-    elevation: 25,
-  },
-  logoGradient: {
-    width: 130,
-    height: 130,
-    borderRadius: 35,
-    justifyContent: 'center',
+  // Emblem
+  emblemBg: {
+    width: EMBLEM,
+    height: EMBLEM,
+    borderRadius: EMBLEM * 0.22,
     alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#4A9020',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.6,
+    shadowRadius: 40,
+    elevation: 30,
+  },
+  emblemShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: EMBLEM * 0.45,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderBottomLeftRadius: EMBLEM,
+    borderBottomRightRadius: EMBLEM,
+  },
+  emblemBorder: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: EMBLEM * 0.22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(168,224,99,0.25)',
+  },
+  // Field icon inside emblem
+  fieldWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fieldOuter: {
+    width: 86,
+    height: 62,
+    borderWidth: 2,
+    borderColor: 'rgba(168,224,99,0.75)',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
   },
-  logoInner: {
+  fieldCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(168,224,99,0.7)',
+  },
+  fieldMidLine: {
+    position: 'absolute',
+    width: 2,
+    height: '100%',
+    backgroundColor: 'rgba(168,224,99,0.5)',
+  },
+  fieldArc: {
+    position: 'absolute',
+    width: 22,
+    height: 36,
+    borderWidth: 2,
+    borderColor: 'rgba(168,224,99,0.5)',
+  },
+  fieldArcL: {
+    left: -12,
+    borderRadius: 0,
+    borderTopRightRadius: 36,
+    borderBottomRightRadius: 36,
+    borderLeftWidth: 0,
+  },
+  fieldArcR: {
+    right: -12,
+    borderRadius: 0,
+    borderTopLeftRadius: 36,
+    borderBottomLeftRadius: 36,
+    borderRightWidth: 0,
+  },
+  // Wordmark
+  wordmarkRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  logoT: {
-    fontSize: 52,
+  wordmarkMain: {
+    fontSize: 40,
     fontWeight: '900',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: -2,
-  },
-  logoS: {
-    fontSize: 38,
-    fontWeight: '300',
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginLeft: -4,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  cornerAccent: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  cornerTL: {
-    top: 10,
-    left: 10,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-  },
-  cornerBR: {
-    bottom: 10,
-    right: 10,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-  },
-  // Title
-  titleContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  titleLetter: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 6,
-    textShadowColor: 'rgba(75, 122, 47, 0.5)',
+    letterSpacing: 10,
+    textShadowColor: 'rgba(120,200,60,0.4)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 16,
   },
-  titleSpace: {
-    width: 12,
+  wordmarkAccent: {
+    fontSize: 40,
+    fontWeight: '200',
+    color: '#A8E063',
+    letterSpacing: 10,
+    textShadowColor: 'rgba(120,200,60,0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
-  // Decorative line
-  decorativeLine: {
-    width: width * 0.5,
-    height: 2,
-    marginBottom: 16,
+  // Divider
+  dividerWrap: {
+    width: width * 0.55,
+    height: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 14,
+    marginBottom: 14,
   },
-  lineGradient: {
+  divider: {
     width: '100%',
-    height: 1.5,
-    position: 'absolute',
+    height: 1,
   },
-  lineDiamond: {
-    width: 8,
-    height: 8,
-    backgroundColor: '#8BC34A',
+  dividerGem: {
+    width: 7,
+    height: 7,
+    backgroundColor: '#A8E063',
     transform: [{ rotate: '45deg' }],
-    shadowColor: '#8BC34A',
+    shadowColor: '#A8E063',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  // Tagline
-  tagline: {
-    fontSize: 13,
-    color: 'rgba(139, 195, 74, 0.8)',
-    letterSpacing: 5,
+  // Subtitle
+  subtitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(168,224,99,0.65)',
+    letterSpacing: 6,
+  },
+  // Badge
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(168,224,99,0.18)',
+    backgroundColor: 'rgba(168,224,99,0.06)',
+    gap: 8,
+  },
+  badgeDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#A8E063',
+    shadowColor: '#A8E063',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  badgeText: {
+    fontSize: 11,
     fontWeight: '500',
+    color: 'rgba(168,224,99,0.7)',
+    letterSpacing: 2.5,
   },
   // Bottom
-  bottomSection: {
+  bottom: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 52,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
-  dotsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  versionText: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.2)',
-    letterSpacing: 2,
+  version: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.15)',
+    letterSpacing: 2.5,
     fontWeight: '400',
   },
 });
