@@ -61,7 +61,7 @@ const SignUpScreen = ({ navigation }) => {
       {/* Top half wave background pattern */}
       <View style={styles.topHeaderContainer}>
         <Image 
-          source={require('../assets/green_topography.png')} 
+          source={require('../assets/green_topography.jpg')} 
           style={styles.headerPattern} 
           resizeMode="cover"
         />

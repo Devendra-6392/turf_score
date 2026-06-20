@@ -476,7 +476,7 @@ const ProfileScreen = ({ navigation }) => {
             >
               <View style={styles.cardTop}>
                 <View style={styles.avatarWrap}>
-                  <Image source={require('../assets/avatar.png')} style={styles.avatar} />
+                  <Image source={require('../assets/avatar.jpg')} style={styles.avatar} />
                 </View>
                 <View style={styles.cardInfo}>
                   <Text style={styles.userName} numberOfLines={1}>{user?.name || 'Player'}</Text>
