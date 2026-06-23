@@ -736,8 +736,9 @@ model PlayerRequest {
   sport         SportType
   playersNeeded Int
   date          DateTime
-  location      String               @db.VarChar(255)
-  description   String?              @db.Text
+  location        String               @db.VarChar(255)
+  preferredGender String               @default("ANY") @db.VarChar(20)
+  description     String?              @db.Text
   status        LfpStatus            @default(OPEN)
   joinedPlayers PlayerRequestJoin[]
   createdAt     DateTime             @default(now())

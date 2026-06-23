@@ -4,7 +4,7 @@ import {
   StatusBar, ActivityIndicator, Dimensions, FlatList, ImageBackground,
   Platform, Animated, Modal, Share
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Search, MapPin, Star, QrCode, ChevronRight, Wallet, Bell,
@@ -139,7 +139,6 @@ const NearbyCard = memo(({ turf, onPress }) => (
 // ─── Main HomeScreen ────────────────────────────────────────
 const HomeScreen = ({ navigation }) => {
   const { user, refreshUser, token } = useAuth();
-  const insets = useSafeAreaInsets();
   const [turfs, setTurfs] = useState([]);
   const [banners, setBanners] = useState([]);
   const [loadingTurfs, setLoadingTurfs] = useState(true);
@@ -360,7 +359,7 @@ const HomeScreen = ({ navigation }) => {
         {/* ── ScrollView with Animated Event ── */}
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+          contentContainerStyle={styles.scrollContent}
           scrollEventThrottle={16}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -593,8 +592,8 @@ const HomeScreen = ({ navigation }) => {
       </Modal>
 
       {/* Floating AI Assistant Button */}
-      <TouchableOpacity 
-        style={styles.aiFab} 
+      <TouchableOpacity
+        style={styles.aiFab}
         activeOpacity={0.8}
         onPress={() => navigation.navigate('AIAssistant')}
       >
@@ -797,8 +796,8 @@ const styles = StyleSheet.create({
 
   // ── ScrollView ──
   scrollContent: {
-    paddingTop: HEADER_MAX_HEIGHT + 20,
-    paddingBottom: 80,
+    paddingTop: HEADER_MAX_HEIGHT + (Platform.OS === 'android' ? StatusBar.currentHeight : 0) - 60,
+    paddingBottom: 40,
   },
 
   // ── Categories ──
