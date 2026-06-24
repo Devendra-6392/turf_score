@@ -79,7 +79,7 @@ export async function scheduleLocalNotification(title, body, seconds = 2) {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: title || 'Turf Score',
+      title: title || 'Skipers',
       body: body || 'You have a new notification!',
       sound: true,
     },

@@ -351,10 +351,29 @@ const ProfileScreen = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const [hasFetchedBookings, setHasFetchedBookings] = useState(false);
   const [hasFetchedChallenges, setHasFetchedChallenges] = useState(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
 
   useEffect(() => {
-    if (token) refreshUser();
-  }, []);
+    if (token) {
+      refreshUser();
+      fetchSubscription();
+    }
+  }, [token]);
+
+  const fetchSubscription = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/subscriptions/check-discount/${user.id}`);
+      const data = await res.json();
+      if (data.hasSubscription) {
+        setSubscriptionPlan(data.plan);
+      } else {
+        setSubscriptionPlan(null);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription in profile:', error);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'bookings' && !hasFetchedBookings && user?.id) {
@@ -404,12 +423,13 @@ const ProfileScreen = ({ navigation }) => {
     setRefreshing(true);
     try {
       await refreshUser();
+      await fetchSubscription();
       if (activeTab === 'bookings') setHasFetchedBookings(false);
       if (activeTab === 'challenges') setHasFetchedChallenges(false);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshUser, activeTab]);
+  }, [refreshUser, activeTab, user?.id]);
 
   const handleSaveProfile = useCallback(async (updates) => {
     setSaving(true);
@@ -482,10 +502,12 @@ const ProfileScreen = ({ navigation }) => {
                   <Text style={styles.userName} numberOfLines={1}>{user?.name || 'Player'}</Text>
                   <Text style={styles.userEmail} numberOfLines={1}>{user?.email}</Text>
                 </View>
-                <View style={styles.proBadge}>
-                  <Award size={12} color="#FFD700" fill="#FFD700" />
-                  <Text style={styles.proBadgeText}>PRO</Text>
-                </View>
+                {subscriptionPlan && (
+                  <View style={styles.proBadge}>
+                    <Award size={12} color="#FFD700" fill="#FFD700" />
+                    <Text style={styles.proBadgeText}>{subscriptionPlan}</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.cardStats}>
@@ -560,6 +582,16 @@ const ProfileScreen = ({ navigation }) => {
             {/* Additional Options */}
             {activeTab === 'info' && (
               <View style={{ marginTop: 20 }}>
+                <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate('Subscriptions')} activeOpacity={0.8}>
+                  <View style={styles.optionBtnLeft}>
+                    <Award size={20} color={Colors.primary} />
+                    <Text style={styles.optionBtnText}>
+                      {subscriptionPlan ? 'Manage Subscription' : 'My Memberships'}
+                    </Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.onSurfaceVariant} />
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.optionBtn} onPress={() => navigation.navigate('Coupons')} activeOpacity={0.8}>
                   <View style={styles.optionBtnLeft}>
                     <Ticket size={20} color={Colors.primary} />

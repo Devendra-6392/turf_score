@@ -45,7 +45,7 @@ const SignUpScreen = ({ navigation }) => {
     try {
       await register(name, email, password);
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully' });
-      scheduleLocalNotification('Welcome to Turf Score! 🎉', 'Your account has been created successfully.', 1);
+      scheduleLocalNotification('Welcome to Skipers! 🎉', 'Your account has been created successfully.', 1);
       navigation.replace('Main');
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Sign Up Failed', text2: error.message });

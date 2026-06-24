@@ -14,13 +14,13 @@ const transporter = nodemailer.createTransport({
 exports.sendBookingBillEmail = async (userEmail, bookingDetails) => {
   try {
     const mailOptions = {
-      from: `"Turf Score" <${EMAIL_USER}>`,
+      from: `"Skipers" <${EMAIL_USER}>`,
       to: userEmail,
       subject: `Booking Confirmed: ${bookingDetails.turfName}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto;">
           <h2 style="color: #4B7A2F;">Booking Confirmed!</h2>
-          <p>Thank you for booking with Turf Score.</p>
+          <p>Thank you for booking with Skipers.</p>
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px;">
             <p><strong>Turf:</strong> ${bookingDetails.turfName}</p>
             <p><strong>Date:</strong> ${bookingDetails.date}</p>
@@ -42,7 +42,7 @@ exports.sendBookingBillEmail = async (userEmail, bookingDetails) => {
 exports.sendChallengeAcceptedEmail = async (creatorEmail, opponentName, challengeDetails) => {
   try {
     const mailOptions = {
-      from: `"Turf Score" <${EMAIL_USER}>`,
+      from: `"Skipers" <${EMAIL_USER}>`,
       to: creatorEmail,
       subject: `Challenge Accepted! 🔥`,
       html: `

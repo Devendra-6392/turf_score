@@ -38,7 +38,7 @@ const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, bookingDeta
         key: RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: 'INR',
-        name: 'Turf Score',
+        name: 'Skipers',
         description: bookingDetails?.description || 'Turf Booking Payment',
         order_id: orderData.id,
         prefill: {
@@ -85,7 +85,7 @@ const RazorpayModal = ({ visible, onClose, onPaymentSuccess, amount, bookingDeta
               <Text style={styles.logoText}>TS</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.merchantName}>Turf Score</Text>
+              <Text style={styles.merchantName}>Skipers</Text>
               <Text style={styles.merchantDesc}>{bookingDetails?.description || 'Secure Payment'}</Text>
             </View>
           </View>

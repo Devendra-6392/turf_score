@@ -16,6 +16,7 @@ const couponRoutes = require('./src/routes/couponRoutes');
 const supportTicketRoutes = require('./src/routes/supportTicketRoutes');
 const lfpRoutes = require('./src/routes/lfpRoutes');
 const aiRoutes = require('./src/routes/aiRoutes');
+const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +28,7 @@ app.use(morgan('dev'));
 
 // Test Route
 app.get('/', (req, res) => {
-  res.json({ message: 'Turf Score API is operational', timestamp: new Date() });
+  res.json({ message: 'Skipers API is operational', timestamp: new Date() });
 });
 
 // API Routes
@@ -44,6 +45,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/support-tickets', supportTicketRoutes);
 app.use('/api/lfp', lfpRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Database check and Start
 const prisma = require('./src/config/db');

@@ -50,6 +50,38 @@ exports.createBooking = async (req, res) => {
       }
     }
 
+    // ── Subscription Discount Check ──
+    let subscriptionDiscount = 0;
+    let subscriptionPlan = null;
+    let usedFreeHour = false;
+
+    // Auto-expire stale subscriptions
+    await prisma.subscription.updateMany({
+      where: { userId, status: 'ACTIVE', endDate: { lt: new Date() } },
+      data: { status: 'EXPIRED' },
+    });
+
+    const activeSubscription = await prisma.subscription.findFirst({
+      where: { userId, status: 'ACTIVE' },
+    });
+
+    if (activeSubscription) {
+      subscriptionPlan = activeSubscription.plan;
+      // Check for free hour (Elite plan)
+      if (activeSubscription.freeHoursRemaining > 0 && req.body.useFreeHour) {
+        usedFreeHour = true;
+        await prisma.subscription.update({
+          where: { id: activeSubscription.id },
+          data: { freeHoursRemaining: { decrement: 1 } },
+        });
+      } else {
+        // Apply discount percentage
+        subscriptionDiscount = Math.round(amount * activeSubscription.discountPercent / 100);
+      }
+    }
+
+    const finalAmount = usedFreeHour ? 0 : Math.max(0, amount - subscriptionDiscount);
+
     // Handle Payment Methods
     let bookingStatus = 'CONFIRMED';
     let paymentDetailStatus = 'SUCCESS';

@@ -16,7 +16,7 @@ export default function AuthFooter() {
         sx={{ gap: 2, justifyContent: { xs: 'center', sm: 'space-between' }, textAlign: { xs: 'center', sm: 'inherit' }, py: 2 }}
       >
         <Typography variant="subtitle2" color="secondary">
-          © {new Date().getFullYear()} Turf Score. All rights reserved.
+          © {new Date().getFullYear()} Skipers. All rights reserved.
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: { xs: 1, sm: 3 }, textAlign: { xs: 'center', sm: 'inherit' } }}>

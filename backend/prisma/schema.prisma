@@ -181,6 +181,7 @@ model User {
   acceptedChallenges   Challenge[]           @relation("AcceptedChallenges")
   playerRequests       PlayerRequest[]       @relation("LfpCreator")
   joinedPlayerRequests PlayerRequestJoin[]
+  subscriptions        Subscription[]
 
   // Expert additions:
   gender         String?    @db.VarChar(20)
@@ -323,8 +324,9 @@ model Team {
   turf      Turf?        @relation(fields: [turfId], references: [id])
   members              TeamMember[]
   bookings             Booking[]
-  challengerChallenges Challenge[]  @relation("ChallengerTeam")
-  opponentChallenges   Challenge[]  @relation("OpponentTeam")
+  challengerChallenges Challenge[]        @relation("ChallengerTeam")
+  opponentChallenges   Challenge[]        @relation("OpponentTeam")
+  teamSubscriptions    TeamSubscription[]
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
@@ -760,4 +762,103 @@ enum LfpStatus {
   OPEN
   FULL
   CANCELLED
+}
+
+// ============================================
+// SUBSCRIPTION & MEMBERSHIP SYSTEM
+// ============================================
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+  ELITE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAUSED
+}
+
+enum TeamSubscriptionPlan {
+  WEEKEND_WARRIORS
+  PREMIUM_TEAM
+}
+
+model Subscription {
+  id                  String             @id @default(uuid()) @db.VarChar(36)
+  userId              String             @db.VarChar(36)
+  user                User               @relation(fields: [userId], references: [id])
+  plan                SubscriptionPlan
+  status              SubscriptionStatus @default(ACTIVE)
+  amount              Float
+  startDate           DateTime           @default(now())
+  endDate             DateTime
+  discountPercent     Int                // 5, 10, or 15
+  freeHoursRemaining  Int                @default(0)
+  walletCreditsGiven  Float              @default(0)
+  noConvenienceFee    Boolean            @default(true)
+  freeCancellation    Boolean            @default(false)
+  freeRescheduling    Boolean            @default(false)
+  priorityBooking     Boolean            @default(false)
+  premiumBadge        Boolean            @default(false)
+  razorpayPaymentId   String?            @db.VarChar(255)
+  razorpayOrderId     String?            @db.VarChar(255)
+  autoRenew           Boolean            @default(false)
+  cancelledAt         DateTime?
+  refundAmount        Float?             @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model TeamSubscription {
+  id                  String                  @id @default(uuid()) @db.VarChar(36)
+  teamId              String                  @db.VarChar(36)
+  team                Team                    @relation(fields: [teamId], references: [id])
+  plan                TeamSubscriptionPlan
+  status              SubscriptionStatus      @default(ACTIVE)
+  amount              Float
+  startDate           DateTime                @default(now())
+  endDate             DateTime
+  slotsPerWeek        Int
+  preferredDays       Json                    @default("[]")
+  preferredTimes      Json                    @default("[]")
+  slotShieldCredits   Int                     @default(0)
+  bookingsIncluded    Int
+  bookingsUsed        Int                     @default(0)
+  splitPayments       Boolean                 @default(false)
+  tournamentAccess    Boolean                 @default(false)
+  teamDashboard       Boolean                 @default(false)
+  razorpayPaymentId   String?                 @db.VarChar(255)
+  razorpayOrderId     String?                 @db.VarChar(255)
+  autoRenew           Boolean                 @default(false)
+  cancelledAt         DateTime?
+  refundAmount        Float?                  @default(0)
+  slotShieldCreditLog SlotShieldCredit[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@index([teamId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model SlotShieldCredit {
+  id                    String           @id @default(uuid()) @db.VarChar(36)
+  teamSubscriptionId    String           @db.VarChar(36)
+  teamSubscription      TeamSubscription @relation(fields: [teamSubscriptionId], references: [id])
+  earnedAt              DateTime         @default(now())
+  expiresAt             DateTime
+  isUsed                Boolean          @default(false)
+  usedAt                DateTime?
+  usedForBookingId      String?          @db.VarChar(36)
+  createdAt             DateTime         @default(now())
+
+  @@index([teamSubscriptionId])
+  @@index([isUsed, expiresAt])
 }

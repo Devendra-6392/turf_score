@@ -4,7 +4,7 @@ async function send() {
   const message = {
     to: 'ExponentPushToken[YpUCPxPfitJXc_5vJ7XUTv]',
     sound: 'default',
-    title: 'Hello from Turf Score! 🏟️',
+    title: 'Hello from Skipers! 🏟️',
     body: 'Notifications are working! Your test was successful.',
     data: { someData: 'goes here' },
   };

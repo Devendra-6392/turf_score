@@ -20,6 +20,14 @@ const operations = {
       roles: ['SUPER_ADMIN']
     },
     {
+      id: 'subscriptions-manage',
+      title: 'Subscriptions',
+      type: 'item',
+      url: '/manage/subscriptions',
+      icon: icons.TagOutlined,
+      roles: ['SUPER_ADMIN']
+    },
+    {
       id: 'coupons-manage',
       title: 'Coupons & Offers',
       type: 'item',
