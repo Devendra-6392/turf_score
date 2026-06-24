@@ -5,12 +5,12 @@ import {
   Card, CardContent, Grid
 } from '@mui/material';
 import axios from 'axios';
-import { useAuth } from '../../contexts/AuthContext';
-import API_URL from '../../config/api';
+import { useAdminAuth } from 'contexts/AdminAuthContext';
 import { toast } from 'react-toastify';
 
 const SubscriptionManagement = () => {
-  const { token, admin } = useAuth();
+  const { admin } = useAdminAuth();
+  const token = localStorage.getItem('adminToken');
   const [individualSubs, setIndividualSubs] = useState([]);
   const [teamSubs, setTeamSubs] = useState([]);
   const [stats, setStats] = useState({});
@@ -24,7 +24,7 @@ const SubscriptionManagement = () => {
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/subscriptions/admin/all${filter !== 'ALL' ? `?status=${filter}` : ''}`, {
+      const res = await axios.get(`${import.meta.env.VITE_APP_API_URL}/subscriptions/admin/all${filter !== 'ALL' ? `?status=${filter}` : ''}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIndividualSubs(res.data.individual || []);
@@ -43,7 +43,7 @@ const SubscriptionManagement = () => {
 
   const handleManage = async (id, type, action) => {
     try {
-      await axios.put(`${API_URL}/subscriptions/admin/${id}/manage`, { action, type }, {
+      await axios.put(`${import.meta.env.VITE_APP_API_URL}/subscriptions/admin/${id}/manage`, { action, type }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success(`Subscription ${action}d successfully`);
