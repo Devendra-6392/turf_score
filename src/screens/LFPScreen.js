@@ -106,13 +106,18 @@ export default function LFPScreen({ navigation }) {
           
           {!isCreator && !hasJoined && item.status === 'OPEN' && (
             <TouchableOpacity style={styles.joinBtn} onPress={() => handleJoin(item.id)}>
-              <Text style={styles.joinBtnText}>Join Game</Text>
+              <Text style={styles.joinBtnText}>I'm Available</Text>
             </TouchableOpacity>
           )}
           {hasJoined && (
             <View style={styles.joinedBadge}>
-              <Text style={styles.joinedText}>You Joined!</Text>
+              <Text style={styles.joinedText}>Interested!</Text>
             </View>
+          )}
+          {isCreator && (
+            <TouchableOpacity style={[styles.joinBtn, { backgroundColor: '#1A1A1A' }]} onPress={() => navigation.navigate('InterestedPlayers', { lfpId: item.id })}>
+              <Text style={styles.joinBtnText}>View Interested</Text>
+            </TouchableOpacity>
           )}
         </View>
       </View>

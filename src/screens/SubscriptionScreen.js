@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import API_URL from '../config/api';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const PlanCard = memo(({ plan, isActive, type, onSubscribe, onCancel }) => {
   return (
@@ -61,11 +62,12 @@ const PlanCard = memo(({ plan, isActive, type, onSubscribe, onCancel }) => {
 });
 
 const SubscriptionScreen = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState('INDIVIDUAL');
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState({ individual: [], team: [] });
   const [activeSubscription, setActiveSubscription] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -83,13 +85,16 @@ const SubscriptionScreen = ({ navigation }) => {
   };
 
   const fetchMySubscription = async () => {
+    if (!token) return;
     try {
       const res = await fetch(`${API_URL}/subscriptions/my`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (data.subscription) {
         setActiveSubscription(data.subscription);
+      } else {
+        setActiveSubscription(null);
       }
     } catch (error) {
       console.error('Error fetching my subscription:', error);
@@ -99,8 +104,44 @@ const SubscriptionScreen = ({ navigation }) => {
   };
 
   const handleSubscribe = useCallback((planId, type) => {
-    Alert.alert('Subscribe', `Initiating subscription for ${planId}`);
-  }, []);
+    Alert.alert(
+      'Confirm Subscription',
+      `Subscribe to ${planId}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Confirm', 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const endpoint = type === 'team' ? '/subscriptions/team/subscribe' : '/subscriptions/subscribe';
+              const bodyPayload = type === 'team' ? { planId, teamId: 'your-team-id' } : { planId }; // Ensure teamId is handled appropriately in real app
+              
+              const res = await fetch(`${API_URL}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(bodyPayload)
+              });
+              const data = await res.json();
+              if (res.ok) {
+                setShowConfetti(true);
+                Toast.show({ type: 'success', text1: 'Subscribed Successfully!' });
+                fetchMySubscription();
+                setTimeout(() => setShowConfetti(false), 5000);
+              } else {
+                Toast.show({ type: 'error', text1: 'Error', text2: data.error || 'Subscription failed' });
+              }
+            } catch (error) {
+              console.error(error);
+              Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to subscribe' });
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  }, [token]);
 
   const handleCancel = useCallback(() => {
     Alert.alert(
@@ -204,6 +245,16 @@ const SubscriptionScreen = ({ navigation }) => {
         
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {showConfetti && (
+        <ConfettiCannon 
+          count={200} 
+          origin={{ x: -10, y: 0 }} 
+          fallSpeed={3000}
+          fadeOut={true}
+          autoStart={true}
+        />
+      )}
     </View>
   );
 };

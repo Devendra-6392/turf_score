@@ -754,6 +754,7 @@ model PlayerRequestJoin {
   userId          String        @db.VarChar(36)
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   joinedAt        DateTime      @default(now())
+  status          String        @default("PENDING") @db.VarChar(20)
 
   @@unique([playerRequestId, userId])
 }

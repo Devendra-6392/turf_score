@@ -26,6 +26,7 @@ const SignUpScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [gender, setGender] = useState('Male');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -43,7 +44,7 @@ const SignUpScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, gender);
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully' });
       scheduleLocalNotification('Welcome to Skipers! 🎉', 'Your account has been created successfully.', 1);
       navigation.replace('Main');
@@ -137,6 +138,26 @@ const SignUpScreen = ({ navigation }) => {
                   <Eye size={18} color={Colors.onSurfaceVariant} />
                 )}
               </TouchableOpacity>
+            </View>
+
+            <Text style={styles.inputLabel}>Gender</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24, marginTop: 4 }}>
+              {['Male', 'Female'].map(g => (
+                <TouchableOpacity
+                  key={g}
+                  style={{
+                    flex: 1, paddingVertical: 12, borderRadius: 12,
+                    borderWidth: 1, borderColor: gender === g ? Colors.primary : Colors.outline,
+                    backgroundColor: gender === g ? Colors.primary + '10' : 'transparent',
+                    alignItems: 'center'
+                  }}
+                  onPress={() => setGender(g)}
+                >
+                  <Text style={{ color: gender === g ? Colors.primary : Colors.onSurfaceVariant, fontWeight: '700' }}>
+                    {g}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
             <TouchableOpacity 

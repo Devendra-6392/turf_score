@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
+import { useIsFocused } from '@react-navigation/native';
 import {
   User, LogOut, Award, Calendar, Edit3, Save, X, Phone, Mail,
   Clock, CheckCircle, MapPin, ChevronRight, Wallet, Trophy,
@@ -342,6 +343,7 @@ const BookingHistorySection = memo(({ bookings, loading, onPress }) => {
 // ─── Main Profile Screen ────────────────────────────────────
 const ProfileScreen = ({ navigation }) => {
   const { user, signOut, refreshUser, updateUser, token } = useAuth();
+  const isFocused = useIsFocused();
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [challenges, setChallenges] = useState([]);
@@ -354,11 +356,11 @@ const ProfileScreen = ({ navigation }) => {
   const [subscriptionPlan, setSubscriptionPlan] = useState(null);
 
   useEffect(() => {
-    if (token) {
+    if (token && isFocused) {
       refreshUser();
       fetchSubscription();
     }
-  }, [token]);
+  }, [token, isFocused]);
 
   const fetchSubscription = async () => {
     if (!user?.id) return;

@@ -75,11 +75,11 @@ export const AuthProvider = ({ children }) => {
     await syncBackend(data);
   }, [syncBackend]);
 
-  const register = useCallback(async (name, email, password) => {
+  const register = useCallback(async (name, email, password, gender) => {
     const res = await fetch(`${BACKEND_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name, email, password, gender })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

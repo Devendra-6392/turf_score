@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 // Traditional Native Sign Up (Email/Password)
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, gender } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Please provide all fields' });
@@ -24,6 +24,7 @@ exports.register = async (req, res) => {
         email,
         name,
         password: hashedPassword,
+        gender: gender || 'Male',
         xp: 0,
         matchesPlayed: 0,
         wallet: {

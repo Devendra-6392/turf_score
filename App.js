@@ -33,6 +33,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import CouponsScreen from './src/screens/CouponsScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import SubscriptionScreen from './src/screens/SubscriptionScreen';
+import InterestedPlayersScreen from './src/screens/InterestedPlayersScreen';
 
 import { requestNotificationPermission, setupNotificationHandler } from './src/utils/notifications';
 
@@ -98,6 +99,7 @@ export default function App() {
           <Stack.Screen name="Coupons" component={CouponsScreen} />
           <Stack.Screen name="Support" component={SupportScreen} />
           <Stack.Screen name="CreateLFP" component={CreateLFPScreen} />
+          <Stack.Screen name="InterestedPlayers" component={InterestedPlayersScreen} />
           <Stack.Screen name="AIAssistant" component={AIAssistantScreen} />
           <Stack.Screen name="Subscriptions" component={SubscriptionScreen} />
         </Stack.Navigator>
