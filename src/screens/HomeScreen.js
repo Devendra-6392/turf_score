@@ -592,8 +592,8 @@ const HomeScreen = ({ navigation }) => {
       </Modal>
 
       {/* Floating AI Assistant Button */}
-      <TouchableOpacity 
-        style={styles.aiFab} 
+      <TouchableOpacity
+        style={styles.aiFab}
         activeOpacity={0.8}
         onPress={() => navigation.navigate('AIAssistant')}
       >

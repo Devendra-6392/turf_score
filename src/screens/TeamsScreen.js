@@ -14,7 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
 import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield, X, CheckCircle2, Trophy } from 'lucide-react-native';
@@ -35,6 +35,7 @@ const SPORT_POSITIONS = {
 
 export default function TeamsScreen({ navigation }) {
   const { token, user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -123,8 +124,8 @@ export default function TeamsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} translucent={false} />
 
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
+      <View style={{ flex: 1 }}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
           <View>
             <Text style={styles.title}>My Teams</Text>
             <Text style={styles.subtitle}>Up to 8 registered players per squad</Text>
@@ -204,7 +205,7 @@ export default function TeamsScreen({ navigation }) {
             )}
           />
         )}
-      </SafeAreaView>
+      </View>
 
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
         <KeyboardAvoidingView

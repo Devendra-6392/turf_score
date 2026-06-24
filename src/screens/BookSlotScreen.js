@@ -278,6 +278,8 @@ const BookSlotScreen = ({ route, navigation }) => {
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [acceptsChallenges, setAcceptsChallenges] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay', 'wallet', 'cod'
+  const [subscriptionDiscount, setSubscriptionDiscount] = useState(0);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(null);
   const bookingShine = useRef(new Animated.Value(0)).current;
 
   const peopleCounts = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
@@ -370,18 +372,35 @@ const BookSlotScreen = ({ route, navigation }) => {
       .catch(() => setTeams([]));
   }, [token]);
 
+  // ── Fetch Subscription Discount ──
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch(`${BACKEND_URL}/subscriptions/check-discount/${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.hasSubscription) {
+          setSubscriptionDiscount(data.discountPercent || 0);
+          setSubscriptionPlan(data.plan);
+        }
+      })
+      .catch(e => console.log('Error fetching subscription', e));
+  }, [user?.id]);
+
+  // ── Confirm Booking ──
   const handleConfirmBooking = async () => {
     if (!selectedSlot) {
       Toast.show({ type: 'info', text1: 'Select a Time Slot', text2: 'Please choose a time slot to book.' });
       return;
     }
-    const bookingAmount = selectedSlot.price || (turf?.pricePerHour || 3500);
-    setPaymentAmount(bookingAmount);
+    const baseAmount = selectedSlot.price || (turf?.pricePerHour || 3500);
+    const discountAmount = Math.round((baseAmount * subscriptionDiscount) / 100);
+    const finalAmount = Math.max(0, baseAmount - discountAmount);
+    setPaymentAmount(finalAmount);
 
     if (paymentMethod === 'razorpay') {
       setShowRazorpay(true);
     } else {
-      processDirectBooking(bookingAmount);
+      processDirectBooking(finalAmount);
     }
   };
 
@@ -641,8 +660,25 @@ const BookSlotScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryTotalLabel}>Total</Text>
-              <Text style={styles.summaryTotalValue}>₹{selectedSlot.price || turf?.pricePerHour || 3500}</Text>
+              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryValue}>₹{selectedSlot.price || turf?.pricePerHour || 3500}</Text>
+            </View>
+            
+            {subscriptionDiscount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: '#A8FF00' }]}>{subscriptionPlan} Discount ({subscriptionDiscount}%)</Text>
+                <Text style={[styles.summaryValue, { color: '#A8FF00' }]}>
+                  -₹{Math.round(((selectedSlot.price || turf?.pricePerHour || 3500) * subscriptionDiscount) / 100)}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryTotalLabel}>Final Amount</Text>
+              <Text style={styles.summaryTotalValue}>
+                ₹{Math.max(0, (selectedSlot.price || turf?.pricePerHour || 3500) - Math.round(((selectedSlot.price || turf?.pricePerHour || 3500) * subscriptionDiscount) / 100))}
+              </Text>
             </View>
           </View>
         )}

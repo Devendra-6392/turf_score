@@ -7,12 +7,24 @@ exports.getLfpRequests = async (req, res) => {
   try {
     const { status = 'OPEN' } = req.query;
     
+    // Fetch the current user to know their gender
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { gender: true }
+    });
+    
+    const userGender = currentUser?.gender || 'UNKNOWN';
+
     const requests = await prisma.playerRequest.findMany({
       where: {
         status,
         date: {
           gte: new Date() // Only show future/today requests
-        }
+        },
+        OR: [
+          { preferredGender: 'ANY' },
+          { preferredGender: userGender }
+        ]
       },
       include: {
         creator: {
@@ -40,7 +52,7 @@ exports.getLfpRequests = async (req, res) => {
 // Create a new LFP request
 exports.createLfpRequest = async (req, res) => {
   try {
-    const { sport, playersNeeded, date, location, description } = req.body;
+    const { sport, playersNeeded, date, location, description, preferredGender = 'ANY' } = req.body;
     
     const newRequest = await prisma.playerRequest.create({
       data: {
@@ -49,7 +61,8 @@ exports.createLfpRequest = async (req, res) => {
         playersNeeded: parseInt(playersNeeded),
         date: new Date(date),
         location,
-        description
+        description,
+        preferredGender
       },
       include: {
         creator: { select: { id: true, name: true, avatar: true, rating: true } },

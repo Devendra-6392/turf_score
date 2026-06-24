@@ -10,7 +10,7 @@ import {
   Platform,
   StatusBar
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { ChevronRight } from 'lucide-react-native';
 
@@ -37,6 +37,7 @@ const SLIDES = [
 const OnboardingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -82,7 +83,7 @@ const OnboardingScreen = ({ navigation }) => {
       />
 
       {/* Footer containing pagination & continue button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + 16, 32) }]}>
         <View style={styles.pagination}>
           {SLIDES.map((_, i) => (
             <View
@@ -156,7 +157,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingBottom: Platform.OS === 'ios' ? 44 : 32,
     backgroundColor: Colors.background,
   },
   pagination: {

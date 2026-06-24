@@ -1,4 +1,4 @@
-// ─── Turf Score — Premium Theme ─────────────────────────────
+// ─── Skipers — Premium Theme ─────────────────────────────
 // Clean cream/beige palette with dark accents and green highlights
 // Matching the reference design screenshots
 

@@ -2,9 +2,9 @@ require('dotenv').config();
 
 module.exports = {
   expo: {
-    name: 'Turf Score',
-    slug: 'turfscore',
-    scheme: 'turfscore',
+    name: 'Skipers',
+    slug: 'skipers',
+    scheme: 'skipers',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -19,7 +19,7 @@ module.exports = {
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#050A02',
+      backgroundColor: '#0D1117',
     },
     ios: {
       supportsTablet: true,
@@ -28,7 +28,7 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#1A2F0E',
+        backgroundColor: '#0D1117',
       },
       package: 'com.turfscore.app',
       googleServicesFile: './google-services.json',

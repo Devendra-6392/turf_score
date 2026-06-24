@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { ArrowLeft, MapPin, Calendar, Users, Target } from 'lucide-react-native';
@@ -15,8 +15,30 @@ export default function CreateLFPScreen({ navigation }) {
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [preferredGender, setPreferredGender] = useState('ANY');
   const [loading, setLoading] = useState(false);
+  const [turfs, setTurfs] = useState([]);
+  const [showTurfModal, setShowTurfModal] = useState(false);
   const { token } = useAuth();
+
+  const GENDERS = [
+    { label: 'Anyone', value: 'ANY' },
+    { label: 'Boys Only', value: 'MALE' },
+    { label: 'Girls Only', value: 'FEMALE' }
+  ];
+
+  React.useEffect(() => {
+    const fetchTurfs = async () => {
+      try {
+        const res = await fetch(`${API_URL}/turfs`);
+        const data = await res.json();
+        if (res.ok) setTurfs(data);
+      } catch (e) {
+        console.log('Error fetching turfs', e);
+      }
+    };
+    fetchTurfs();
+  }, []);
 
   const handleCreate = async () => {
     if (!playersNeeded || !date || !location) {
@@ -44,7 +66,8 @@ export default function CreateLFPScreen({ navigation }) {
           playersNeeded: parseInt(playersNeeded),
           date: parsedDate.toISOString(), // placeholder
           location,
-          description
+          description,
+          preferredGender
         })
       });
 
@@ -88,6 +111,19 @@ export default function CreateLFPScreen({ navigation }) {
             ))}
           </ScrollView>
 
+          <Text style={styles.sectionTitle}>Who can join?</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sportScroll}>
+            {GENDERS.map((g) => (
+              <TouchableOpacity 
+                key={g.value} 
+                style={[styles.sportChip, preferredGender === g.value && styles.sportChipActive]}
+                onPress={() => setPreferredGender(g.value)}
+              >
+                <Text style={[styles.sportChipText, preferredGender === g.value && styles.sportChipTextActive]}>{g.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Players Needed</Text>
             <View style={styles.inputContainer}>
@@ -104,15 +140,12 @@ export default function CreateLFPScreen({ navigation }) {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Location</Text>
-            <View style={styles.inputContainer}>
+            <TouchableOpacity style={styles.inputContainer} onPress={() => setShowTurfModal(true)}>
               <MapPin size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Gomti Nagar Turf"
-                value={location}
-                onChangeText={setLocation}
-              />
-            </View>
+              <Text style={[styles.input, { color: location ? '#1a1a1a' : '#999', paddingTop: 15 }]}>
+                {location || "Select a Turf"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
@@ -152,6 +185,35 @@ export default function CreateLFPScreen({ navigation }) {
           )}
         </TouchableOpacity>
       </View>
+
+      <Modal visible={showTurfModal} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Turf Location</Text>
+              <TouchableOpacity onPress={() => setShowTurfModal(false)}>
+                <Text style={styles.closeBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={turfs}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.turfItem}
+                  onPress={() => {
+                    setLocation(item.name);
+                    setShowTurfModal(false);
+                  }}
+                >
+                  <Text style={styles.turfName}>{item.name}</Text>
+                  <Text style={styles.turfLocation}>{item.location}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -176,5 +238,13 @@ const styles = StyleSheet.create({
   textArea: { height: 100, alignItems: 'flex-start', paddingTop: 15 },
   footer: { padding: 20, borderTopWidth: 1, borderTopColor: '#eee', backgroundColor: '#fff' },
   submitBtn: { backgroundColor: Colors.primary, height: 55, borderRadius: 12, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
-  submitBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+  submitBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' },
+  closeBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '600' },
+  turfItem: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  turfName: { fontSize: 16, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4 },
+  turfLocation: { fontSize: 14, color: '#666' }
 });

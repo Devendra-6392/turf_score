@@ -6,191 +6,152 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Image,
+  ImageBackground,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-// ─── Elegant Orb (background ambient glow) ──────────────────────
-const AmbientOrb = ({ cx, cy, radius, color, delay, duration }) => {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.6)).current;
-
-  useEffect(() => {
-    setTimeout(() => {
-      Animated.loop(
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(opacity, { toValue: 1, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-            Animated.timing(opacity, { toValue: 0.4, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          ]),
-          Animated.sequence([
-            Animated.timing(scale, { toValue: 1.1, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-            Animated.timing(scale, { toValue: 0.85, duration: duration * 0.5, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          ]),
-        ])
-      ).start();
-    }, delay);
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        left: cx - radius,
-        top: cy - radius,
-        width: radius * 2,
-        height: radius * 2,
-        borderRadius: radius,
-        backgroundColor: color,
-        opacity,
-        transform: [{ scale }],
-      }}
-    />
-  );
+// Brand Colors
+const BRAND = {
+  neonGreen: '#A8FF00',
+  limeGreen: '#7CFF00',
+  green: '#00B51E',
+  dark: '#0D1117',
+  white: '#FFFFFF',
 };
 
-// ─── Expanding Ring ──────────────────────────────────────────────
-const ExpandingRing = ({ size, color, delay }) => {
-  const scale = useRef(new Animated.Value(0.1)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    setTimeout(() => {
-      Animated.loop(
-        Animated.parallel([
-          Animated.timing(scale, { toValue: 1, duration: 2800, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-          Animated.sequence([
-            Animated.timing(opacity, { toValue: 0.6, duration: 400, useNativeDriver: true }),
-            Animated.timing(opacity, { toValue: 0, duration: 2400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-          ]),
-        ])
-      ).start();
-    }, delay);
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        borderWidth: 1,
-        borderColor: color,
-        opacity,
-        transform: [{ scale }],
-      }}
-    />
-  );
-};
-
-// ─── Floating Mote ───────────────────────────────────────────────
-const Mote = ({ x, y, size, delay }) => {
-  const ty = useRef(new Animated.Value(0)).current;
-  const op = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    setTimeout(() => {
-      Animated.loop(
-        Animated.parallel([
-          Animated.timing(ty, { toValue: -height * 0.35, duration: 5000 + Math.random() * 3000, easing: Easing.linear, useNativeDriver: true }),
-          Animated.sequence([
-            Animated.timing(op, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-            Animated.timing(op, { toValue: 0, duration: 3000, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          ]),
-        ])
-      ).start();
-    }, delay);
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        left: x,
-        top: y,
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: '#A8E063',
-        opacity: op,
-        transform: [{ translateY: ty }],
-      }}
-    />
-  );
-};
-
-// ─── Main Splash Screen ──────────────────────────────────────────
+// ─── Main Splash Screen ──────────────────────────────────────
 const SplashScreen = ({ navigation }) => {
   const { user, loading } = useAuth();
 
-  // Master timeline refs
-  const masterFade = useRef(new Animated.Value(0)).current;
-  const emblemScale = useRef(new Animated.Value(0.3)).current;
-  const emblemOpacity = useRef(new Animated.Value(0)).current;
-  const emblemRotate = useRef(new Animated.Value(0)).current;
-  const wordmarkOpacity = useRef(new Animated.Value(0)).current;
-  const wordmarkY = useRef(new Animated.Value(24)).current;
-  const dividerWidth = useRef(new Animated.Value(0)).current;
-  const subtitleOpacity = useRef(new Animated.Value(0)).current;
-  const subtitleY = useRef(new Animated.Value(12)).current;
-  const badgeOpacity = useRef(new Animated.Value(0)).current;
-  const badgeY = useRef(new Animated.Value(16)).current;
-  const loaderOpacity = useRef(new Animated.Value(0)).current;
+  // ── Phase 1: Speed (horizontal speed lines streak in) ──
+  const speedLine1X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine2X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine3X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine4X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine5X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine6X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLine7X = useRef(new Animated.Value(-width * 1.5)).current;
+  const speedLinesOpacity = useRef(new Animated.Value(0)).current;
 
-  // Continuous emblem glow
-  const emblemGlow = useRef(new Animated.Value(0.6)).current;
+  // ── Phase 2: Shape Forming (S shape scales + rotates in) ──
+  const sShapeScale = useRef(new Animated.Value(0)).current;
+  const sShapeOpacity = useRef(new Animated.Value(0)).current;
+  const sShapeRotate = useRef(new Animated.Value(0)).current;
+
+  // ── Phase 3: Player Appears (full logo image fades in) ──
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.7)).current;
+
+  // ── Phase 4: Logo Complete (text + tagline reveal) ──
+  const brandTextOpacity = useRef(new Animated.Value(0)).current;
+  const brandTextY = useRef(new Animated.Value(30)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const taglineY = useRef(new Animated.Value(20)).current;
+
+  // ── Background ──
+  const bgOpacity = useRef(new Animated.Value(0)).current;
+  const bgScale = useRef(new Animated.Value(1.1)).current;
+
+  // ── Glow effect ──
+  const glowOpacity = useRef(new Animated.Value(0)).current;
+  const glowScale = useRef(new Animated.Value(0.5)).current;
+
+  // ── Loader ──
+  const loaderOpacity = useRef(new Animated.Value(0)).current;
+  const loaderRotate = useRef(new Animated.Value(0)).current;
+
+  // ── Continuous logo pulse ──
+  const logoPulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Speed line stagger delays
+    const speedLineDuration = 500;
+    const stagger = 60;
+
     Animated.sequence([
-      // 1. Scene fade in
-      Animated.timing(masterFade, { toValue: 1, duration: 700, useNativeDriver: true }),
-
-      // 2. Emblem burst in
+      // ═══ PHASE 0: Background reveals ═══
       Animated.parallel([
-        Animated.spring(emblemScale, { toValue: 1, tension: 9, friction: 4, useNativeDriver: true }),
-        Animated.timing(emblemOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(emblemRotate, { toValue: 1, duration: 900, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true }),
+        Animated.timing(bgOpacity, { toValue: 1, duration: 800, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(bgScale, { toValue: 1, duration: 2500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
 
-      // 3. Short breathe
-      Animated.delay(100),
-
-      // 4. Wordmark slides up
-      Animated.parallel([
-        Animated.timing(wordmarkOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.spring(wordmarkY, { toValue: 0, tension: 18, friction: 6, useNativeDriver: true }),
+      // ═══ PHASE 1: SPEED — Horizontal speed lines streak across ═══
+      Animated.timing(speedLinesOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.stagger(stagger, [
+        Animated.timing(speedLine1X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine2X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine3X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine4X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine5X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine6X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(speedLine7X, { toValue: width * 2, duration: speedLineDuration, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
 
-      // 5. Divider draws
-      Animated.timing(dividerWidth, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
-
-      // 6. Subtitle
+      // ═══ PHASE 2: SHAPE FORMING — S shape bursts in ═══
       Animated.parallel([
-        Animated.timing(subtitleOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.spring(subtitleY, { toValue: 0, tension: 18, friction: 7, useNativeDriver: true }),
+        Animated.spring(sShapeScale, { toValue: 1, tension: 10, friction: 4, useNativeDriver: true }),
+        Animated.timing(sShapeOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(sShapeRotate, { toValue: 1, duration: 600, easing: Easing.out(Easing.back(1.2)), useNativeDriver: true }),
+        // Glow behind S
+        Animated.parallel([
+          Animated.timing(glowOpacity, { toValue: 0.6, duration: 500, useNativeDriver: true }),
+          Animated.spring(glowScale, { toValue: 1.2, tension: 8, friction: 5, useNativeDriver: true }),
+        ]),
       ]),
 
-      // 7. Badge + loader
-      Animated.delay(100),
+      Animated.delay(200),
+
+      // ═══ PHASE 3: PLAYER APPEARS — Full logo replaces S shape ═══
       Animated.parallel([
-        Animated.timing(badgeOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.spring(badgeY, { toValue: 0, tension: 16, friction: 7, useNativeDriver: true }),
+        // Fade out simple S, fade in full logo
+        Animated.timing(sShapeOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, tension: 12, friction: 5, useNativeDriver: true }),
+      ]),
+
+      Animated.delay(300),
+
+      // ═══ PHASE 4: LOGO COMPLETE — Brand text + tagline ═══
+      Animated.parallel([
+        Animated.timing(brandTextOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.spring(brandTextY, { toValue: 0, tension: 16, friction: 6, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(taglineOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(taglineY, { toValue: 0, tension: 16, friction: 7, useNativeDriver: true }),
         Animated.timing(loaderOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]),
     ]).start();
 
-    // Continuous emblem glow breathe
+    // Continuous logo pulse (breathe effect)
     setTimeout(() => {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(emblemGlow, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(emblemGlow, { toValue: 0.5, duration: 2000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(logoPulse, { toValue: 1.04, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(logoPulse, { toValue: 1, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
         ])
       ).start();
-    }, 2000);
+    }, 3000);
+
+    // Continuous glow pulse
+    setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowOpacity, { toValue: 0.8, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(glowOpacity, { toValue: 0.3, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      ).start();
+    }, 2500);
+
+    // Loader rotation
+    setTimeout(() => {
+      Animated.loop(
+        Animated.timing(loaderRotate, { toValue: 1, duration: 1200, easing: Easing.linear, useNativeDriver: true })
+      ).start();
+    }, 3500);
   }, []);
 
   // Navigation
@@ -198,401 +159,260 @@ const SplashScreen = ({ navigation }) => {
     if (loading) return;
     const t = setTimeout(() => {
       navigation.replace(user ? 'Main' : 'Onboarding');
-    }, 4800);
+    }, 5000);
     return () => clearTimeout(t);
   }, [loading, user, navigation]);
 
-  const spin = emblemRotate.interpolate({ inputRange: [0, 1], outputRange: ['-180deg', '0deg'] });
+  const sRotation = sShapeRotate.interpolate({ inputRange: [0, 1], outputRange: ['-45deg', '0deg'] });
+  const loaderSpin = loaderRotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
-  // Motes
-  const motes = Array.from({ length: 18 }).map((_, i) => (
-    <Mote
-      key={i}
-      x={Math.random() * width}
-      y={height * 0.4 + Math.random() * height * 0.5}
-      size={Math.random() * 4 + 1.5}
-      delay={Math.random() * 4000}
-    />
-  ));
+  // Speed line data (y positions and widths relative to center)
+  const speedLineData = [
+    { y: -36, w: 100, h: 3.5, ref: speedLine1X },
+    { y: -24, w: 130, h: 3, ref: speedLine2X },
+    { y: -12, w: 90, h: 4, ref: speedLine3X },
+    { y: 0, w: 150, h: 4.5, ref: speedLine4X },
+    { y: 12, w: 110, h: 3, ref: speedLine5X },
+    { y: 24, w: 80, h: 3.5, ref: speedLine6X },
+    { y: 36, w: 120, h: 2.5, ref: speedLine7X },
+  ];
 
   return (
     <View style={s.root}>
-      {/* ── Background ── */}
-      <LinearGradient
-        colors={['#040C02', '#071405', '#040C02']}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.3, y: 0 }}
-        end={{ x: 0.7, y: 1 }}
-      />
-
-      {/* ── Ambient orbs ── */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: masterFade }]}>
-        <AmbientOrb cx={width * 0.15} cy={height * 0.2} radius={180} color="rgba(80,140,40,0.07)" delay={0} duration={5000} />
-        <AmbientOrb cx={width * 0.85} cy={height * 0.75} radius={200} color="rgba(60,110,30,0.06)" delay={600} duration={6000} />
-        <AmbientOrb cx={width * 0.5} cy={height * 0.5} radius={260} color="rgba(100,180,50,0.04)" delay={1200} duration={7000} />
+      {/* ── Splash background image (stadium) ── */}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: bgOpacity, transform: [{ scale: bgScale }] }]}>
+        <Image
+          source={require('../../assets/splash-bg.png')}
+          style={s.bgImage}
+          resizeMode="cover"
+        />
       </Animated.View>
 
-      {/* ── Motes ── */}
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: masterFade }]}>
-        {motes}
-      </Animated.View>
+      {/* ── Dark overlay to ensure text is readable ── */}
+      <View style={s.darkOverlay} />
 
-      {/* ── Main content ── */}
-      <Animated.View style={[s.content, { opacity: masterFade }]}>
-
-        {/* Expanding rings behind emblem */}
-        <View style={s.ringsWrap}>
-          <ExpandingRing size={320} color="rgba(100,180,50,0.18)" delay={1200} />
-          <ExpandingRing size={260} color="rgba(80,140,40,0.22)" delay={2000} />
-          <ExpandingRing size={200} color="rgba(120,200,60,0.15)" delay={2800} />
-        </View>
-
-        {/* Outer glow halo */}
-        <Animated.View style={[s.halo, { opacity: emblemGlow }]} />
-
-        {/* Emblem */}
-        <Animated.View style={{ transform: [{ scale: emblemScale }, { rotate: spin }], opacity: emblemOpacity }}>
-          <LinearGradient
-            colors={['#1E3A10', '#2C5618', '#1E3A10']}
-            style={s.emblemBg}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            {/* Inner shine top */}
-            <View style={s.emblemShine} />
-
-            {/* Hexagon-feel border */}
-            <View style={s.emblemBorder} />
-
-            {/* Icon: stylized pitch/field lines */}
-            <View style={s.fieldWrap}>
-              {/* Outer boundary */}
-              <View style={s.fieldOuter}>
-                {/* Centre circle */}
-                <View style={s.fieldCircle} />
-                {/* Halfway line */}
-                <View style={s.fieldMidLine} />
-                {/* Penalty arcs (left & right) */}
-                <View style={[s.fieldArc, s.fieldArcL]} />
-                <View style={[s.fieldArc, s.fieldArcR]} />
-              </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Wordmark */}
-        <Animated.View style={{ opacity: wordmarkOpacity, transform: [{ translateY: wordmarkY }], alignItems: 'center', marginTop: 38 }}>
-          <View style={s.wordmarkRow}>
-            <Text style={s.wordmarkMain}>TURF</Text>
-            <Text style={s.wordmarkAccent}> SCORE</Text>
-          </View>
-        </Animated.View>
-
-        {/* Divider */}
-        <Animated.View style={[s.dividerWrap, { transform: [{ scaleX: dividerWidth }] }]}>
-          <LinearGradient
-            colors={['transparent', 'rgba(130,200,60,0.7)', 'rgba(168,224,99,1)', 'rgba(130,200,60,0.7)', 'transparent']}
-            style={s.divider}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+      {/* ── PHASE 1: Speed Lines ── */}
+      <Animated.View style={[s.speedLinesContainer, { opacity: speedLinesOpacity }]}>
+        {speedLineData.map((line, i) => (
+          <Animated.View
+            key={i}
+            style={[
+              s.speedLine,
+              {
+                top: height * 0.38 + line.y,
+                width: line.w,
+                height: line.h,
+                transform: [{ translateX: line.ref }],
+              },
+            ]}
           />
-          <View style={s.dividerGem} />
-        </Animated.View>
-
-        {/* Subtitle */}
-        <Animated.Text style={[s.subtitle, { opacity: subtitleOpacity, transform: [{ translateY: subtitleY }] }]}>
-          PREMIUM SPORTS BOOKING
-        </Animated.Text>
-
-        {/* Badge pill */}
-        <Animated.View style={[s.badge, { opacity: badgeOpacity, transform: [{ translateY: badgeY }] }]}>
-          <View style={s.badgeDot} />
-          <Text style={s.badgeText}>Book · Play · Compete</Text>
-        </Animated.View>
+        ))}
       </Animated.View>
 
-      {/* ── Bottom loader ── */}
+      {/* ── Main Content ── */}
+      <View style={s.content}>
+        {/* ── Glow behind logo ── */}
+        <Animated.View style={[s.glow, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]} />
+
+        {/* ── PHASE 2: S Shape Forming (green S text) ── */}
+        <Animated.View
+          style={[
+            s.sShapeWrap,
+            {
+              opacity: sShapeOpacity,
+              transform: [{ scale: sShapeScale }, { rotate: sRotation }],
+            },
+          ]}
+        >
+          <Text style={s.sShape}>S</Text>
+        </Animated.View>
+
+        {/* ── PHASE 3: Full Logo (player + S from your exact image) ── */}
+        <Animated.View
+          style={[
+            s.logoWrap,
+            {
+              opacity: logoOpacity,
+              transform: [{ scale: Animated.multiply(logoScale, logoPulse) }],
+            },
+          ]}
+        >
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={s.logoImage}
+            resizeMode="contain"
+          />
+        </Animated.View>
+
+        {/* ── PHASE 4: Brand Text ── */}
+        <Animated.View style={[s.brandRow, { opacity: brandTextOpacity, transform: [{ translateY: brandTextY }] }]}>
+          <Text style={s.brandWhite}>SKIP</Text>
+          <Text style={s.brandGreen}>E</Text>
+          <Text style={s.brandWhite}>RS</Text>
+        </Animated.View>
+
+        {/* ── Tagline ── */}
+        <Animated.View style={{ opacity: taglineOpacity, transform: [{ translateY: taglineY }] }}>
+          <Text style={s.tagline}>PLAY MORE. BOOK EASY.</Text>
+        </Animated.View>
+      </View>
+
+      {/* ── Bottom Loader ── */}
       <Animated.View style={[s.bottom, { opacity: loaderOpacity }]}>
-        <ArcLoader />
+        <View style={s.loaderWrap}>
+          <Animated.View style={[s.loaderTrack, { transform: [{ rotate: loaderSpin }] }]} />
+          <View style={s.loaderDimTrack} />
+        </View>
         <Text style={s.version}>v1.0.0</Text>
       </Animated.View>
     </View>
   );
 };
 
-// ─── Arc Loader ──────────────────────────────────────────────────
-const ArcLoader = () => {
-  const rotate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    setTimeout(() => {
-      Animated.loop(
-        Animated.timing(rotate, { toValue: 1, duration: 1400, easing: Easing.linear, useNativeDriver: true })
-      ).start();
-    }, 3800);
-  }, []);
-
-  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
-  return (
-    <View style={arc.wrap}>
-      <Animated.View style={[arc.track, { transform: [{ rotate: spin }] }]}>
-        <LinearGradient
-          colors={['transparent', 'rgba(130,200,60,0.0)', 'rgba(168,224,99,0.9)']}
-          style={arc.fill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      </Animated.View>
-      {/* Static dim track */}
-      <View style={arc.dimTrack} />
-    </View>
-  );
-};
-
-const arc = StyleSheet.create({
-  wrap: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  dimTrack: {
-    position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  track: {
-    position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    borderTopColor: '#A8E063',
-    borderRightColor: 'rgba(168,224,99,0.4)',
-  },
-  fill: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-});
-
-// ─── Styles ───────────────────────────────────────────────────────
-const EMBLEM = 140;
-
+// ─── Styles ───────────────────────────────────────────────────
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#040C02',
+    backgroundColor: BRAND.dark,
   },
+  bgImage: {
+    width: '100%',
+    height: '100%',
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(13,17,23,0.3)',
+  },
+  // Speed lines
+  speedLinesContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  speedLine: {
+    position: 'absolute',
+    left: 0,
+    borderRadius: 2,
+    backgroundColor: BRAND.neonGreen,
+    shadowColor: BRAND.neonGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  // Content
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 60,
   },
-  // Rings
-  ringsWrap: {
+  // Glow
+  glow: {
     position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    top: height * 0.5 - 160 - 60,
-    alignSelf: 'center',
-  },
-  // Halo
-  halo: {
-    position: 'absolute',
-    width: EMBLEM + 80,
-    height: EMBLEM + 80,
-    borderRadius: (EMBLEM + 80) / 2,
-    backgroundColor: 'rgba(80,160,40,0.12)',
-    shadowColor: '#7EC83A',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: 'rgba(168,255,0,0.12)',
+    shadowColor: BRAND.neonGreen,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 50,
+    shadowOpacity: 0.7,
+    shadowRadius: 80,
     elevation: 0,
   },
-  // Emblem
-  emblemBg: {
-    width: EMBLEM,
-    height: EMBLEM,
-    borderRadius: EMBLEM * 0.22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: '#4A9020',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.6,
-    shadowRadius: 40,
-    elevation: 30,
-  },
-  emblemShine: {
+  // Phase 2: S Shape
+  sShapeWrap: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: EMBLEM * 0.45,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderBottomLeftRadius: EMBLEM,
-    borderBottomRightRadius: EMBLEM,
-  },
-  emblemBorder: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: EMBLEM * 0.22,
-    borderWidth: 1.5,
-    borderColor: 'rgba(168,224,99,0.25)',
-  },
-  // Field icon inside emblem
-  fieldWrap: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fieldOuter: {
-    width: 86,
-    height: 62,
-    borderWidth: 2,
-    borderColor: 'rgba(168,224,99,0.75)',
-    borderRadius: 4,
+  sShape: {
+    fontSize: 140,
+    fontWeight: '900',
+    color: BRAND.neonGreen,
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(168,255,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 30,
+  },
+  // Phase 3: Full Logo
+  logoWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    marginBottom: 10,
   },
-  fieldCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(168,224,99,0.7)',
+  logoImage: {
+    width: width * 0.55,
+    height: width * 0.55,
   },
-  fieldMidLine: {
-    position: 'absolute',
-    width: 2,
-    height: '100%',
-    backgroundColor: 'rgba(168,224,99,0.5)',
-  },
-  fieldArc: {
-    position: 'absolute',
-    width: 22,
-    height: 36,
-    borderWidth: 2,
-    borderColor: 'rgba(168,224,99,0.5)',
-  },
-  fieldArcL: {
-    left: -12,
-    borderRadius: 0,
-    borderTopRightRadius: 36,
-    borderBottomRightRadius: 36,
-    borderLeftWidth: 0,
-  },
-  fieldArcR: {
-    right: -12,
-    borderRadius: 0,
-    borderTopLeftRadius: 36,
-    borderBottomLeftRadius: 36,
-    borderRightWidth: 0,
-  },
-  // Wordmark
-  wordmarkRow: {
+  // Phase 4: Brand text
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    marginTop: 8,
   },
-  wordmarkMain: {
-    fontSize: 40,
+  brandWhite: {
+    fontSize: 36,
     fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 10,
-    textShadowColor: 'rgba(120,200,60,0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
-  },
-  wordmarkAccent: {
-    fontSize: 40,
-    fontWeight: '200',
-    color: '#A8E063',
-    letterSpacing: 10,
-    textShadowColor: 'rgba(120,200,60,0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
-  },
-  // Divider
-  dividerWrap: {
-    width: width * 0.55,
-    height: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 14,
-    marginBottom: 14,
-  },
-  divider: {
-    width: '100%',
-    height: 1,
-  },
-  dividerGem: {
-    width: 7,
-    height: 7,
-    backgroundColor: '#A8E063',
-    transform: [{ rotate: '45deg' }],
-    shadowColor: '#A8E063',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  // Subtitle
-  subtitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(168,224,99,0.65)',
+    color: BRAND.white,
     letterSpacing: 6,
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(255,255,255,0.2)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  // Badge
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 24,
-    paddingVertical: 7,
-    paddingHorizontal: 18,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(168,224,99,0.18)',
-    backgroundColor: 'rgba(168,224,99,0.06)',
-    gap: 8,
+  brandGreen: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: BRAND.neonGreen,
+    letterSpacing: 6,
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(168,255,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
   },
-  badgeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#A8E063',
-    shadowColor: '#A8E063',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  badgeText: {
-    fontSize: 11,
+  // Tagline
+  tagline: {
+    fontSize: 12,
     fontWeight: '500',
-    color: 'rgba(168,224,99,0.7)',
-    letterSpacing: 2.5,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 4,
+    marginTop: 10,
   },
   // Bottom
   bottom: {
     position: 'absolute',
-    bottom: 52,
+    bottom: 50,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
+  loaderWrap: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  loaderDimTrack: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  loaderTrack: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    borderTopColor: BRAND.neonGreen,
+    borderRightColor: 'rgba(168,255,0,0.3)',
+  },
   version: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.15)',
+    color: 'rgba(255,255,255,0.12)',
     letterSpacing: 2.5,
     fontWeight: '400',
   },

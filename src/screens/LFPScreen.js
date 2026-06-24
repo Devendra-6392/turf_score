@@ -68,7 +68,14 @@ export default function LFPScreen({ navigation }) {
           />
           <View style={styles.headerText}>
             <Text style={styles.creatorName}>{item.creator.name} is looking for players!</Text>
-            <Text style={styles.sportBadge}>{item.sport}</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Text style={styles.sportBadge}>{item.sport}</Text>
+              {item.preferredGender && item.preferredGender !== 'ANY' && (
+                <Text style={[styles.sportBadge, { backgroundColor: '#fcd34d20', color: '#d97706' }]}>
+                  {item.preferredGender === 'MALE' ? 'Boys Only' : 'Girls Only'}
+                </Text>
+              )}
+            </View>
           </View>
         </View>
 
