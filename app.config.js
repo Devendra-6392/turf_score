@@ -3,11 +3,11 @@ require('dotenv').config();
 module.exports = {
   expo: {
     name: 'Skipers',
-    slug: 'skipers',
+    slug: 'turfscore',
     scheme: 'skipers',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
+    icon: './assets/s_icon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     updates: {
@@ -27,7 +27,7 @@ module.exports = {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/s_icon_adaptive.png',
         backgroundColor: '#0D1117',
       },
       package: 'com.turfscore.app',
@@ -35,7 +35,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
     },
     web: {
-      favicon: './assets/favicon.png',
+      favicon: './assets/s_icon.png',
     },
     plugins: [
       'expo-font',
