@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const subscriptionController = require('../controllers/subscriptionController');
-const { authMiddleware } = require('../middleware/authMiddleware');
-const { adminAuthMiddleware } = require('../middleware/adminAuthMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
+const adminAuthMiddleware = require('../middleware/adminAuthMiddleware');
 
 // ── Public ──
 router.get('/plans', subscriptionController.getPlans);

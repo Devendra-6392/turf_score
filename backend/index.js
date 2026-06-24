@@ -31,21 +31,21 @@ app.get('/', (req, res) => {
   res.json({ message: 'Skipers API is operational', timestamp: new Date() });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/turfs', turfRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/teams', teamRoutes);
-app.use('/api/check-ins', checkInRoutes);
-app.use('/api/banners', bannerRoutes);
-app.use('/api/challenges', challengeRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/support-tickets', supportTicketRoutes);
-app.use('/api/lfp', lfpRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/subscriptions', subscriptionRoutes);
+// API Routes (nginx strips /api prefix, so don't add it here)
+app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
+app.use('/turfs', turfRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/teams', teamRoutes);
+app.use('/check-ins', checkInRoutes);
+app.use('/banners', bannerRoutes);
+app.use('/challenges', challengeRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/coupons', couponRoutes);
+app.use('/support-tickets', supportTicketRoutes);
+app.use('/lfp', lfpRoutes);
+app.use('/ai', aiRoutes);
+app.use('/subscriptions', subscriptionRoutes);
 
 // Database check and Start
 const prisma = require('./src/config/db');
