@@ -1,5 +1,5 @@
 // assets
-import { AppstoreAddOutlined, CalendarOutlined, UsergroupAddOutlined, PictureOutlined, WalletOutlined, BellOutlined } from '@ant-design/icons';
+import { AppstoreAddOutlined, CalendarOutlined, UsergroupAddOutlined, PictureOutlined, WalletOutlined, BellOutlined, ShoppingCartOutlined, ToolOutlined, DollarOutlined } from '@ant-design/icons';
 
 // icons
 const icons = {
@@ -72,7 +72,7 @@ const management = {
       url: '/manage/expenses',
       icon: icons.DollarOutlined,
       roles: ['SUPER_ADMIN', 'TURF_ADMIN'],
-      permission: { resource: 'bookings', action: 'view' } 
+      permission: { resource: 'bookings', action: 'view' }
     },
     {
       id: 'admin-manage',
