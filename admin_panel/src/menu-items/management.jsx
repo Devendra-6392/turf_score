@@ -8,7 +8,10 @@ const icons = {
   UsergroupAddOutlined,
   PictureOutlined,
   WalletOutlined,
-  BellOutlined
+  BellOutlined,
+  ShoppingCartOutlined,
+  ToolOutlined,
+  DollarOutlined
 };
 
 // ==============================|| MENU ITEMS - MANAGEMENT ||============================== //
@@ -43,6 +46,33 @@ const management = {
       roles: ['TURF_ADMIN', 'EMPLOYEE'],
       assignedTurf: true,
       permission: { resource: 'slots', action: 'view' }
+    },
+    {
+      id: 'pos-manage',
+      title: 'POS / Walk-in Booking',
+      type: 'item',
+      url: '/manage/pos',
+      icon: icons.ShoppingCartOutlined,
+      roles: ['SUPER_ADMIN', 'TURF_ADMIN', 'EMPLOYEE'],
+      permission: { resource: 'bookings', action: 'edit' }
+    },
+    {
+      id: 'equipment-manage',
+      title: 'Equipment & Inventory',
+      type: 'item',
+      url: '/manage/equipment',
+      icon: icons.ToolOutlined,
+      roles: ['SUPER_ADMIN', 'TURF_ADMIN'],
+      permission: { resource: 'inventory', action: 'view' }
+    },
+    {
+      id: 'expense-manage',
+      title: 'Expense Tracker',
+      type: 'item',
+      url: '/manage/expenses',
+      icon: icons.DollarOutlined,
+      roles: ['SUPER_ADMIN', 'TURF_ADMIN'],
+      permission: { resource: 'bookings', action: 'view' } 
     },
     {
       id: 'admin-manage',

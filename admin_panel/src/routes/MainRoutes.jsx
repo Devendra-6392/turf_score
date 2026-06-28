@@ -24,6 +24,9 @@ const CouponsManagement = Loadable(lazy(() => import('pages/management/CouponsMa
 const SupportTicketsManagement = Loadable(lazy(() => import('pages/management/SupportTicketsManagement')));
 const NotificationManagement = Loadable(lazy(() => import('pages/management/NotificationManagement')));
 const SubscriptionManagement = Loadable(lazy(() => import('pages/management/SubscriptionManagement')));
+const POSManagement = Loadable(lazy(() => import('pages/management/POSManagement')));
+const EquipmentManagement = Loadable(lazy(() => import('pages/management/EquipmentManagement')));
+const ExpenseManagement = Loadable(lazy(() => import('pages/management/ExpenseManagement')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -98,6 +101,18 @@ const MainRoutes = {
         {
           path: 'subscriptions',
           element: <SubscriptionManagement />
+        },
+        {
+          path: 'pos',
+          element: <POSManagement />
+        },
+        {
+          path: 'equipment',
+          element: <EquipmentManagement />
+        },
+        {
+          path: 'expenses',
+          element: <ExpenseManagement />
         }
       ]
     },

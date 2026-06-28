@@ -7,6 +7,7 @@ const authorize = require('../middleware/permissionMiddleware');
 // Admin routes
 router.get('/', adminAuth, authorize('bookings', 'view'), bookingController.getAllBookings);
 router.post('/create-order', bookingController.createRazorpayOrder);
+router.post('/offline', adminAuth, authorize('bookings', 'edit'), bookingController.adminCreateOfflineBooking);
 
 // Get other users' bookings for a turf on a specific date (for challenge suggestions)
 router.get('/turf/:turfId/date/:date/users', bookingController.getOtherUsersBookingsForTurfDate);

@@ -591,3 +591,91 @@ exports.getOtherUsersBookingsForTurfDate = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch other users bookings' });
   }
 };
+
+// Admin create offline/walk-in booking
+exports.adminCreateOfflineBooking = async (req, res) => {
+  try {
+    const { turfId, bookingDate, timeSlot, amount, paymentMethod, customerName, customerPhone } = req.body;
+    
+    // Auth check for turf access
+    if (req.admin && req.admin.role !== 'SUPER_ADMIN' && req.admin.turfId !== turfId) {
+      return res.status(403).json({ error: 'You can only create bookings for your assigned turf.' });
+    }
+
+    // 1. Find or create user
+    let user = await prisma.user.findFirst({
+      where: { phone: customerPhone }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          name: customerName || 'Walk-in Customer',
+          phone: customerPhone,
+          email: `offline_${Date.now()}@turf.local`, // dummy email
+          isActive: true
+        }
+      });
+    }
+
+    // 2. Parse Date
+    const parsedDate = parseCalendarDate(bookingDate);
+    if (!parsedDate) return res.status(400).json({ error: 'Invalid booking date' });
+
+    // 3. Find or Create Slot
+    let slot = await prisma.turfSlot.findFirst({
+      where: {
+        turfId,
+        date: parsedDate,
+        startTime: timeSlot
+      }
+    });
+
+    if (slot && slot.status === 'BOOKED') {
+      return res.status(400).json({ error: 'This slot is already booked.' });
+    }
+
+    if (!slot) {
+      slot = await prisma.turfSlot.create({
+        data: {
+          turfId,
+          date: parsedDate,
+          startTime: timeSlot,
+          endTime: 'Next Hour',
+          status: 'BOOKED',
+          price: amount
+        }
+      });
+    } else {
+      await prisma.turfSlot.update({
+        where: { id: slot.id },
+        data: { status: 'BOOKED' }
+      });
+    }
+
+    // 4. Create Booking
+    const booking = await prisma.booking.create({
+      data: {
+        userId: user.id,
+        turfId,
+        slotId: slot.id,
+        amount,
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        paymentDetail: {
+          create: {
+            paymentMethod: paymentMethod || 'CASH',
+            amount,
+            status: 'SUCCESS'
+          }
+        }
+      },
+      include: { turf: true, slot: true, paymentDetail: true, user: true }
+    });
+
+    res.status(201).json(booking);
+  } catch (error) {
+    console.error('CRITICAL Admin Booking Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create offline booking' });
+  }
+};

@@ -20,13 +20,13 @@ export default function NavCard() {
       <Stack alignItems="center" spacing={2.5}>
         <CardMedia component="img" image={avatar} sx={{ width: 112 }} />
         <Stack alignItems="center">
-          <Typography variant="h5">Mantis Pro</Typography>
+          <Typography variant="h5">Skipers Admin</Typography>
           <Typography variant="h6" color="secondary">
-            Checkout pro features
+            Manage your turf
           </Typography>
         </Stack>
         <AnimateButton>
-          <Button component={Link} target="_blank" href="https://mantisdashboard.com" variant="contained" color="success" size="small">
+          <Button variant="contained" color="success" size="small">
             Pro
           </Button>
         </AnimateButton>
