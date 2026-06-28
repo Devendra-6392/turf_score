@@ -17,7 +17,7 @@ module.exports = {
       policy: 'appVersion',
     },
     splash: {
-      image: './assets/splash-icon.png',
+      image: './assets/splash-icon.jpg',
       resizeMode: 'contain',
       backgroundColor: '#0D1117',
     },
