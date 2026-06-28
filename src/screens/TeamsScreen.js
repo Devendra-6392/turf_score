@@ -21,6 +21,7 @@ import { Plus, QrCode, Trash2, Users, Mail, User as UserIcon, Shield, X, CheckCi
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
 const SPORTS = ['CRICKET', 'FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'TENNIS'];

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,21 +9,39 @@ import {
   Alert,
   StatusBar,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
-import { ArrowLeft, CheckCircle2, ChevronRight, Crown } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle2, ChevronRight, Crown, Sparkles } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import API_URL from '../config/api';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../constants/Colors';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { wp, hp, scale, fontScale, moderateScale } from '../utils/responsive';
 
 const PlanCard = memo(({ plan, isActive, type, onSubscribe, onCancel }) => {
+  const crownAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isActive) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(crownAnim, { toValue: 1.15, duration: 1000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(crownAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [isActive]);
+
   return (
     <View style={[styles.card, isActive && styles.activeCard]}>
       {isActive && (
         <View style={styles.activeBadgeTop}>
-          <Crown size={14} color="#FFF" />
-          <Text style={styles.activeBadgeTopText}>Current Plan</Text>
+          <Animated.View style={{ transform: [{ scale: crownAnim }] }}>
+            <Crown size={scale(14)} color="#FFF" />
+          </Animated.View>
+          <Text style={styles.activeBadgeTopText}>Active Pass</Text>
         </View>
       )}
       
@@ -41,17 +59,13 @@ const PlanCard = memo(({ plan, isActive, type, onSubscribe, onCancel }) => {
         ))}
       </View>
 
-      {isActive ? (
-        <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.85}>
-          <Text style={styles.cancelBtnText}>Cancel Subscription</Text>
-        </TouchableOpacity>
-      ) : (
+      {!isActive && (
         <TouchableOpacity 
           style={styles.subscribeBtn} 
           onPress={() => onSubscribe(plan.planId, type)} 
           activeOpacity={0.85}
         >
-          <Text style={styles.subscribeBtnText}>Subscribe</Text>
+          <Text style={styles.subscribeBtnText}>Unlock This Pass</Text>
           <View style={styles.subscribeBtnArrow}>
             <ChevronRight size={20} color={Colors.primaryDark} />
           </View>
@@ -228,8 +242,8 @@ const SubscriptionScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionSubtitle}>
           {activeTab === 'INDIVIDUAL' 
-            ? 'Unlock exclusive benefits and priority bookings for yourself.' 
-            : 'Get the best value for your entire squad with team passes.'}
+            ? 'Level up your game. Exclusive perks, priority access, and zero fuss.' 
+            : 'Squad goals! Premium team passes for your whole crew.'}
         </Text>
 
         {currentPlans.map((plan) => (

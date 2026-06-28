@@ -14,13 +14,13 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH, SCREEN_HEIGHT } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { API_URL as BACKEND_URL } from '../config/api';
-const BANNER_WIDTH = SCREEN_WIDTH - 40;
+const BANNER_WIDTH = SCREEN_WIDTH - scale(40);
 const AUTO_SCROLL_INTERVAL = 5000;
-const HEADER_MAX_HEIGHT = 145;
-const HEADER_MIN_HEIGHT = 76;
+const HEADER_MAX_HEIGHT = moderateScale(145);
+const HEADER_MIN_HEIGHT = moderateScale(76);
 
 // ─── Sport Categories ───────────────────────────────────────
 const SPORT_CATEGORIES = [
@@ -417,7 +417,7 @@ const HomeScreen = ({ navigation }) => {
           {/* ─── Recommended Section ─── */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recommended</Text>
+              <Text style={styles.sectionTitle}>Hot Picks for You</Text>
               <TouchableOpacity onPress={handleSearchPress}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
@@ -440,9 +440,9 @@ const HomeScreen = ({ navigation }) => {
                 <View style={styles.emptyIconContainer}>
                   <MapPin size={28} color={Colors.primary} strokeWidth={2.5} />
                 </View>
-                <Text style={styles.emptyText}>No turfs found</Text>
+                <Text style={styles.emptyText}>No Arenas Yet!</Text>
                 <Text style={styles.emptySubtext}>
-                  {selectedCategory ? `We couldn't find any ${selectedCategory.toLowerCase()} arenas. Try another sport!` : 'We are expanding! Check back later for new venues.'}
+                  {selectedCategory ? `Hmm, no ${selectedCategory.toLowerCase()} arenas nearby. Try switching sports!` : 'We\'re cooking up something amazing! New venues dropping soon.'}
                 </Text>
               </View>
             )}
@@ -451,7 +451,7 @@ const HomeScreen = ({ navigation }) => {
           {/* ─── Nearby Section ─── */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Nearby</Text>
+              <Text style={styles.sectionTitle}>Arenas Near You</Text>
               <TouchableOpacity onPress={handleSearchPress}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
@@ -465,8 +465,8 @@ const HomeScreen = ({ navigation }) => {
                 <View style={styles.emptyIconContainer}>
                   <Compass size={28} color={Colors.primary} strokeWidth={2.5} />
                 </View>
-                <Text style={styles.emptyText}>Out of bounds</Text>
-                <Text style={styles.emptySubtext}>There are no turfs located in your immediate vicinity right now.</Text>
+                <Text style={styles.emptyText}>Off the Radar!</Text>
+                <Text style={styles.emptySubtext}>No arenas spotted nearby — but we're always expanding. Stay tuned!</Text>
               </View>
             ) : null}
           </View>
@@ -489,7 +489,7 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={styles.avatarText}>{userName.substring(0, 2).toUpperCase()}</Text>
                 </View>
                 <View style={styles.profileTextWrap}>
-                  <Text style={styles.greetingText}>Hey, {userName} 👋</Text>
+                  <Text style={styles.greetingText}>What's up, {userName}</Text>
                   <View style={styles.locationContainer}>
                     <MapPin size={11} color={Colors.primary} />
                     <Text style={styles.locationLabel} numberOfLines={1}>{currentLocation}</Text>
@@ -523,7 +523,7 @@ const HomeScreen = ({ navigation }) => {
             {/* Compact Glassmorphic Search Bar */}
             <TouchableOpacity style={styles.searchBarCompact} onPress={handleSearchPress} activeOpacity={0.9}>
               <Search size={16} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.searchPlaceholderCompact}>Search turfs, sports, arenas...</Text>
+              <Text style={styles.searchPlaceholderCompact}>Find your next arena...</Text>
             </TouchableOpacity>
           </Animated.View>
 
@@ -531,7 +531,7 @@ const HomeScreen = ({ navigation }) => {
           <Animated.View style={[styles.compactHeader, { opacity: compactHeaderOpacity }]}>
             <TouchableOpacity style={styles.compactSearchBar} onPress={handleSearchPress} activeOpacity={0.9}>
               <Search size={16} color="rgba(255,255,255,0.4)" />
-              <Text style={styles.searchPlaceholderCompact}>Search turfs, sports...</Text>
+              <Text style={styles.searchPlaceholderCompact}>Find arenas...</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.compactIconButton} onPress={openNotifications}>
               <Bell size={18} color="#FFF" />
@@ -548,7 +548,7 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle}>
-              <Text style={styles.modalTitle}>Notifications</Text>
+              <Text style={styles.modalTitle}>What's New</Text>
               <TouchableOpacity onPress={() => setShowNotifications(false)}>
                 <X size={24} color={Colors.onSurfaceVariant} />
               </TouchableOpacity>
@@ -558,7 +558,7 @@ const HomeScreen = ({ navigation }) => {
             ) : notifications.length === 0 ? (
               <View style={styles.emptyState}>
                 <Bell size={48} color={Colors.onSurfaceVariant} />
-                <Text style={styles.emptySubtext}>No notifications yet</Text>
+                <Text style={styles.emptySubtext}>All clear! No updates yet.</Text>
               </View>
             ) : (
               <FlatList
@@ -604,7 +604,7 @@ const HomeScreen = ({ navigation }) => {
 };
 
 // ─── Styles ─────────────────────────────────────────────────
-const CARD_WIDTH = (SCREEN_WIDTH - 48 - 14) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - scale(48) - scale(14)) / 2;
 
 const styles = StyleSheet.create({
   container: {

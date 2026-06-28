@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity,
   ActivityIndicator, Dimensions, RefreshControl, ImageBackground,
-  Alert
+  Alert, Animated, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,10 +11,10 @@ import { Plus, MapPin, Users, Clock, Zap, Trophy } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { ChevronRight } from 'lucide-react-native';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { API_URL as BACKEND_URL } from '../config/api';
-const CARD_WIDTH = SCREEN_WIDTH - 32;
+const CARD_WIDTH = SCREEN_WIDTH - scale(32);
 
 const ChallengesScreen = ({ navigation }) => {
   const { user, token } = useAuth();
@@ -23,6 +23,18 @@ const ChallengesScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSport, setSelectedSport] = useState('ALL');
   const [selectedType, setSelectedType] = useState('ALL');
+  const trophyAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(trophyAnim, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(trophyAnim, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  const trophyScale = trophyAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
 
   const sports = ['ALL', 'CRICKET', 'FOOTBALL', 'TENNIS', 'BADMINTON', 'BASKETBALL'];
   const challengeTypes = ['ALL', 'INDIVIDUAL', 'TEAM'];
@@ -160,7 +172,7 @@ const ChallengesScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Challenges</Text>
-          <Text style={styles.headerSubtitle}>Find & Accept epic challenges</Text>
+          <Text style={styles.headerSubtitle}>Prove your mettle. Accept the dare.</Text>
         </View>
         <TouchableOpacity
           style={styles.createButton}
@@ -219,9 +231,11 @@ const ChallengesScreen = ({ navigation }) => {
         </View>
       ) : challenges.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Trophy size={64} color={Colors.primary} opacity={0.3} />
-          <Text style={styles.emptyText}>No challenges yet</Text>
-          <Text style={styles.emptySubtext}>Be the first to create one!</Text>
+          <Animated.View style={{ transform: [{ scale: trophyScale }] }}>
+            <Trophy size={scale(64)} color={Colors.primary} opacity={0.3} />
+          </Animated.View>
+          <Text style={styles.emptyText}>No challengers... yet!</Text>
+          <Text style={styles.emptySubtext}>Be the legend who throws down first.</Text>
           <TouchableOpacity
             style={styles.createFirstButton}
             onPress={() => navigation.navigate('CreateChallenge')}
@@ -230,7 +244,7 @@ const ChallengesScreen = ({ navigation }) => {
               colors={['#1A1A1A', '#000']}
               style={styles.createFirstButtonGradient}
             >
-              <Text style={styles.createFirstButtonText}>Create Challenge</Text>
+              <Text style={styles.createFirstButtonText}>Throw Down the Gauntlet</Text>
               <View style={styles.createFirstButtonArrow}>
                 <ChevronRight size={14} color="#FFF" />
               </View>
@@ -269,12 +283,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: fontScale(26),
+    fontWeight: '900',
     color: Colors.onBackground,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: fontScale(13),
     color: Colors.onSurfaceVariant,
     marginTop: 4,
   },

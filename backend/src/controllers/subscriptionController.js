@@ -330,59 +330,7 @@ exports.subscribe = async (req, res) => {
 // POST /api/subscriptions/cancel — Cancel and pro-rate refund to wallet
 exports.cancelSubscription = async (req, res) => {
   try {
-    const userId = req.userId;
-
-    const subscription = await prisma.subscription.findFirst({
-      where: { userId, status: 'ACTIVE' },
-    });
-
-    if (!subscription) {
-      return res.status(404).json({ error: 'No active subscription found' });
-    }
-
-    // Calculate pro-rated refund
-    const now = new Date();
-    const totalDays = Math.ceil((subscription.endDate - subscription.startDate) / (1000 * 60 * 60 * 24));
-    const daysUsed = Math.ceil((now - subscription.startDate) / (1000 * 60 * 60 * 24));
-    const daysRemaining = Math.max(0, totalDays - daysUsed);
-    const refundAmount = Math.round((subscription.amount / totalDays) * daysRemaining);
-
-    // Update subscription
-    await prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        status: 'CANCELLED',
-        cancelledAt: now,
-        refundAmount,
-      },
-    });
-
-    // Refund to wallet
-    if (refundAmount > 0) {
-      const wallet = await prisma.wallet.upsert({
-        where: { userId },
-        update: { balance: { increment: refundAmount } },
-        create: { userId, balance: refundAmount },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          walletId: wallet.id,
-          amount: refundAmount,
-          type: 'REFUND',
-          description: `Pro-rated refund for ${subscription.plan} Pass cancellation (${daysRemaining} days remaining)`,
-          status: 'COMPLETED',
-          previousBalance: wallet.balance - refundAmount,
-          newBalance: wallet.balance,
-        },
-      });
-    }
-
-    res.json({
-      message: `Subscription cancelled. ₹${refundAmount} refunded to your wallet.`,
-      refundAmount,
-      daysRemaining,
-    });
+    return res.status(400).json({ error: 'Subscription cancellations are not permitted.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -595,53 +543,7 @@ exports.teamSubscribe = async (req, res) => {
 // POST /api/subscriptions/team/cancel
 exports.cancelTeamSubscription = async (req, res) => {
   try {
-    const { teamId } = req.body;
-    const userId = req.userId;
-
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team || team.captainId !== userId) {
-      return res.status(403).json({ error: 'Only the team captain can cancel' });
-    }
-
-    const subscription = await prisma.teamSubscription.findFirst({
-      where: { teamId, status: 'ACTIVE' },
-    });
-    if (!subscription) {
-      return res.status(404).json({ error: 'No active team subscription found' });
-    }
-
-    const now = new Date();
-    const totalDays = Math.ceil((subscription.endDate - subscription.startDate) / (1000 * 60 * 60 * 24));
-    const daysUsed = Math.ceil((now - subscription.startDate) / (1000 * 60 * 60 * 24));
-    const daysRemaining = Math.max(0, totalDays - daysUsed);
-    const refundAmount = Math.round((subscription.amount / totalDays) * daysRemaining);
-
-    await prisma.teamSubscription.update({
-      where: { id: subscription.id },
-      data: { status: 'CANCELLED', cancelledAt: now, refundAmount },
-    });
-
-    // Refund to captain's wallet
-    if (refundAmount > 0) {
-      const wallet = await prisma.wallet.upsert({
-        where: { userId },
-        update: { balance: { increment: refundAmount } },
-        create: { userId, balance: refundAmount },
-      });
-      await prisma.transaction.create({
-        data: {
-          walletId: wallet.id,
-          amount: refundAmount,
-          type: 'REFUND',
-          description: `Pro-rated refund for team ${subscription.plan} cancellation`,
-          status: 'COMPLETED',
-          previousBalance: wallet.balance - refundAmount,
-          newBalance: wallet.balance,
-        },
-      });
-    }
-
-    res.json({ message: `Team subscription cancelled. ₹${refundAmount} refunded to your wallet.`, refundAmount });
+    return res.status(400).json({ error: 'Team subscription cancellations are not permitted.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
-  ActivityIndicator, Alert, Animated, Dimensions, Platform, DatePickerAndroid
+  ActivityIndicator, Alert, Animated, Dimensions, Platform, DatePickerAndroid, Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,8 +13,8 @@ import {
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import { useUserBookings, useBookingForTurfDate, useOtherBookingsInTurf } from '../hooks/useChallengeFlow';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { API_URL as BACKEND_URL } from '../config/api';
 
 // ─── Sport Config ─────────────────────────────────────────────────────────────
@@ -157,9 +157,9 @@ const CreateChallengeScreen = ({ route, navigation }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create challenge');
-      Alert.alert('Challenge Posted! 🏆', 'Your challenge is live.', [
-        { text: 'View', onPress: () => navigation.navigate('ChallengeDetail', { challengeId: data.id }) },
-        { text: 'Feed', onPress: () => navigation.navigate('Main', { screen: 'Challenges' }) },
+      Alert.alert('Challenge Dropped!', 'Your gauntlet is live. Let the games begin!', [
+        { text: 'View It', onPress: () => navigation.navigate('ChallengeDetail', { challengeId: data.id }) },
+        { text: 'Back to Feed', onPress: () => navigation.navigate('Main', { screen: 'Challenges' }) },
       ]);
     } catch (e) {
       Alert.alert('Error', e.message || 'Something went wrong.');
@@ -176,7 +176,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
       <LinearGradient colors={Colors.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.heroBand}>
         <View>
           <Text style={s.heroEyebrow}>NEW CHALLENGE</Text>
-          <Text style={s.heroHeadline}>Who dares{'\n'}challenge you?</Text>
+          <Text style={s.heroHeadline}>Drop the gauntlet.{'\n'}Who dares?</Text>
         </View>
         <View style={s.heroBadge}>
           <Zap size={28} color="#fff" />
@@ -185,7 +185,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
 
       {/* Sport Selector */}
       <View style={s.card}>
-        <SectionLabel>Pick your sport</SectionLabel>
+        <SectionLabel>Pick your battleground</SectionLabel>
         <View style={s.sportGrid}>
           {Object.entries(SPORT_CONFIG).map(([sport, cfg]) => {
             const Icon = cfg.icon;
@@ -295,7 +295,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
 
       {/* Venue */}
       <View style={s.card}>
-        <SectionLabel>Choose venue</SectionLabel>
+        <SectionLabel>Choose your arena</SectionLabel>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
           {turfs.map((turf) => {
             const active = turfId === turf.id;
@@ -323,7 +323,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
 
       {/* Date */}
       <View style={s.card}>
-        <SectionLabel>Date & time slot</SectionLabel>
+        <SectionLabel>Lock a date & time</SectionLabel>
         <TouchableOpacity style={s.datePicker} onPress={openDatePicker} activeOpacity={0.8}>
           <Calendar size={18} color={Colors.primary} />
           <Text style={s.datePickerText}>
@@ -358,10 +358,10 @@ const CreateChallengeScreen = ({ route, navigation }) => {
 
       {/* Trash Talk */}
       <View style={s.card}>
-        <SectionLabel>Trash talk <Text style={{ color: Colors.onSurfaceVariant, textTransform: 'none', fontWeight: '600' }}>(optional)</Text></SectionLabel>
+        <SectionLabel>Trash talk <Text style={{ color: Colors.onSurfaceVariant, textTransform: 'none', fontWeight: '600' }}>(spice it up!)</Text></SectionLabel>
         <TextInput
           style={[s.textInput, s.textArea]}
-          placeholder={`"Who dares challenge us?"`}
+          placeholder={`"Think you can beat us? Bring it on!"`}
           placeholderTextColor={Colors.onSurfaceVariant}
           value={message}
           onChangeText={setMessage}
@@ -384,7 +384,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <ChevronLeft size={24} color={Colors.onBackground} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Create Challenge</Text>
+        <Text style={s.headerTitle}>Forge a Challenge</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -406,7 +406,7 @@ const CreateChallengeScreen = ({ route, navigation }) => {
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
-                <Text style={s.nextBtnText}>Publish Challenge</Text>
+                <Text style={s.nextBtnText}>Launch Challenge</Text>
                 <View style={s.nextBtnArrow}>
                   <ChevronRight size={18} color="#fff" />
                 </View>

@@ -11,9 +11,9 @@ import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
-const { width } = Dimensions.get('window');
 
 const BookingSuccessScreen = ({ route, navigation }) => {
   const { booking } = route.params || {};
@@ -42,7 +42,7 @@ const BookingSuccessScreen = ({ route, navigation }) => {
     try {
       const date = new Date(booking?.bookingDate || new Date());
       const formattedDate = date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
-      const message = `Game On! 🏏\n\n${formattedDate} @ ${booking?.timeSlot}\n📍 ${booking?.turf?.name || 'Turf'}\n\nYour pitch is locked in. Assemble the squad! ⚽🏆`;
+      const message = `Game On!\n\n${formattedDate} @ ${booking?.timeSlot}\nVenue: ${booking?.turf?.name || 'Turf'}\n\nYour pitch is locked in. Assemble the squad!`;
       await Share.share({ message, title: 'Match Ready!' });
     } catch (error) {
       console.error('Share Error:', error);

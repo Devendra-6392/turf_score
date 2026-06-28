@@ -15,9 +15,9 @@ import {
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Challenge Card ──────────────────────────────────────────
 const ChallengeCard = memo(({ challenge, onPress }) => {

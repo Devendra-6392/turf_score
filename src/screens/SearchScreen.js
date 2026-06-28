@@ -7,22 +7,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Search, X, MapPin, Star, SlidersHorizontal,
   Trophy, Target, Zap, Activity, CircleDot, ChevronLeft,
-  ChevronRight
+  ChevronRight, Compass
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES = [
-  { id: 'All', name: 'All', icon: '🌟' },
-  { id: 'Football', name: 'Football', icon: '⚽' },
-  { id: 'Cricket', name: 'Cricket', icon: '🏏' },
-  { id: 'Tennis', name: 'Tennis', icon: '🎾' },
-  { id: 'Basketball', name: 'Basketball', icon: '🏀' },
-  { id: 'Volleyball', name: 'Volleyball', icon: '🏐' },
+  { id: 'All', name: 'All' },
+  { id: 'Football', name: 'Football' },
+  { id: 'Cricket', name: 'Cricket' },
+  { id: 'Tennis', name: 'Tennis' },
+  { id: 'Basketball', name: 'Basketball' },
+  { id: 'Volleyball', name: 'Volleyball' },
 ];
 
 const SORT_OPTIONS = [
@@ -230,7 +230,6 @@ const SearchScreen = ({ navigation, route }) => {
                     style={[styles.categoryChip, isActive && styles.categoryChipActive]}
                     onPress={() => setSelectedCategory(item.id)}
                   >
-                    <Text style={styles.categoryEmoji}>{item.icon}</Text>
                     <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
                       {item.name}
                     </Text>
@@ -268,7 +267,9 @@ const SearchScreen = ({ navigation, route }) => {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>🏟️</Text>
+              <View style={styles.emptyIconContainer}>
+                 <Compass size={scale(48)} color={Colors.primary} strokeWidth={1.5} />
+              </View>
               <Text style={styles.emptyTitle}>No Turfs Found</Text>
               <Text style={styles.emptySubtitle}>We couldn't find any turfs matching your search. Try different keywords or filters.</Text>
               <TouchableOpacity
@@ -581,12 +582,17 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
+    paddingVertical: scale(60),
+    paddingHorizontal: scale(40),
   },
-  emptyEmoji: {
-    fontSize: 56,
-    marginBottom: 16,
+  emptyIconContainer: {
+    marginBottom: scale(16),
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyTitle: {
     fontSize: 22,

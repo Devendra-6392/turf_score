@@ -6,33 +6,39 @@ import {
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
-import { ArrowLeft, Star, MapPin, Clock, Users, Wifi, ShieldCheck, Coffee, Zap, ChevronRight, Phone, Mail, Info } from 'lucide-react-native';
+import { 
+  ArrowLeft, Star, MapPin, Clock, Users, Wifi, ShieldCheck, 
+  Coffee, Zap, ChevronRight, Phone, Mail, Info, Car, Lightbulb, 
+  Droplet, Lock, Activity, Thermometer
+} from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { API_URL as BACKEND_URL } from '../config/api';
 
 // ─── Amenity Icon Mapper ────────────────────────────────────
 const AMENITY_DATA = {
-  'Wifi': { icon: '📶', label: 'Free Wifi' },
-  'Shower': { icon: '🚿', label: 'Shower' },
-  'Cafeteria': { icon: '☕', label: 'Cafeteria' },
-  'Parking': { icon: '🅿️', label: 'Parking' },
-  'Floodlights': { icon: '💡', label: 'LED Floodlights' },
-  'Beverages': { icon: '🥤', label: 'Beverages' },
-  'Locker Room': { icon: '🔒', label: 'Locker Room' },
-  'Equipment Rental': { icon: '🏋️', label: 'Equipment' },
-  'First Aid': { icon: '🩹', label: 'First Aid' },
-  'Synthetic Grass': { icon: '🌿', label: 'Synthetic Grass' },
+  'Wifi': { icon: Wifi, label: 'Free Wifi' },
+  'Shower': { icon: Droplet, label: 'Shower' },
+  'Cafeteria': { icon: Coffee, label: 'Cafeteria' },
+  'Parking': { icon: Car, label: 'Parking' },
+  'Floodlights': { icon: Lightbulb, label: 'LED Floodlights' },
+  'Beverages': { icon: Coffee, label: 'Beverages' },
+  'Locker Room': { icon: Lock, label: 'Locker Room' },
+  'Equipment Rental': { icon: Activity, label: 'Equipment' },
+  'First Aid': { icon: Thermometer, label: 'First Aid' },
+  'Synthetic Grass': { icon: Zap, label: 'Synthetic Grass' },
 };
 
 // ─── Amenity Chip ───────────────────────────────────────────
+// ─── Amenity Chip ───────────────────────────────────────────
 const AmenityChip = memo(({ name }) => {
-  const data = AMENITY_DATA[name] || { icon: '✨', label: name };
+  const data = AMENITY_DATA[name] || { icon: Star, label: name };
+  const IconComponent = data.icon;
   return (
     <View style={styles.amenityChip}>
-      <Text style={styles.amenityIcon}>{data.icon}</Text>
+      <IconComponent size={scale(18)} color={Colors.primary} />
       <Text style={styles.amenityLabel}>{data.label}</Text>
     </View>
   );

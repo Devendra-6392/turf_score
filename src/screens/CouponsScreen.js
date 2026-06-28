@@ -5,6 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';

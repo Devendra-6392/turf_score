@@ -12,9 +12,9 @@ import {
 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BookingDetailScreen = ({ route, navigation }) => {
   const { booking } = route.params;

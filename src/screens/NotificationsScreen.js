@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import { Bell, ArrowLeft, Share2, Calendar, Trophy, AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
+import { wp, hp, scale, fontScale, moderateScale, SCREEN_WIDTH } from '../utils/responsive';
 
 import { API_URL as BACKEND_URL } from '../config/api';
 
