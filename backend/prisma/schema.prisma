@@ -184,13 +184,14 @@ model User {
   subscriptions        Subscription[]
 
   // Expert additions:
-  gender         String?    @db.VarChar(20)
-  dob            DateTime?  @db.Date
-  isActive       Boolean    @default(true)
-  isVerified     Boolean    @default(false)
-  preferredSport SportType?
-  bio            String?    @db.Text
-  totalSpend     Float      @default(0.0)
+  gender           String?    @db.VarChar(20)
+  dob              DateTime?  @db.Date
+  isActive         Boolean    @default(true)
+  isVerified       Boolean    @default(false)
+  preferredSport   SportType?
+  bio              String?    @db.Text
+  totalSpend       Float      @default(0.0)
+  profileCardColor String?    @db.VarChar(50)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
