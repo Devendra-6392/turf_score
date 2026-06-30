@@ -102,7 +102,7 @@ Version      : 1.0
 		lastScrollTop = st;
 	}
 
-	// Featured Venues Slider
+	// Featured Turfs Slider
 
 	if ($('.featured-venues-slider').length > 0) {
 		$('.featured-venues-slider').owlCarousel({
@@ -483,7 +483,7 @@ Version      : 1.0
 		$(this).toggleClass("active").siblings().removeClass('active');
 	});
 
-	// Venue Details Options toggle Class Active
+	// Turf Details Options toggle Class Active
 
 	$(".venue-options li").on('click', function () {
 		$(this).toggleClass("active").siblings().removeClass('active');
@@ -495,7 +495,7 @@ Version      : 1.0
 		$(this).toggleClass("active").siblings().removeClass('active');
 	});
 
-	// Main Gallery Owl Carousel Slider for Venue Details
+	// Main Gallery Owl Carousel Slider for Turf Details
 
 	if ($('.main-gallery-slider').length > 0) {
 		$('.main-gallery-slider').owlCarousel({
@@ -523,7 +523,7 @@ Version      : 1.0
 		})
 	}
 
-	// Gallery Owl Carousel Slider For Venue Details
+	// Gallery Owl Carousel Slider For Turf Details
 
 	if ($('.gallery-slider').length > 0) {
 		$('.gallery-slider').owlCarousel({

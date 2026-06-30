@@ -211,7 +211,7 @@
 											src="assets/img/icons/venue-type.svg" alt="Icon"></a>
 								</div>
 								<div class="ms-2">
-									<p>Venue Type</p>
+									<p>Turf Type</p>
 									<h6 class="mb-0">Indoor</h6>
 								</div>
 							</li>
@@ -330,7 +330,7 @@
 											</li>
 											<li>
 												<p><i class="feather-alert-octagon"></i>A maximum number of members per
-													booking per football and cricket court is admissible fixed by Venue Vendors</p>
+													booking per football and cricket court is admissible fixed by Turf Vendors</p>
 											</li>
 											<li>
 												<p><i class="feather-alert-octagon"></i>No pets, no seeds, no gum, no
@@ -626,7 +626,7 @@
 												<i class="fas fa-location-arrow"></i>
 											</div>
 											<div class="">
-												<h6>Our Venue Location</h6>
+												<h6>Our Turf Location</h6>
 												<p>Hazratganj, Lucknow, India</p>
 											</div>
 										</div>
@@ -672,58 +672,47 @@
 						</div>
 						<div class="white-bg">
 							<h4 class="border-bottom">Request for Availability</h4>
-							<form>
-								<div class="mb-10">
-									<label for="name" class="form-label">Name</label>
-									<input type="text" class="form-control" id="name" placeholder="Enter Name">
-								</div>
-								<div class="mb-10">
-									<label for="email" class="form-label">Email</label>
-									<input type="email" class="form-control" id="email"
-										placeholder="Enter Email Address">
-								</div>
-								<div class="mb-10">
-									<label for="name" class="form-label">Phone Number</label>
-									<input type="text" class="form-control" id="phonenumber"
-										placeholder="Enter Phone Number">
-								</div>
-								<div class="mb-10">
-									<label for="date" class="form-label">Date</label>
-									<div class="form-icon">
-										<input type="text" class="form-control datetimepicker" placeholder="Select Date"
-											id="date">
-										<span class="cus-icon">
-											<i class="feather-calendar"></i>
-										</span>
-									</div>
-								</div>
-								<div class="mb-10">
-									<label for="comments" class="form-label">Details</label>
-									<textarea class="form-control" id="comments" rows="3"
-										placeholder="Enter Comments"></textarea>
-								</div>
-								<div class="">
-									<label class="form-label">Number of Guests</label>
-									<div class="input-group">
-										<input type="number" class="form-control" value="1" readonly>
-										<input type="number" class="form-control active" value="2" readonly>
-										<input type="number" class="form-control" value="3" readonly>
-										<input type="number" class="form-control" value="4" readonly>
-									</div>
-								</div>
-								<div class="form-check d-flex justify-content-start align-items-center policy">
-									<div class="d-inline-block">
-										<input class="form-check-input" type="checkbox" value="" id="policy" checked>
-									</div>
-									<label class="form-check-label" for="policy">By clicking 'Send Request', I agree to
-										Dreamsport Privacy Policy and Terms of Use</label>
-								</div>
-								<div class="d-grid btn-block">
-									<a href="javascript:;"
-										class="btn btn-secondary d-inline-flex justify-content-center align-items-center">Send
-										Request<i class="feather-arrow-right-circle ms-1"></i></a>
-								</div>
-							</form>
+							<form id="turf-booking-form">
+                                <div class="mb-10">
+                                    <label for="booking-date" class="form-label">Booking Date</label>
+                                    <input type="date" class="form-control" id="booking-date" required>
+                                </div>
+                                <div class="mb-10">
+                                    <label for="booking-time" class="form-label">Time Slot</label>
+                                    <select class="form-control" id="booking-time" required>
+                                        <option value="08:00">08:00 AM - 09:00 AM</option>
+                                        <option value="09:00">09:00 AM - 10:00 AM</option>
+                                        <option value="10:00">10:00 AM - 11:00 AM</option>
+                                        <option value="11:00">11:00 AM - 12:00 PM</option>
+                                        <option value="12:00">12:00 PM - 01:00 PM</option>
+                                        <option value="13:00">01:00 PM - 02:00 PM</option>
+                                        <option value="14:00">02:00 PM - 03:00 PM</option>
+                                        <option value="15:00">03:00 PM - 04:00 PM</option>
+                                        <option value="16:00">04:00 PM - 05:00 PM</option>
+                                        <option value="17:00">05:00 PM - 06:00 PM</option>
+                                        <option value="18:00">06:00 PM - 07:00 PM</option>
+                                        <option value="19:00">07:00 PM - 08:00 PM</option>
+                                        <option value="20:00">08:00 PM - 09:00 PM</option>
+                                        <option value="21:00">09:00 PM - 10:00 PM</option>
+                                        <option value="22:00">10:00 PM - 11:00 PM</option>
+                                    </select>
+                                </div>
+                                <div class="mb-10">
+                                    <label for="booking-payment" class="form-label">Payment Method</label>
+                                    <select class="form-control" id="booking-payment" required>
+                                        <option value="wallet">Wallet (Deduct from balance)</option>
+                                        <option value="cod">Pay at Turf</option>
+                                    </select>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <h5 class="mb-0">Total Price</h5>
+                                    <h5 class="mb-0 text-primary" id="booking-total-price">₹0</h5>
+                                </div>
+                                <div class="d-grid btn-block">
+                                    <button type="submit" class="btn btn-secondary">Confirm Booking</button>
+                                </div>
+                            </form>
 						</div>
 						<div class="white-bg cage-owner-info">
 							<h4 class="border-bottom">Cage Owner Details</h4>
@@ -781,7 +770,7 @@
 							</ul>
 						</div>
 						<div class="white-bg">
-							<h4 class="border-bottom">Share Venue</h4>
+							<h4 class="border-bottom">Share Turf</h4>
 							<ul class="social-medias d-flex">
 								<li class="facebook"><a href="javascript:void(0);"><i
 											class="fa-brands fa-facebook-f"></i></a></li>
@@ -806,7 +795,7 @@
 			<section class="section innerpagebg">
 				<div class="container">
 					<div class="featured-slider-group">
-						<h3 class="mb-40">Similar Venues</h3>
+						<h3 class="mb-40">Similar Turfs</h3>
 						<div class="owl-carousel featured-venues-slider owl-theme">
 
 							<!-- Featured Item -->
@@ -1284,10 +1273,36 @@
     });
 
     // Booking Logic
-    // We will attach an event listener to any form inside a div with class booking-form
-    document.addEventListener('submit', async (e) => {
-        const form = e.target;
-        if(form.closest('.booking-form') || form.closest('.check-availability')) {
+    let currentTurfPrice = 1000;
+    
+    // Set min date to today
+    const dateInput = document.getElementById('booking-date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        dateInput.min = today;
+    }
+    
+    // Hook up form logic
+    const bookingForm = document.getElementById('turf-booking-form');
+    if(bookingForm) {
+        // When user data loads we need the price
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const turfId = urlParams.get('id');
+            if (turfId) {
+                try {
+                    const turfs = await getTurfs();
+                    const turf = turfs.find(t => t.id === turfId);
+                    if (turf) {
+                        currentTurfPrice = turf.pricePerHour || turf.price || 1000;
+                        document.getElementById('booking-total-price').innerText = `₹${currentTurfPrice}`;
+                    }
+                } catch(e) {}
+            }
+        });
+        
+        bookingForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if(!isLoggedIn()) {
@@ -1303,24 +1318,24 @@
                 return;
             }
             
+            const date = document.getElementById('booking-date').value;
+            const timeSlot = document.getElementById('booking-time').value;
+            const paymentMethod = document.getElementById('booking-payment').value;
+            
+            const btn = bookingForm.querySelector('button[type="submit"]');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = 'Booking...';
+            btn.disabled = true;
+            
             try {
-                // Find date and time inputs if they exist, else dummy data for now
-                const dateInput = form.querySelector('input[type="date"]');
-                const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
-                
-                const btn = form.querySelector('button[type="submit"]');
-                const ogText = btn.innerHTML;
-                btn.innerHTML = 'Booking...';
-                btn.disabled = true;
-                
                 const response = await apiFetch('/bookings', {
                     method: 'POST',
                     body: JSON.stringify({
                         turfId: turfId,
-                        date: date,
-                        startTime: "18:00",
-                        endTime: "19:00",
-                        paymentMethod: "wallet"
+                        bookingDate: new Date(date).toISOString(),
+                        timeSlot: timeSlot,
+                        amount: currentTurfPrice,
+                        paymentMethod: paymentMethod
                     })
                 });
                 
@@ -1328,12 +1343,11 @@
                 window.location.href = 'user-bookings.html';
             } catch (err) {
                 alert('Booking failed: ' + err.message);
-                const btn = form.querySelector('button[type="submit"]');
                 btn.innerHTML = 'Confirm Booking';
                 btn.disabled = false;
             }
-        }
-    });
+        });
+    }
 </script>
 
 </body>
