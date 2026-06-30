@@ -169,8 +169,8 @@ const BookingCard = memo(({ booking, onPress }) => {
 });
 
 // ─── Personal Info Section ──────────────────────────────────
-const PersonalInfoSection = memo(({ user, onSave, saving }) => {
-  const [editing, setEditing] = useState(false);
+const PersonalInfoSection = memo(({ user, onSave, saving, forceEdit }) => {
+  const [editing, setEditing] = useState(forceEdit || false);
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
 
@@ -178,6 +178,12 @@ const PersonalInfoSection = memo(({ user, onSave, saving }) => {
     setName(user?.name || '');
     setPhone(user?.phone || '');
   }, [user?.name, user?.phone]);
+
+  useEffect(() => {
+    if (forceEdit) {
+      setEditing(true);
+    }
+  }, [forceEdit]);
 
   const handleSave = useCallback(async () => {
     try {
@@ -341,7 +347,7 @@ const BookingHistorySection = memo(({ bookings, loading, onPress }) => {
 });
 
 // ─── Main Profile Screen ────────────────────────────────────
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation, route }) => {
   const { user, signOut, refreshUser, updateUser, token } = useAuth();
   const isFocused = useIsFocused();
   const [bookings, setBookings] = useState([]);
@@ -574,7 +580,7 @@ const ProfileScreen = ({ navigation }) => {
           {/* ── Main Content ── */}
           <View style={styles.contentWrap}>
             {activeTab === 'info' ? (
-              <PersonalInfoSection user={user} onSave={handleSaveProfile} saving={saving} />
+              <PersonalInfoSection user={user} onSave={handleSaveProfile} saving={saving} forceEdit={route?.params?.completeProfile} />
             ) : activeTab === 'bookings' ? (
               <BookingHistorySection bookings={bookings} loading={loadingBookings} onPress={handleBookingPress} />
             ) : (

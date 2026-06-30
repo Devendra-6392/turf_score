@@ -37,6 +37,8 @@ import InterestedPlayersScreen from './src/screens/InterestedPlayersScreen';
 
 import { requestNotificationPermission, setupNotificationHandler } from './src/utils/notifications';
 
+import { Auth0Provider } from 'react-native-auth0';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -75,36 +77,38 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <Stack.Navigator 
-          initialRouteName="Splash"
-          screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
-        >
-          <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
-          <Stack.Screen name="Main" component={TabNavigator} />
-          <Stack.Screen name="TurfDetail" component={TurfDetailScreen} />
-          <Stack.Screen name="BookSlot" component={BookSlotScreen} />
-          <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
-          <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
-          <Stack.Screen name="Search" component={SearchScreen} />
-          <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
-          <Stack.Screen name="ChallengeDetail" component={ChallengeDetailScreen} />
-          <Stack.Screen name="ChallengeDetailByShare" component={ChallengeDetailScreen} />
-          <Stack.Screen name="MatchResult" component={MatchResultScreen} />
-          <Stack.Screen name="Notifications" component={NotificationsScreen} />
-          <Stack.Screen name="Coupons" component={CouponsScreen} />
-          <Stack.Screen name="Support" component={SupportScreen} />
-          <Stack.Screen name="CreateLFP" component={CreateLFPScreen} />
-          <Stack.Screen name="InterestedPlayers" component={InterestedPlayersScreen} />
-          <Stack.Screen name="AIAssistant" component={AIAssistantScreen} />
-          <Stack.Screen name="Subscriptions" component={SubscriptionScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-      <Toast config={toastConfig} position="top" topOffset={50} />
-    </AuthProvider>
+    <Auth0Provider domain={"dev-or2bg4ojjktwtv8j.us.auth0.com"} clientId={"9F2MhzuFUca4x4BGiF1eJmYv0xCm8fS0"}>
+      <AuthProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName="Splash"
+            screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+          >
+            <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen name="TurfDetail" component={TurfDetailScreen} />
+            <Stack.Screen name="BookSlot" component={BookSlotScreen} />
+            <Stack.Screen name="BookingSuccess" component={BookingSuccessScreen} />
+            <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
+            <Stack.Screen name="Search" component={SearchScreen} />
+            <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
+            <Stack.Screen name="ChallengeDetail" component={ChallengeDetailScreen} />
+            <Stack.Screen name="ChallengeDetailByShare" component={ChallengeDetailScreen} />
+            <Stack.Screen name="MatchResult" component={MatchResultScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Coupons" component={CouponsScreen} />
+            <Stack.Screen name="Support" component={SupportScreen} />
+            <Stack.Screen name="CreateLFP" component={CreateLFPScreen} />
+            <Stack.Screen name="InterestedPlayers" component={InterestedPlayersScreen} />
+            <Stack.Screen name="AIAssistant" component={AIAssistantScreen} />
+            <Stack.Screen name="Subscriptions" component={SubscriptionScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+        <Toast config={toastConfig} position="top" topOffset={50} />
+      </AuthProvider>
+    </Auth0Provider>
   );
 }

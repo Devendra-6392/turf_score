@@ -42,6 +42,12 @@ module.exports = {
       'expo-secure-store',
       'expo-camera',
       [
+        'react-native-auth0',
+        {
+          domain: 'YOUR_AUTH0_DOMAIN',
+        }
+      ],
+      [
         'expo-build-properties',
         {
           android: {

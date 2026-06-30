@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { Mail, Lock, Eye, EyeOff, ChevronRight } from 'lucide-react-native';
+import { useAuth0 } from 'react-native-auth0';
 import { useAuth } from '../context/AuthContext';
 import Toast from 'react-native-toast-message';
 import { scheduleLocalNotification } from '../utils/notifications';
@@ -25,13 +26,15 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
-  const { login } = useAuth();
+  const { login, syncSso, user } = useAuth();
+  const { authorize, user: auth0User, getCredentials } = useAuth0();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -43,11 +46,52 @@ const LoginScreen = ({ navigation }) => {
       await login(email, password);
       Toast.show({ type: 'success', text1: 'Welcome back!', text2: 'Login successful' });
       scheduleLocalNotification('Welcome Back! 👋', 'You have successfully logged in.', 1);
+      
+      // We will handle profile completion in the Home or let the user do it manually.
       navigation.replace('Main');
     } catch (error) {
       Toast.show({ type: 'error', text1: 'Login Failed', text2: error.message });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSSOLogin = async () => {
+    setSsoLoading(true);
+    try {
+      await authorize();
+      const credentials = await getCredentials();
+      
+      // The auth0 user profile is retrieved automatically if properly configured,
+      // but you can fetch it if needed or use the decoded ID token.
+      // Usually authorize() doesn't return the full user profile immediately,
+      // it populates the auth0User state, or we fetch it.
+      // Let's rely on the syncSso logic and pass the user details once they are available, 
+      // but wait, auth0User might not be immediately populated here without useEffect, 
+      // so let's fetch profile using credentials.accessToken.
+      
+      const response = await fetch(`https://YOUR_AUTH0_DOMAIN/userinfo`, {
+        headers: { Authorization: `Bearer ${credentials.accessToken}` }
+      });
+      const userInfo = await response.json();
+      
+      await syncSso(userInfo.sub, userInfo.email, userInfo.name || userInfo.nickname, userInfo.picture);
+      
+      Toast.show({ type: 'success', text1: 'SSO Login successful!' });
+      
+      // If the user's phone is not set, we navigate them to profile screen to complete it
+      // but wait, we need the updated user object from syncSso context first.
+      // Since it's updated in the context, we will navigate to Main and let a check run, 
+      // or we can pass a param to Main to switch to Profile tab.
+      navigation.replace('Main', { screen: 'Profile', params: { completeProfile: true } });
+      
+    } catch (error) {
+      console.log(error);
+      if (error?.message !== 'a0.session.user_cancelled') {
+        Toast.show({ type: 'error', text1: 'SSO Login Failed', text2: error.message });
+      }
+    } finally {
+      setSsoLoading(false);
     }
   };
 
@@ -151,6 +195,24 @@ const LoginScreen = ({ navigation }) => {
                     <ChevronRight size={18} color="#fff" />
                   </View>
                 </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={styles.ssoBtn}
+              onPress={handleSSOLogin}
+              activeOpacity={0.85}
+            >
+              {ssoLoading ? (
+                <ActivityIndicator color={Colors.primary} />
+              ) : (
+                <Text style={styles.ssoBtnText}>Continue with SSO</Text>
               )}
             </TouchableOpacity>
 
@@ -294,6 +356,37 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.outline,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: Colors.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  ssoBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderRadius: 16,
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ssoBtnText: {
+    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
   },
   footer: {
     flexDirection: 'row',
