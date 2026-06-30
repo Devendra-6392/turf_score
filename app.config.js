@@ -44,7 +44,7 @@ module.exports = {
       [
         'react-native-auth0',
         {
-          domain: 'YOUR_AUTH0_DOMAIN',
+          domain: 'dev-or2bg4ojjktwtv8j.us.auth0.com',
         }
       ],
       [

@@ -70,7 +70,7 @@ const LoginScreen = ({ navigation }) => {
       // but wait, auth0User might not be immediately populated here without useEffect, 
       // so let's fetch profile using credentials.accessToken.
       
-      const response = await fetch(`https://YOUR_AUTH0_DOMAIN/userinfo`, {
+      const response = await fetch(`https://dev-or2bg4ojjktwtv8j.us.auth0.com/userinfo`, {
         headers: { Authorization: `Bearer ${credentials.accessToken}` }
       });
       const userInfo = await response.json();
