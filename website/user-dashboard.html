@@ -233,7 +233,7 @@
 								<div class="col-xl-3 col-lg-6 col-md-6 d-flex">
 									<div class="statistics-grid flex-fill">
 										<div class="statistics-content">
-											<h3>78</h3>
+											<h3><span id="stat-courts-booked">0</span></h3>
 											<p>Total Court Booked</p>
 										</div>
 										<div class="statistics-icon">
@@ -244,7 +244,7 @@
 								<div class="col-xl-3 col-lg-6 col-md-6 d-flex">
 									<div class="statistics-grid flex-fill">
 										<div class="statistics-content">
-											<h3>45</h3>
+											<h3><span id="stat-coaches-booked">0</span></h3>
 											<p>Total Coaches Booked</p>
 										</div>
 										<div class="statistics-icon">
@@ -2048,8 +2048,46 @@
 	<!-- Select JS -->
 	<script src="assets/plugins/select2/js/select2.min.js"></script>
 
+	<script src="assets/js/api.js"></script>
 	<!-- Custom JS -->
 	<script src="assets/js/script.js"></script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        try {
+            // Fetch User Profile
+            const profile = await apiFetch('/auth/me', { method: 'GET' });
+            
+            // Set Wallet Balance
+            const walletEl = document.getElementById('stat-wallet');
+            if (walletEl && profile.wallet) {
+                walletEl.innerText = `₹${profile.wallet.balance || 0}`;
+            }
+            
+            // Fetch Bookings to count
+            const bookings = await apiFetch('/bookings/my-bookings', { method: 'GET' });
+            const bookedEl = document.getElementById('stat-courts-booked');
+            if (bookedEl && bookings && bookings.length !== undefined) {
+                bookedEl.innerText = bookings.length;
+            }
+            
+            // We can also update other stats based on XP or MatchesPlayed
+            const matchesEl = document.getElementById('stat-events');
+            if (matchesEl) {
+                matchesEl.innerText = profile.matchesPlayed || 0;
+            }
+            
+        } catch (err) {
+            console.error('Failed to load dashboard data:', err);
+        }
+    });
+</script>
 
 </body>
 

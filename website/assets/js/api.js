@@ -209,6 +209,6 @@ async function renderTurfs() {
         wrapper.innerHTML = tabsHtml + contentHtml;
 
     } catch (error) {
-        wrapper.innerHTML = \`<div class="text-center w-100 py-5 text-danger"><h4>Error loading turfs</h4><p>\${error.message}</p></div>\`;
+        wrapper.innerHTML = `<div class="text-center w-100 py-5 text-danger"><h4>Error loading turfs</h4><p>${error.message}</p></div>`;
     }
 }
